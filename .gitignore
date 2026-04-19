@@ -1,0 +1,164 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+
+# Testing
+coverage/
+.nyc_output/
+*.lcov
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+.cache/
+.parcel-cache/
+.wrangler/
+
+# Environment files (NEVER commit secrets!)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.dev.vars
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# TypeScript
+*.tsbuildinfo
+.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional stylelint cache
+.stylelintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn
+.yarn-integrity
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+
+# Vercel
+.vercel
+
+# Cloudflare
+.wrangler/
+wrangler.toml.backup
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Python (if using Python tools)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Secrets and credentials (be explicit about these!)
+.env
+.env.*
+!.env.example
+!.env.template
+.dev.vars
+!.dev.vars.template
+*.pem
+*.key
+*.cert
+credentials.json
+secrets.json
+service-account*.json
+
+# Third-party tool directories
+.entire/
+
+# Session state (ephemeral work context - security by default)
+# Remove these lines if you want cross-machine session state sync
+# WARNING: If committed, may contain secrets, API keys, PII, or sensitive data
+.claude/session-state/current.md
+.claude/session-state/pr-*.md
+
+# Per-developer Claude Code settings (commit settings.json, not the local overrides)
+.claude/settings.local.json
+
+# Project-specific (add your own below this line)
+# Example:
+# /data/
+# /uploads/

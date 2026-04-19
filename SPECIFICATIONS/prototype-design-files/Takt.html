@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+<title>Takt — keep it going</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@200;300;400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="styles.css">
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="voice.js"></script>
+<script type="text/babel" src="icons.jsx"></script>
+<script type="text/babel" src="screens.jsx"></script>
+<script type="text/babel" src="interpretation.jsx"></script>
+<script type="text/babel" src="running.jsx"></script>
+<script type="text/babel" src="presets-settings.jsx"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- Tweaks panel (accent color) -->
+<div class="tweaks" id="tweaks-panel">
+  <h3>Accent</h3>
+  <div class="swatch-row" id="swatch-row"></div>
+</div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+const { Home, VoiceOverlay, Interpretation, Running, Complete, PresetsDrawer, Settings, Onboarding, SavePresetSheet, StepperSheet } = window.TaktScreens;
+
+// Tweakable defaults
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "accent": "#4EA47A"
+}/*EDITMODE-END*/;
+
+const ACCENT_OPTIONS = [
+  { name: 'Icy Blue',   color: '#4A8EFF', deep: '#1F5FD6', soft: 'rgba(74,142,255,0.12)' },
+  { name: 'Arctic',     color: '#5BC0DE', deep: '#1F8AA8', soft: 'rgba(91,192,222,0.14)' },
+  { name: 'Lichen',     color: '#4EA47A', deep: '#23764E', soft: 'rgba(78,164,122,0.14)' },
+  { name: 'Ember',      color: '#E26B3A', deep: '#B04A20', soft: 'rgba(226,107,58,0.14)' },
+  { name: 'Lilac',      color: '#8B84FF', deep: '#554EDB', soft: 'rgba(139,132,255,0.14)' },
+  { name: 'Graphite',   color: '#4F5660', deep: '#2A2F37', soft: 'rgba(79,86,96,0.12)' },
+];
+
+function applyAccent(hex) {
+  const opt = ACCENT_OPTIONS.find(o => o.color.toLowerCase() === hex.toLowerCase()) || ACCENT_OPTIONS[0];
+  document.documentElement.style.setProperty('--accent', opt.color);
+  document.documentElement.style.setProperty('--accent-deep', opt.deep);
+  document.documentElement.style.setProperty('--accent-soft', opt.soft);
+}
+
+// ──────────────── Audio (WebAudio beep synth) ────────────────
+let audioCtx = null;
+function getAudio() {
+  if (!audioCtx) {
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch { audioCtx = null; }
+  }
+  return audioCtx;
+}
+function beep({ freq = 880, dur = 0.12, type = 'sine', vol = 0.18 } = {}) {
+  const ctx = getAudio();
+  if (!ctx) return;
+  if (ctx.state === 'suspended') ctx.resume();
+  const t = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, t);
+  gain.gain.setValueAtTime(0, t);
+  gain.gain.linearRampToValueAtTime(vol, t + 0.008);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(t);
+  osc.stop(t + dur + 0.02);
+}
+function haptic(pattern = 15) {
+  try { navigator.vibrate && navigator.vibrate(pattern); } catch {}
+}
+
+// Example phrases cycled in voice capture (simulates recognition)
+const EXAMPLE_PHRASES = [
+  { text: "3 sets of 1 minute, 30 seconds rest between each", hint: "session" },
+  { text: "5 rounds of 45 seconds with 15 seconds rest", hint: "session" },
+  { text: "Tabata — 8 rounds of 20 seconds, 10 seconds rest", hint: "session" },
+  { text: "2 minutes work, 1 minute rest, 4 sets", hint: "session" },
+];
+
+function uid() { return Math.random().toString(36).slice(2, 10); }
+
+function App() {
+  // Core app state
+  const [screen, setScreen] = useState('home'); // home | running | complete
+  const [onboarding, setOnboarding] = useState(() => {
+    try { return localStorage.getItem('takt:onboarded') !== '1'; } catch { return true; }
+  });
+  const [voiceOpen, setVoiceOpen] = useState(false);
+  const [voicePhase, setVoicePhase] = useState('listening'); // 'listening' | 'processing'
+  const [transcript, setTranscript] = useState('');
+  const [interpretation, setInterpretation] = useState(null); // parsed session awaiting confirm
+  const [presetsOpen, setPresetsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [saveSheetOpen, setSaveSheetOpen] = useState(false);
+  const [saveDefault, setSaveDefault] = useState('');
+  const [editingField, setEditingField] = useState(null); // 'sets' | 'work' | 'rest' | null
+
+  // Session state
+  const [presets, setPresets] = useState(() => {
+    try { const s = localStorage.getItem('takt:presets'); if (s) return JSON.parse(s); } catch {}
+    return [
+      { id: uid(), name: 'basic rehab pattern', sets: 3, workSec: 60, restSec: 30 },
+      { id: uid(), name: 'tabata', sets: 8, workSec: 20, restSec: 10, pinned: true },
+      { id: uid(), name: 'cooldown stretch', sets: 4, workSec: 45, restSec: 15 },
+    ];
+  });
+  const [lastSession, setLastSession] = useState(() => {
+    try { const s = localStorage.getItem('takt:last'); if (s) return JSON.parse(s); } catch {}
+    return null;
+  });
+  const [history, setHistory] = useState(() => {
+    try { const s = localStorage.getItem('takt:history'); if (s) return JSON.parse(s); } catch {}
+    return [];
+  });
+  const [runSession, setRunSession] = useState(null);
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [phase, setPhase] = useState('work'); // 'work' | 'rest'
+  const [secondsLeft, setSecondsLeft] = useState(0);
+  const [phaseTotal, setPhaseTotal] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [countIn, setCountIn] = useState(null);
+  const [cueFlash, setCueFlash] = useState(null);
+  const [toast, setToast] = useState(null);
+  const [holding, setHolding] = useState(false);
+  const holdTimer = useRef(null);
+  const holdFired = useRef(false);
+  const cueTimer = useRef(null);
+  const transcriptTimer = useRef(null);
+  const wakeLockRef = useRef(null);
+  const lastBeepSecondRef = useRef(-1);
+
+  // Settings
+  const [settings, setSettings] = useState(() => {
+    try { const s = localStorage.getItem('takt:settings'); if (s) return JSON.parse(s); } catch {}
+    return { sound: true, countIn: true, voiceCues: true, haptic: true, wakeLock: true, accent: TWEAK_DEFAULTS.accent };
+  });
+
+  useEffect(() => { try { localStorage.setItem('takt:presets', JSON.stringify(presets)); } catch {} }, [presets]);
+  useEffect(() => { try { localStorage.setItem('takt:settings', JSON.stringify(settings)); } catch {} }, [settings]);
+  useEffect(() => { if (lastSession) try { localStorage.setItem('takt:last', JSON.stringify(lastSession)); } catch {} }, [lastSession]);
+  useEffect(() => { try { localStorage.setItem('takt:history', JSON.stringify(history)); } catch {} }, [history]);
+  useEffect(() => { applyAccent(settings.accent); renderSwatches(settings.accent); }, [settings.accent]);
+
+  // Wake lock lifecycle
+  useEffect(() => {
+    async function acquire() {
+      try {
+        if ('wakeLock' in navigator && screen === 'running' && settings.wakeLock) {
+          wakeLockRef.current = await navigator.wakeLock.request('screen');
+        }
+      } catch {}
+    }
+    async function release() {
+      try { if (wakeLockRef.current) await wakeLockRef.current.release(); } catch {}
+      wakeLockRef.current = null;
+    }
+    if (screen === 'running' && settings.wakeLock) acquire();
+    else release();
+    return () => { release(); };
+  }, [screen, settings.wakeLock]);
+
+  // Toast helper
+  const showToast = useCallback((msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2200);
+  }, []);
+
+  // Voice simulation: when opened, pick a random phrase and show it, then parse
+  const openVoice = useCallback((prefillText = null) => {
+    setVoiceOpen(true);
+    setVoicePhase('listening');
+    setTranscript('');
+    const target = prefillText || EXAMPLE_PHRASES[Math.floor(Math.random() * EXAMPLE_PHRASES.length)].text;
+    // resume audio on user-triggered voice (satisfies autoplay policies)
+    try { const c = getAudio(); if (c && c.state === 'suspended') c.resume(); } catch {}
+    clearTimeout(transcriptTimer.current);
+    transcriptTimer.current = setTimeout(() => {
+      setTranscript(target);
+      // brief listen-to-thinking transition
+      transcriptTimer.current = setTimeout(() => {
+        setVoicePhase('processing');
+        transcriptTimer.current = setTimeout(() => {
+          setVoiceOpen(false);
+          const parsed = Takt.parseCommand(target, presets);
+          handleParsed(parsed, target);
+        }, 700);
+      }, 800);
+    }, 1400);
+  }, [presets]);
+
+  const cancelVoice = useCallback(() => {
+    clearTimeout(transcriptTimer.current);
+    setVoiceOpen(false);
+    setVoicePhase('listening');
+    setTranscript('');
+  }, []);
+
+  // Handle parsed command result
+  const handleParsed = useCallback((parsed, sourceText) => {
+    if (parsed.type === 'runPreset') {
+      showToast(`Running “${parsed.preset.name}”`);
+      startSession(parsed.preset);
+      return;
+    }
+    if (parsed.type === 'save') {
+      // Save the current interpretation or last session
+      const base = interpretation || lastSession;
+      if (!base) {
+        showToast('Nothing to save yet');
+        return;
+      }
+      const newPreset = {
+        id: uid(),
+        name: parsed.name,
+        sets: base.sets,
+        workSec: base.workSec,
+        restSec: base.restSec,
+      };
+      setPresets((ps) => [newPreset, ...ps.filter(p => p.name !== parsed.name)]);
+      showToast(`Saved “${parsed.name}”`);
+      return;
+    }
+    // session
+    setInterpretation({
+      sets: parsed.sets,
+      workSec: parsed.workSec,
+      restSec: parsed.restSec,
+      transcript: sourceText,
+    });
+  }, [interpretation, lastSession, presets]);
+
+  // Start session
+  const startSession = (s) => {
+    setInterpretation(null);
+    setPresetsOpen(false);
+    setRunSession({ name: s.name, sets: s.sets, workSec: s.workSec, restSec: s.restSec });
+    setCurrentIdx(0);
+    setPhase('work');
+    setPaused(false);
+    setScreen('running');
+    lastBeepSecondRef.current = -1;
+    // count-in
+    if (settings.countIn) {
+      runCountIn(() => {
+        setSecondsLeft(s.workSec);
+        setPhaseTotal(s.workSec);
+        triggerCue('Work');
+        cuePhaseStart('work');
+      });
+    } else {
+      setSecondsLeft(s.workSec);
+      setPhaseTotal(s.workSec);
+      triggerCue('Work');
+      cuePhaseStart('work');
+    }
+  };
+
+  const runCountIn = (onDone) => {
+    let n = 3;
+    setCountIn(n);
+    if (settings.sound) beep({ freq: 660, dur: 0.1 });
+    if (settings.haptic) haptic(12);
+    const tick = () => {
+      n--;
+      if (n <= 0) {
+        setCountIn(null);
+        if (settings.sound) beep({ freq: 1200, dur: 0.2, vol: 0.22 });
+        if (settings.haptic) haptic([30, 40, 30]);
+        onDone();
+      } else {
+        setCountIn(n);
+        if (settings.sound) beep({ freq: 660 + (3 - n) * 100, dur: 0.1 });
+        if (settings.haptic) haptic(12);
+        setTimeout(tick, 800);
+      }
+    };
+    setTimeout(tick, 800);
+  };
+
+  const triggerCue = (label) => {
+    if (!settings.voiceCues) return;
+    clearTimeout(cueTimer.current);
+    setCueFlash(label);
+    cueTimer.current = setTimeout(() => setCueFlash(null), 1600);
+  };
+
+  const cuePhaseStart = (nextPhase) => {
+    if (settings.sound) {
+      // work = bright high tone, rest = softer low tone
+      if (nextPhase === 'work') beep({ freq: 1200, dur: 0.18, vol: 0.22 });
+      else beep({ freq: 500, dur: 0.22, vol: 0.18, type: 'triangle' });
+    }
+    if (settings.haptic) haptic(nextPhase === 'work' ? [30, 30, 30] : 30);
+  };
+
+  // Timer tick
+  useEffect(() => {
+    if (screen !== 'running' || paused || countIn != null) return;
+    if (secondsLeft <= 0) return;
+    const id = setInterval(() => {
+      setSecondsLeft((s) => Math.max(0, s - 1));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [screen, paused, countIn]);
+
+  // Countdown beeps (3-2-1 before transition)
+  useEffect(() => {
+    if (screen !== 'running' || countIn != null || paused) return;
+    if (secondsLeft > 0 && secondsLeft <= 3 && lastBeepSecondRef.current !== secondsLeft) {
+      lastBeepSecondRef.current = secondsLeft;
+      if (settings.sound) beep({ freq: 700, dur: 0.08, vol: 0.14 });
+      if (settings.haptic) haptic(8);
+    }
+    if (secondsLeft > 3) lastBeepSecondRef.current = -1;
+  }, [secondsLeft, screen, countIn, paused, settings.sound, settings.haptic]);
+
+  // Phase transitions
+  useEffect(() => {
+    if (screen !== 'running' || countIn != null) return;
+    if (secondsLeft > 0) return;
+    if (!runSession) return;
+
+    // small delay so "0:00" can hold for a beat visually
+    const timer = setTimeout(() => {
+      if (phase === 'work') {
+        const nextIdx = currentIdx + 1;
+        if (nextIdx >= runSession.sets) {
+          finishSession();
+        } else {
+          if (runSession.restSec > 0) {
+            setPhase('rest');
+            setPhaseTotal(runSession.restSec);
+            setSecondsLeft(runSession.restSec);
+            triggerCue('Rest');
+            cuePhaseStart('rest');
+          } else {
+            setCurrentIdx(nextIdx);
+            setPhaseTotal(runSession.workSec);
+            setSecondsLeft(runSession.workSec);
+            triggerCue(`Work, set ${nextIdx + 1}`);
+            cuePhaseStart('work');
+          }
+        }
+      } else {
+        const nextIdx = currentIdx + 1;
+        setCurrentIdx(nextIdx);
+        setPhase('work');
+        setPhaseTotal(runSession.workSec);
+        setSecondsLeft(runSession.workSec);
+        triggerCue(`Work, set ${nextIdx + 1}`);
+        cuePhaseStart('work');
+      }
+    }, 320);
+    return () => clearTimeout(timer);
+  }, [secondsLeft, screen, phase, currentIdx, runSession, countIn]);
+
+  const finishSession = () => {
+    setLastSession(runSession);
+    const total = runSession.sets * runSession.workSec + Math.max(0, runSession.sets - 1) * runSession.restSec;
+    setHistory((h) => [...h.slice(-19), { at: Date.now(), totalSec: total, sets: runSession.sets }]);
+    if (settings.sound) {
+      // three-note finish
+      beep({ freq: 900, dur: 0.14 });
+      setTimeout(() => beep({ freq: 1200, dur: 0.14 }), 140);
+      setTimeout(() => beep({ freq: 1600, dur: 0.26, vol: 0.22 }), 280);
+    }
+    if (settings.haptic) haptic([40, 40, 80]);
+    setScreen('complete');
+  };
+
+  const handleStop = () => {
+    setScreen('home');
+    setRunSession(null);
+    setCountIn(null);
+  };
+
+  const handleSkip = () => {
+    setSecondsLeft(0);
+  };
+
+  const handleRepeatSet = () => {
+    if (!runSession) return;
+    // If in rest, go back to work of current set. If in work, restart current work phase.
+    if (phase === 'rest') {
+      setPhase('work');
+      setPhaseTotal(runSession.workSec);
+      setSecondsLeft(runSession.workSec);
+      triggerCue(`Work, set ${currentIdx + 1}`);
+      cuePhaseStart('work');
+    } else {
+      // already in work; restart current
+      setPhaseTotal(runSession.workSec);
+      setSecondsLeft(runSession.workSec);
+    }
+    if (settings.haptic) haptic(15);
+  };
+
+  const savePreset = (name) => {
+    const base = interpretation || lastSession || runSession;
+    if (!base) return;
+    const newPreset = {
+      id: uid(),
+      name,
+      sets: base.sets,
+      workSec: base.workSec,
+      restSec: base.restSec,
+    };
+    setPresets((ps) => [newPreset, ...ps.filter(p => p.name !== name)]);
+    setSaveSheetOpen(false);
+    showToast(`Saved “${name}”`);
+  };
+
+  // Preset mutations
+  const onTogglePin = (id) => {
+    setPresets((ps) => ps.map(p => p.id === id ? { ...p, pinned: !p.pinned } : p));
+  };
+  const onDuplicate = (id) => {
+    setPresets((ps) => {
+      const p = ps.find(x => x.id === id);
+      if (!p) return ps;
+      const copy = { ...p, id: uid(), name: `${p.name} copy`, pinned: false };
+      const idx = ps.findIndex(x => x.id === id);
+      return [...ps.slice(0, idx + 1), copy, ...ps.slice(idx + 1)];
+    });
+    showToast('Duplicated');
+  };
+  const onReorder = (fromId, toId) => {
+    setPresets((ps) => {
+      const arr = [...ps];
+      const fromIdx = arr.findIndex(x => x.id === fromId);
+      const toIdx = arr.findIndex(x => x.id === toId);
+      if (fromIdx === -1 || toIdx === -1 || fromIdx === toIdx) return arr;
+      const [moved] = arr.splice(fromIdx, 1);
+      arr.splice(toIdx, 0, moved);
+      return arr;
+    });
+  };
+
+  // Voice trigger handlers
+  const onVoiceTap = () => {
+    if (holdFired.current) { holdFired.current = false; return; }
+    openVoice();
+  };
+  const onVoiceHoldStart = () => {
+    holdFired.current = false;
+    clearTimeout(holdTimer.current);
+    holdTimer.current = setTimeout(() => {
+      holdFired.current = true;
+      setHolding(true);
+      openVoice();
+    }, 350);
+  };
+  const onVoiceHoldEnd = () => {
+    clearTimeout(holdTimer.current);
+    setHolding(false);
+  };
+
+  // Edit-mode (Tweaks) wiring
+  useEffect(() => {
+    const onMsg = (e) => {
+      if (!e.data || typeof e.data !== 'object') return;
+      if (e.data.type === '__activate_edit_mode') setTweaksOpen(true);
+      if (e.data.type === '__deactivate_edit_mode') setTweaksOpen(false);
+    };
+    window.addEventListener('message', onMsg);
+    try { window.parent.postMessage({ type: '__edit_mode_available' }, '*'); } catch {}
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
+  const setTweaksOpen = (open) => {
+    const panel = document.getElementById('tweaks-panel');
+    if (panel) panel.classList.toggle('open', open);
+  };
+
+  const onAccentChange = (color) => {
+    setSettings((s) => ({ ...s, accent: color }));
+    try {
+      window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { accent: color } }, '*');
+    } catch {}
+  };
+
+  // Expose for swatch-row rendering
+  window.__taktSetAccent = onAccentChange;
+
+  const completeOnDone = () => {
+    setScreen('home');
+    setRunSession(null);
+  };
+  const completeOnRepeat = () => {
+    if (runSession) startSession(runSession);
+  };
+
+  return (
+    <div className="app-shell">
+      <div className="app-viewport">
+        {/* Base: always Home for seamless background when drawer/overlay opens */}
+        <Home
+          holding={holding || voiceOpen}
+          onVoiceTap={onVoiceTap}
+          onVoiceHoldStart={onVoiceHoldStart}
+          onVoiceHoldEnd={onVoiceHoldEnd}
+          onOpenPresets={() => setPresetsOpen(true)}
+          onOpenSettings={() => setSettingsOpen(true)}
+          onQuickStart={(s) => startSession(s)}
+          lastSession={lastSession}
+          recentPresets={presets.slice(0, 3)}
+          history={history}
+        />
+
+        {/* Running overlays Home */}
+        {(screen === 'running') && (
+          <Running
+            session={runSession}
+            currentIdx={currentIdx}
+            phase={phase}
+            secondsLeft={secondsLeft}
+            phaseTotal={phaseTotal}
+            paused={paused}
+            countIn={countIn}
+            cueFlash={cueFlash}
+            soundOn={settings.sound}
+            onStop={handleStop}
+            onPause={() => setPaused(true)}
+            onResume={() => setPaused(false)}
+            onSkip={handleSkip}
+            onRepeatSet={handleRepeatSet}
+          />
+        )}
+
+        {(screen === 'complete') && runSession && (
+          <Complete
+            session={runSession}
+            totalSec={runSession.sets * runSession.workSec + Math.max(0, runSession.sets - 1) * runSession.restSec}
+            onDone={completeOnDone}
+            onRepeat={completeOnRepeat}
+            onSaveAsPreset={() => { setSaveDefault(''); setSaveSheetOpen(true); }}
+          />
+        )}
+
+        <PresetsDrawer
+          open={presetsOpen}
+          presets={presets}
+          onClose={() => setPresetsOpen(false)}
+          onRun={(p) => { setPresetsOpen(false); startSession(p); }}
+          onEdit={() => {}}
+          onDelete={(id) => setPresets((ps) => ps.filter(p => p.id !== id))}
+          onCreate={() => {
+            setPresetsOpen(false);
+            setInterpretation({ sets: 3, workSec: 60, restSec: 30, transcript: 'New preset' });
+          }}
+          onTogglePin={onTogglePin}
+          onDuplicate={onDuplicate}
+          onReorder={onReorder}
+        />
+
+        {interpretation && (
+          <Interpretation
+            open={true}
+            parsed={interpretation}
+            transcript={interpretation.transcript}
+            onConfirm={() => startSession(interpretation)}
+            onCancel={() => setInterpretation(null)}
+            onUpdate={(patch) => setInterpretation((i) => ({ ...i, ...patch }))}
+            onSaveAsPreset={() => { setSaveDefault(''); setSaveSheetOpen(true); }}
+            onStartOver={() => { setInterpretation(null); openVoice(); }}
+            onEditField={(field) => setEditingField(field)}
+          />
+        )}
+
+        <StepperSheet
+          open={editingField === 'sets'}
+          mode="int"
+          label="Sets"
+          value={interpretation ? interpretation.sets : 1}
+          min={1}
+          max={99}
+          onChange={(v) => setInterpretation((i) => i ? ({ ...i, sets: v }) : i)}
+          onClose={() => setEditingField(null)}
+        />
+        <StepperSheet
+          open={editingField === 'work'}
+          mode="duration"
+          label="Work"
+          value={interpretation ? interpretation.workSec : 60}
+          min={5}
+          max={3600}
+          onChange={(v) => setInterpretation((i) => i ? ({ ...i, workSec: v }) : i)}
+          onClose={() => setEditingField(null)}
+        />
+        <StepperSheet
+          open={editingField === 'rest'}
+          mode="duration"
+          label="Rest"
+          value={interpretation ? interpretation.restSec : 30}
+          min={0}
+          max={3600}
+          onChange={(v) => setInterpretation((i) => i ? ({ ...i, restSec: v }) : i)}
+          onClose={() => setEditingField(null)}
+        />
+
+        <Settings
+          open={settingsOpen}
+          settings={settings}
+          accentOptions={ACCENT_OPTIONS}
+          onChange={(patch) => setSettings((s) => ({ ...s, ...patch }))}
+          onAccentChange={onAccentChange}
+          onClose={() => setSettingsOpen(false)}
+          onOnboardingReplay={() => { setSettingsOpen(false); setOnboarding(true); }}
+        />
+
+        <SavePresetSheet
+          open={saveSheetOpen}
+          defaultName={saveDefault}
+          onClose={() => setSaveSheetOpen(false)}
+          onSave={savePreset}
+        />
+
+        <VoiceOverlay
+          open={voiceOpen}
+          transcript={transcript}
+          phase={voicePhase}
+          onCancel={cancelVoice}
+        />
+
+        {onboarding && (
+          <Onboarding onDone={() => {
+            setOnboarding(false);
+            try { localStorage.setItem('takt:onboarded', '1'); } catch {}
+          }} />
+        )}
+
+        {/* Toast */}
+        <div className={`toast ${toast ? 'show' : ''}`}>{toast}</div>
+      </div>
+    </div>
+  );
+}
+
+
+function renderSwatches(active) {
+  const row = document.getElementById('swatch-row');
+  if (!row) return;
+  row.innerHTML = '';
+  ACCENT_OPTIONS.forEach(({ color, name }) => {
+    const b = document.createElement('button');
+    b.className = 'swatch' + (color.toLowerCase() === active.toLowerCase() ? ' active' : '');
+    b.style.background = color;
+    b.title = name;
+    b.onclick = () => window.__taktSetAccent && window.__taktSetAccent(color);
+    row.appendChild(b);
+  });
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
