@@ -22,7 +22,7 @@ Voice is the primary input; every voice action has a tap equivalent. Designed mo
 
 ## Status
 
-Phase 1 (Foundation) deployed to [takt.hultberg.org](https://takt.hultberg.org) on 2026-04-19. Phase 2 (Core timer) is next. See [SPECIFICATIONS/](./SPECIFICATIONS/) for the full six-phase plan.
+Phase 2 (Core timer) live at [takt.hultberg.org](https://takt.hultberg.org) since 2026-04-19. Configure a session, run it with beeps and haptics, install as a PWA for offline use. Phase 3 (voice input) is next. See [SPECIFICATIONS/](./SPECIFICATIONS/) for the full six-phase plan.
 
 ## Getting started (for contributors / future Magnus)
 

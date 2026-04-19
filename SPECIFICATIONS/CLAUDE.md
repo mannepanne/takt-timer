@@ -20,17 +20,17 @@ Before making an architectural decision that outlasts today's PR, consult [../RE
 
 Full product vision: [ORIGINAL_IDEA/project-outline.md](./ORIGINAL_IDEA/project-outline.md).
 
-**Current phase:** Phase 2 — Core timer (not started).
+**Current phase:** Phase 3 — Voice (not started).
 
-**Live deployment:** https://takt.hultberg.org — Phase 1 shell deployed 2026-04-19.
+**Live deployment:** https://takt.hultberg.org — Phase 2 core timer live since 2026-04-19.
 
 ### Phase files (work through in order)
 
 1. ~~**[01-foundation.md](./ARCHIVE/01-foundation.md)**~~ — ✅ complete
    Scaffolded Vite + React + TS SPA, single Cloudflare Worker serving both assets and API, custom domain, CI, Web Analytics, design system port. Archived.
 
-2. **[02-core-timer.md](./02-core-timer.md)** — 5–8 days
-   Usable vertical slice: manual session configuration, full Running screen, Web Audio beeps, Wake Lock, offline service worker, `localStorage` history and sparkline. No voice, no auth.
+2. ~~**[02-core-timer.md](./ARCHIVE/02-core-timer.md)**~~ — ✅ complete
+   Shipped the usable tap-only timer — state machine, count-in, work/rest phases, pause/resume, skip, repeat-set, beeps, haptics (Android), Wake Lock, PWA with offline running, localStorage history, sparkline, last-session quick-start, demo mic button. Archived.
 
 3. **[03-voice.md](./03-voice.md)** — 4–6 days
    Mic capture, Voice overlay, Whisper-turbo + Llama pipeline on Workers AI, anonymous rate limiting (3/day/IP), calm failure states. English only.
