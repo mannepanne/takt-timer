@@ -106,6 +106,19 @@ export function useTimerMachine(session: Session): TimerApi {
     return () => document.removeEventListener('visibilitychange', handler);
   }, [send]);
 
+  // Safari bfcache: a `pageshow` with `event.persisted` means the page was restored from
+  // the back-forward cache. Any in-flight session state is stale — no live Wake Lock, no
+  // resumable AudioContext, no rAF history. Stop cleanly so the user sees Home on return.
+  useEffect(() => {
+    const handler = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        send({ type: 'stop' });
+      }
+    };
+    window.addEventListener('pageshow', handler);
+    return () => window.removeEventListener('pageshow', handler);
+  }, [send]);
+
   // Release the wake lock on unmount.
   useEffect(
     () => () => {

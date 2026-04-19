@@ -11,13 +11,15 @@ export function MicButton() {
         type="button"
         className="mic-button-demo-dot"
         aria-disabled="true"
-        aria-label="Voice input — available in Phase 3"
+        aria-label="Voice input — coming soon"
         tabIndex={-1}
         onClick={(e) => e.preventDefault()}
       >
         <Icon.Mic size={34} />
       </button>
-      <p className="mic-button-demo-hint">Voice in Phase 3 — tap Configure to build a session</p>
+      <p className="mic-button-demo-hint">
+        Voice input coming soon — tap Configure to build a session
+      </p>
     </div>
   );
 }

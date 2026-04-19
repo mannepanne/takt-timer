@@ -41,9 +41,7 @@ export function Complete() {
       <main className="complete-screen-body">
         <div className="complete-eyebrow-row">
           <Icon.Check size={20} color="var(--accent)" />
-          <span className="eyebrow" style={{ color: 'var(--accent-deep)' }}>
-            Complete
-          </span>
+          <span className="eyebrow complete-eyebrow-label">Complete</span>
         </div>
         <h1 className="complete-title">Nicely done.</h1>
         <p className="complete-subtitle">
@@ -54,15 +52,11 @@ export function Complete() {
 
         <div className="complete-totals">
           <div>
-            <div className="eyebrow" style={{ color: 'var(--ink-3)' }}>
-              Total time
-            </div>
+            <div className="eyebrow complete-totals-label">Total time</div>
             <div className="mono complete-totals-value">{fmtTime(totalSec)}</div>
           </div>
           <div>
-            <div className="eyebrow" style={{ color: 'var(--ink-3)' }}>
-              Work time
-            </div>
+            <div className="eyebrow complete-totals-label">Work time</div>
             <div className="mono complete-totals-value">{fmtTime(workTotal)}</div>
           </div>
         </div>

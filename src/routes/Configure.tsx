@@ -33,33 +33,10 @@ export function Configure() {
       />
 
       <main className="configure-screen-body">
-        <div style={{ padding: '0 28px', textAlign: 'center' }}>
-          <div className="eyebrow" style={{ color: 'var(--ink-3)' }}>
-            Configure
-          </div>
-          <h1
-            style={{
-              fontSize: 26,
-              fontWeight: 500,
-              letterSpacing: '-0.02em',
-              color: 'var(--ink)',
-              lineHeight: 1.2,
-              margin: '12px 0 0',
-              textWrap: 'balance',
-            }}
-          >
-            Build a session
-          </h1>
-          <p
-            style={{
-              fontSize: 14,
-              color: 'var(--ink-3)',
-              marginTop: 10,
-              lineHeight: 1.5,
-            }}
-          >
-            Tap any chip to edit it.
-          </p>
+        <div className="configure-intro">
+          <div className="eyebrow configure-intro-eyebrow">Configure</div>
+          <h1 className="configure-intro-title">Build a session</h1>
+          <p className="configure-intro-hint">Tap any chip to edit it.</p>
         </div>
 
         <Interpretation value={session} onChange={setSession} />

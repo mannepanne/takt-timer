@@ -367,6 +367,30 @@ describe('edge cases', () => {
   });
 });
 
+describe('tick identity (bailout)', () => {
+  it('returns the same state reference when not in the pip zone', () => {
+    const s = step(start(initial(baseSession), 0), { type: 'tick', now: 3000 }).next; // → work
+    // 60s work phase, at t=5000 secondsLeft = 58. Not in pip zone (≤3). Should bail out.
+    const r1 = step(s, { type: 'tick', now: 5000 });
+    expect(r1.next).toBe(s);
+    const r2 = step(r1.next, { type: 'tick', now: 5500 });
+    expect(r2.next).toBe(r1.next);
+  });
+
+  it('allocates a new state only when the pip second advances', () => {
+    const s = step(start(initial(baseSession), 0), { type: 'tick', now: 3000 }).next;
+    // t=60000 → secondsLeft=3, pip fires, new reference.
+    const t3 = step(s, { type: 'tick', now: 60000 });
+    expect(t3.next).not.toBe(s);
+    // t=60500 → still secondsLeft=3, same reference.
+    const t3b = step(t3.next, { type: 'tick', now: 60500 });
+    expect(t3b.next).toBe(t3.next);
+    // t=61000 → secondsLeft=2, new pip + new reference.
+    const t2 = step(t3b.next, { type: 'tick', now: 61000 });
+    expect(t2.next).not.toBe(t3.next);
+  });
+});
+
 describe('derived helpers', () => {
   it('secondsLeft returns 0 when elapsed exceeds total', () => {
     let s: MachineState = start(initial(baseSession), 0);
