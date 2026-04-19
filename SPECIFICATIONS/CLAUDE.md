@@ -6,8 +6,8 @@ Auto-loaded when working with files in this directory. Forward-looking plans for
 
 ## How this folder works
 
-- **Numbered phase files** (`01-…md` through `06-…md`) are living specs. They describe what's being built *now* or *next*. Each phase is sequential and self-contained: scope, acceptance criteria, technical approach, testing, PR workflow, risks.
-- **[ORIGINAL_IDEA/project-outline.md](./ORIGINAL_IDEA/project-outline.md)** is the source of truth for *what* Takt is and *why*. Phase specs reference it but don't duplicate it.
+- **Numbered phase files** (`01-…md` through `06-…md`) are living specs. They describe what's being built _now_ or _next_. Each phase is sequential and self-contained: scope, acceptance criteria, technical approach, testing, PR workflow, risks.
+- **[ORIGINAL_IDEA/project-outline.md](./ORIGINAL_IDEA/project-outline.md)** is the source of truth for _what_ Takt is and _why_. Phase specs reference it but don't duplicate it.
 - **[prototype-design-files/](./prototype-design-files/)** holds the Claude Design prototype — the visual and interaction reference for v1.
 - **[ARCHIVE/](./ARCHIVE/)** receives phase files after they ship. Move them here once the PR is merged and the features are verified in production.
 - **[00-TEMPLATE-phase.md](./00-TEMPLATE-phase.md)** is a blank template. Kept on purpose — useful if we ever add a Phase 7.
@@ -20,12 +20,14 @@ Before making an architectural decision that outlasts today's PR, consult [../RE
 
 Full product vision: [ORIGINAL_IDEA/project-outline.md](./ORIGINAL_IDEA/project-outline.md).
 
-**Current phase:** Phase 1 — Foundation (not started).
+**Current phase:** Phase 2 — Core timer (not started).
+
+**Live deployment:** https://takt.hultberg.org — Phase 1 shell deployed 2026-04-19.
 
 ### Phase files (work through in order)
 
-1. **[01-foundation.md](./01-foundation.md)** — 3–5 days
-   Scaffolds the Vite + React + TS SPA, single Cloudflare Worker serving both assets and API, domain, CI, design system port, Web Analytics. No features.
+1. ~~**[01-foundation.md](./ARCHIVE/01-foundation.md)**~~ — ✅ complete
+   Scaffolded Vite + React + TS SPA, single Cloudflare Worker serving both assets and API, custom domain, CI, Web Analytics, design system port. Archived.
 
 2. **[02-core-timer.md](./02-core-timer.md)** — 5–8 days
    Usable vertical slice: manual session configuration, full Running screen, Web Audio beeps, Wake Lock, offline service worker, `localStorage` history and sparkline. No voice, no auth.
@@ -45,15 +47,19 @@ Full product vision: [ORIGINAL_IDEA/project-outline.md](./ORIGINAL_IDEA/project-
 ### Supporting documentation
 
 **[ORIGINAL_IDEA/](./ORIGINAL_IDEA/)**
+
 - `project-outline.md` — source of truth for what Takt is, why, and the shaping decisions.
 
 **[prototype-design-files/](./prototype-design-files/)**
+
 - The Claude Design prototype of Takt — reference for the v1 design and interaction model.
 
 **[ARCHIVE/](./ARCHIVE/)**
+
 - Completed specifications (moved here when a phase is done).
 
 **[../REFERENCE/decisions/](../REFERENCE/decisions/)**
+
 - Architecture Decision Records. Search here before making architectural decisions (library choice, patterns, API design). Follow existing ADRs unless new information invalidates the reasoning.
 
 ---
