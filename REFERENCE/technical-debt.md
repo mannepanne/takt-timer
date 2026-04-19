@@ -78,8 +78,11 @@ Tracks known limitations, accepted shortcuts, and deferred improvements in Takt.
 
 These are debt items declared in phase specs that will become active when the phase ships. Listed here for forward visibility.
 
-- **TD-002** (Phase 3): Hard-coded English language hint for Whisper. Swedish arrives in Phase 5. Risk: Low.
+- **TD-002** (Phase 3, partial): Settings toggle for language choice is deferred to Phase 5. The pipeline itself validates both English and Swedish in Phase 3. Risk: Low.
 - **TD-003** (Phase 3): IP-based rate limiter only; authenticated-user tier added in Phase 4. Risk: Low.
+- **TD-013** (Phase 3): Language toggle UI not shipped — pipeline handles en/sv, UI choice lands Phase 5. Risk: Low.
+- **TD-014** (Phase 3): Silence detection / VAD deferred — hard 8s cap + manual stop only. Risk: Low. Resolution: Phase 5+ if user feedback warrants.
+- **TD-015** (Phase 3): KV eventually-consistent rate-limit race lets 1–2 extra calls slip per IP under concurrent requests. Accepted; revisit with Phase 4 authenticated tier. Risk: Low.
 - **TD-004** (Phase 4): `isAdmin` flag set by hand in D1 until Phase 6 automates it. Acceptable because only Magnus needs admin before Phase 6. Risk: Low.
 - **TD-005** (Phase 4): No admin UI yet; users table inspected via direct D1 queries until Phase 6. Risk: Low.
 - **TD-006** (Phase 5): Missing-i18n-key warning is log-only, not a build-time check. Acceptable for two languages; revisit if a third lands. Risk: Low.
