@@ -7,6 +7,15 @@ type AudioSession = { type: 'ambient' | 'playback' | 'auto' | 'play-and-record' 
 type NavigatorWithAudioSession = Navigator & { audioSession?: AudioSession };
 
 let context: AudioContext | null = null;
+let muted = false;
+
+export function setMuted(next: boolean): void {
+  muted = next;
+}
+
+export function isMuted(): boolean {
+  return muted;
+}
 
 function getContext(): AudioContext | null {
   if (context) return context;
@@ -55,8 +64,9 @@ const PROFILES: Record<BeepKind, BeepProfile> = {
   complete: { freq: 784, dur: 0.3, type: 'sine', vol: 0.24 },
 };
 
-/** Schedule a beep. Fails silently if audio is unavailable. */
+/** Schedule a beep. Fails silently if audio is unavailable or muted. */
 export function beep(kind: BeepKind): void {
+  if (muted) return;
   const ctx = getContext();
   if (!ctx) return;
   if (ctx.state === 'suspended') void ctx.resume();
@@ -78,4 +88,5 @@ export function beep(kind: BeepKind): void {
 /** For tests only — reset module state so a subsequent prepareAudio() creates a fresh context. */
 export function __resetAudioForTest(): void {
   context = null;
+  muted = false;
 }
