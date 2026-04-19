@@ -7,10 +7,14 @@ compatibility_date = "2026-04-01"
 compatibility_flags = ["nodejs_compat"]
 
 # Static SPA bundle (produced by `pnpm build` into ./dist).
+# `run_worker_first = true` routes every request through the Worker so we can
+# apply security headers uniformly. The Worker then delegates to the ASSETS
+# binding. Bundle is tiny (~60 kB gz) so the CPU cost is negligible for Phase 1.
 [assets]
 directory = "./dist"
 binding = "ASSETS"
 not_found_handling = "single-page-application"
+run_worker_first = true
 
 # Observability (stream logs via `pnpm dlx wrangler tail`).
 [observability]
