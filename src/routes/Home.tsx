@@ -42,7 +42,7 @@ export function Home() {
       <TopBar />
 
       {sessionCount > 0 && (
-        <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 2 }}>
+        <div className="home-history-chip-row">
           <div className="history-chip">
             <Sparkline entries={history} />
             <span>
@@ -52,13 +52,11 @@ export function Home() {
         </div>
       )}
 
-      <div style={{ flex: 1, minHeight: 20 }} />
+      <div className="home-spacer home-spacer-top" />
 
       <main className="home-hero">
-        <div style={{ textAlign: 'center' }}>
-          <div className="eyebrow home-prompt-eyebrow" style={{ color: 'var(--ink-3)' }}>
-            Ready
-          </div>
+        <div className="home-prompt-block">
+          <div className="eyebrow home-prompt-eyebrow">Ready</div>
           <h1 className="home-prompt-title">What cadence do you need?</h1>
           <p className="home-prompt-example">
             <em>&ldquo;3 sets of 1 minute, 30 seconds rest between each&rdquo;</em>
@@ -68,7 +66,7 @@ export function Home() {
         <MicButton />
       </main>
 
-      <div style={{ flex: 1 }} />
+      <div className="home-spacer" />
 
       <div className="home-cta-row">
         <Link to="/configure" className="btn btn-primary">

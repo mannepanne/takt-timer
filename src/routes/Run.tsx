@@ -194,7 +194,7 @@ function RunInner({ session, onComplete }: RunInnerProps) {
               Your phone was locked or the tab went to the background. Ready to pick up where you
               left off?
             </p>
-            <button type="button" className="btn btn-primary" onClick={api.resume}>
+            <button type="button" className="btn btn-primary" onClick={api.resume} autoFocus>
               <Icon.Play size={18} color="var(--paper)" />
               Resume
             </button>

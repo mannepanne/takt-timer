@@ -87,19 +87,19 @@ function stepActive(state: ActiveState, event: MachineEvent): StepResult {
 
       // Emit pip on final three seconds, once per integer second.
       const effects: Effect[] = [];
-      if (left > 0 && left <= 3 && left !== state.lastPipSecond) {
+      const shouldFirePip = left > 0 && left <= 3 && left !== state.lastPipSecond;
+      if (shouldFirePip) {
         effects.push({ type: 'beep', kind: 'pip' });
       }
 
       if (left > 0) {
-        // Still in the current phase.
-        return {
-          next: {
-            ...state,
-            lastPipSecond: left !== state.lastPipSecond ? left : state.lastPipSecond,
-          },
-          effects,
-        };
+        // Still in the current phase. Only allocate a new state object when the pip
+        // second actually advances — otherwise return the same reference so the hook's
+        // bailout guard can skip re-rendering at rAF cadence.
+        if (!shouldFirePip) {
+          return { next: state, effects };
+        }
+        return { next: { ...state, lastPipSecond: left }, effects };
       }
 
       // Phase ended — transition.

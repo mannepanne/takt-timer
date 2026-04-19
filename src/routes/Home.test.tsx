@@ -39,9 +39,7 @@ describe('Home', () => {
   it('renders the prompt and demo mic button', () => {
     renderHome();
     expect(screen.getByRole('heading', { name: /what cadence do you need/i })).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: /voice input — available in phase 3/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /voice input — coming soon/i })).toBeInTheDocument();
   });
 
   it('Configure CTA navigates to /configure', async () => {

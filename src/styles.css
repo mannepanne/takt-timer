@@ -823,8 +823,23 @@ input {
   align-items: center;
   gap: 40px;
 }
+.home-history-chip-row {
+  display: flex;
+  justify-content: center;
+  padding-top: 2px;
+}
+.home-spacer {
+  flex: 1;
+}
+.home-spacer-top {
+  min-height: 20px;
+}
+.home-prompt-block {
+  text-align: center;
+}
 .home-prompt-eyebrow {
   margin-bottom: 14px;
+  color: var(--ink-3);
 }
 .home-prompt-title {
   font-size: 30px;
@@ -1031,6 +1046,28 @@ input {
   justify-content: center;
   gap: 28px;
 }
+.configure-intro {
+  padding: 0 28px;
+  text-align: center;
+}
+.configure-intro-eyebrow {
+  color: var(--ink-3);
+}
+.configure-intro-title {
+  font-size: 26px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  line-height: 1.2;
+  margin: 12px 0 0;
+  text-wrap: balance;
+}
+.configure-intro-hint {
+  font-size: 14px;
+  color: var(--ink-3);
+  margin-top: 10px;
+  line-height: 1.5;
+}
 .configure-actions {
   padding: 0 24px 32px;
   display: flex;
@@ -1201,6 +1238,12 @@ input {
   align-items: center;
   gap: 6px;
   color: var(--accent-deep);
+}
+.complete-eyebrow-label {
+  color: var(--accent-deep);
+}
+.complete-totals-label {
+  color: var(--ink-3);
 }
 .complete-title {
   font-size: 42px;
