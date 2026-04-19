@@ -10,6 +10,7 @@ import { Home } from '@/routes/Home';
 import { NotFound } from '@/routes/NotFound';
 import { Privacy } from '@/routes/Privacy';
 import { Run } from '@/routes/Run';
+import { Spike } from '@/routes/Spike';
 
 export function App() {
   return (
@@ -20,6 +21,7 @@ export function App() {
         <Route path="/run" element={<Run />} />
         <Route path="/complete" element={<Complete />} />
         <Route path="/privacy" element={<Privacy />} />
+        <Route path="/spike" element={<Spike />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </PhoneFrame>

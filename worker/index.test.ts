@@ -7,6 +7,7 @@ function makeEnv(assetBody = 'spa bundle'): Env {
     ASSETS: {
       fetch: vi.fn(async () => new Response(assetBody, { status: 200 })),
     } as unknown as Fetcher,
+    AI: { run: vi.fn(async () => ({ text: '' })) } as unknown as Ai,
   };
 }
 
