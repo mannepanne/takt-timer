@@ -1368,6 +1368,31 @@ input {
   font-size: 13px;
   color: var(--danger);
 }
+.spike-error-detail {
+  margin: 2px 0 6px;
+  font-size: 11px;
+  color: var(--ink-3);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  word-break: break-all;
+}
+.spike-diag {
+  background: var(--paper-2);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+.spike-diag summary {
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+.spike-diag .spike-kv {
+  margin-top: 8px;
+  font-size: 11px;
+}
+.spike-diag dd {
+  word-break: break-all;
+}
 .spike-kv {
   display: grid;
   grid-template-columns: max-content 1fr;
