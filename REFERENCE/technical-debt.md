@@ -56,14 +56,28 @@ Tracks known limitations, accepted shortcuts, and deferred improvements in Takt.
 - **Risk:** Low for now, rises with each phase.
 - **Resolution phase:** Phase 4, when auth and WebAuthn libraries enter the dep tree.
 
+### TD-001: Sound toggle lives on the Running screen, not in Settings
+
+- **Location:** `src/routes/Run.tsx` — top-right toggle; preference persisted in `takt.sound.v1`.
+- **Issue:** Phase 2 shipped a sound on/off control on the Running screen rather than Settings, because Settings does not yet exist.
+- **Why accepted:** Phase 5 adds the Settings screen; moving the control then is the natural home.
+- **Risk:** Low.
+- **Resolution phase:** Phase 5.
+
+### TD-012: Count-in duration fixed at 3s
+
+- **Location:** `src/lib/timer/types.ts` — `phaseTotalSec` returns `3` for `countIn`.
+- **Issue:** Count-in is hard-coded rather than user-configurable.
+- **Why accepted:** 3s is the sensible default; making it configurable before Settings ships would be scope-creep.
+- **Risk:** Low.
+- **Resolution phase:** Phase 5 — move to Settings as a user-adjustable preference.
+
 ---
 
 ## Anticipated debt by phase
 
 These are debt items declared in phase specs that will become active when the phase ships. Listed here for forward visibility.
 
-- **TD-001** (Phase 2): Sound toggle on a transient UI location, not yet in Settings. Moves to Settings in Phase 5. Risk: Low.
-- **TD-012** (Phase 2): Count-in duration fixed at 3s. Move to Settings in Phase 5 as a user-adjustable preference. Risk: Low.
 - **TD-002** (Phase 3): Hard-coded English language hint for Whisper. Swedish arrives in Phase 5. Risk: Low.
 - **TD-003** (Phase 3): IP-based rate limiter only; authenticated-user tier added in Phase 4. Risk: Low.
 - **TD-004** (Phase 4): `isAdmin` flag set by hand in D1 until Phase 6 automates it. Acceptable because only Magnus needs admin before Phase 6. Risk: Low.
