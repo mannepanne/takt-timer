@@ -2,10 +2,12 @@
 // ABOUT: Serves the Vite-built SPA via Workers Assets and handles /api/* routes.
 
 import { health } from './api/health';
+import { parseVoice } from './api/voice/parse';
 import { applySecurityHeaders } from './lib/securityHeaders';
 
 export interface Env {
   ASSETS: Fetcher;
+  AI: Ai;
   // Additional bindings are declared here as they are activated per-phase.
   // The canonical list of planned bindings lives in wrangler.toml.
 }
@@ -16,6 +18,10 @@ export default {
 
     if (url.pathname === '/api/health') {
       return applySecurityHeaders(await health());
+    }
+
+    if (url.pathname === '/api/voice/parse') {
+      return applySecurityHeaders(await parseVoice(request, env));
     }
 
     // Everything else is served from the static SPA bundle.

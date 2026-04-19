@@ -40,9 +40,9 @@ enabled = true
 # binding = "RATE_LIMITS"
 # id = "<FILL_IN_FROM_CLOUDFLARE_DASHBOARD>"
 
-# Workers AI — Whisper + Llama. Activated in Phase 3.
-# [ai]
-# binding = "AI"
+# Workers AI — Whisper + Llama. Activated in Phase 3 for the voice pipeline.
+[ai]
+binding = "AI"
 
 # Custom domain is configured in the Cloudflare dashboard under
 # Workers & Pages → takt → Settings → Domains & Routes. No entry needed here.
