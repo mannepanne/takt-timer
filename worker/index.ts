@@ -1,8 +1,8 @@
 // ABOUT: Cloudflare Worker entry point.
 // ABOUT: Serves the Vite-built SPA via Workers Assets and handles /api/* routes.
 
-import { health } from '@worker/api/health';
-import { applySecurityHeaders } from '@worker/lib/securityHeaders';
+import { health } from './api/health';
+import { applySecurityHeaders } from './lib/securityHeaders';
 
 export interface Env {
   ASSETS: Fetcher;
