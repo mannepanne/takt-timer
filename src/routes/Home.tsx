@@ -1,63 +1,90 @@
-// ABOUT: Home screen placeholder for Phase 1 — TopBar and a calm empty body.
-// ABOUT: Real content (mic button, prompt, sparkline, last-session card) lands in Phase 2+.
+// ABOUT: Home screen — demo mic button (Phase 3 arrives), Configure CTA,
+// ABOUT: optional last-session quick-start card, optional sparkline chip.
 
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 
+import { Icon } from '@/components/icons';
+import { LastSessionCard } from '@/components/LastSessionCard';
+import { MicButton } from '@/components/MicButton';
+import { Sparkline } from '@/components/Sparkline';
 import { TopBar } from '@/components/TopBar';
+import { readHistory } from '@/lib/history';
+import type { CompletedSession } from '@/lib/timer/types';
 
 export function Home() {
+  const [history, setHistory] = useState<CompletedSession[]>([]);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    setHistory(readHistory());
+  }, []);
+
+  const sessionCount = history.length;
+  const last = sessionCount > 0 ? history[sessionCount - 1] : null;
+
+  const runLast = () => {
+    if (!last) return;
+    navigate('/run', {
+      state: {
+        session: {
+          sets: last.sets,
+          workSec: last.workSec,
+          restSec: last.restSec,
+          name: last.name,
+        },
+      },
+    });
+  };
+
   return (
     <div className="screen">
       <TopBar />
 
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1 }} />
-
-        <div style={{ padding: '0 28px', textAlign: 'center' }}>
-          <div className="eyebrow" style={{ marginBottom: 14, color: 'var(--ink-3)' }}>
-            Setting up
+      {sessionCount > 0 && (
+        <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 2 }}>
+          <div className="history-chip">
+            <Sparkline entries={history} />
+            <span>
+              {sessionCount} {sessionCount === 1 ? 'session' : 'sessions'} so far
+            </span>
           </div>
-          <h1
-            style={{
-              fontSize: 28,
-              fontWeight: 500,
-              letterSpacing: '-0.02em',
-              color: 'var(--ink)',
-              lineHeight: 1.2,
-              margin: 0,
-              textWrap: 'balance',
-            }}
-          >
-            Takt is under construction.
-          </h1>
-          <p
-            style={{
-              fontSize: 14,
-              color: 'var(--ink-3)',
-              marginTop: 14,
-              lineHeight: 1.5,
-              textWrap: 'balance',
-            }}
-          >
-            The timer, voice, and everything else arrive in the phases ahead.
+        </div>
+      )}
+
+      <div style={{ flex: 1, minHeight: 20 }} />
+
+      <main className="home-hero">
+        <div style={{ textAlign: 'center' }}>
+          <div className="eyebrow home-prompt-eyebrow" style={{ color: 'var(--ink-3)' }}>
+            Ready
+          </div>
+          <h1 className="home-prompt-title">What cadence do you need?</h1>
+          <p className="home-prompt-example">
+            <em>&ldquo;3 sets of 1 minute, 30 seconds rest between each&rdquo;</em>
           </p>
         </div>
 
-        <div style={{ flex: 1 }} />
+        <MicButton />
       </main>
 
-      <div style={{ padding: '0 24px 28px', textAlign: 'center' }}>
-        <Link
-          to="/privacy"
-          style={{
-            fontSize: 13,
-            color: 'var(--ink-3)',
-            textDecoration: 'none',
-            letterSpacing: 0.2,
-          }}
-        >
-          Privacy
+      <div style={{ flex: 1 }} />
+
+      <div className="home-cta-row">
+        <Link to="/configure" className="btn btn-primary">
+          <Icon.Play size={18} color="var(--paper)" />
+          Configure a session
         </Link>
+      </div>
+
+      {last && (
+        <div className="last-session-card-wrap">
+          <LastSessionCard session={last} onRun={runLast} />
+        </div>
+      )}
+
+      <div className="home-footer">
+        <Link to="/privacy">Privacy</Link>
       </div>
     </div>
   );
