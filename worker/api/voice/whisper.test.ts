@@ -28,12 +28,12 @@ describe('whisper.transcribe', () => {
     expect(result.language).toBeUndefined();
   });
 
-  it('forwards the audio bytes as an Array<number>', async () => {
+  it('base64-encodes the audio bytes before calling the model', async () => {
     const runFn = vi.fn(async (_model: string, _input: unknown) => ({ text: '' }));
     const ai = { run: runFn } as unknown as Ai;
-    await transcribe(ai, new Uint8Array([10, 20, 30]));
+    await transcribe(ai, new Uint8Array([72, 105])); // "Hi"
     const [, inputArg] = runFn.mock.calls[0];
-    const input = inputArg as { audio: number[] };
-    expect(input.audio).toEqual([10, 20, 30]);
+    const input = inputArg as { audio: string };
+    expect(input.audio).toBe('SGk=');
   });
 });

@@ -7,10 +7,6 @@ type WhisperResult = {
   latencyMs: number;
 };
 
-type WhisperInput = {
-  audio: number[];
-};
-
 type WhisperResponse = {
   text?: string;
   language?: string;
@@ -20,7 +16,17 @@ type WhisperResponse = {
 type AiRunner = { run: (model: string, input: unknown) => Promise<unknown> };
 
 export async function transcribe(ai: Ai, audio: Uint8Array): Promise<WhisperResult> {
-  const input: WhisperInput = { audio: Array.from(audio) };
+  // Workers AI's whisper-large-v3-turbo accepts `audio` as base64-encoded audio bytes
+  // per the model's JSON-mode schema. `btoa` cannot take a Uint8Array directly, so we
+  // build the binary string chunk-by-chunk to avoid stack overflow on large clips.
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let i = 0; i < audio.byteLength; i += chunkSize) {
+    const chunk = audio.subarray(i, Math.min(i + chunkSize, audio.byteLength));
+    binary += String.fromCharCode.apply(null, Array.from(chunk));
+  }
+  const base64 = btoa(binary);
+  const input = { audio: base64 };
   const started = performance.now();
   const raw = await (ai as unknown as AiRunner).run('@cf/openai/whisper-large-v3-turbo', input);
   const latencyMs = Math.round(performance.now() - started);

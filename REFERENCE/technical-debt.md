@@ -83,7 +83,7 @@ These are debt items declared in phase specs that will become active when the ph
 - **TD-013** (Phase 3): Language toggle UI not shipped — pipeline handles en/sv, UI choice lands Phase 5. Risk: Low.
 - **TD-014** (Phase 3): Silence detection / VAD deferred — hard 8s cap + manual stop only. Risk: Low. Resolution: Phase 5+ if user feedback warrants.
 - **TD-015** (Phase 3): KV eventually-consistent rate-limit race lets 1–2 extra calls slip per IP under concurrent requests. Accepted; revisit with Phase 4 authenticated tier. Risk: Low.
-- **TD-004** (Phase 4): `isAdmin` flag set by hand in D1 until Phase 6 automates it. Acceptable because only Magnus needs admin before Phase 6. Risk: Low.
+- **TD-016** (Phase 3): iOS Safari's Whisper path routinely transcribes Swedish speech with Icelandic phonology ("åtta" → "ótta", "sekunder" → "sekundar", "fyrtiofem" → "fyrtífem"). The Llama system prompt's Swedish numeral table doesn't cover these spellings, so on iOS + Swedish the parsed numbers are sometimes wrong. Root cause: no `language` hint passed to Whisper (can't — we need auto-detect for the language gate until Phase 5 Settings gives us a user preference). Interim: the Interpretation screen catches wrong numbers before the timer starts. Resolution: Phase 5 passes `language: 'sv'` to Whisper when the user has selected Swedish. Android and iOS-in-English are unaffected. Risk: Low (English is the default and is rock-solid on both platforms).
 - **TD-005** (Phase 4): No admin UI yet; users table inspected via direct D1 queries until Phase 6. Risk: Low.
 - **TD-006** (Phase 5): Missing-i18n-key warning is log-only, not a build-time check. Acceptable for two languages; revisit if a third lands. Risk: Low.
 

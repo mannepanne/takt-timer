@@ -32,7 +32,6 @@ export default defineConfig({
         'src/vite-env.d.ts',
         'src/components/icons.tsx',
         'src/routes/Spike.tsx',
-        'worker/api/voice/corpus.ts',
       ],
       thresholds: {
         lines: 95,
