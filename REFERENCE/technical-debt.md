@@ -63,6 +63,7 @@ Tracks known limitations, accepted shortcuts, and deferred improvements in Takt.
 These are debt items declared in phase specs that will become active when the phase ships. Listed here for forward visibility.
 
 - **TD-001** (Phase 2): Sound toggle on a transient UI location, not yet in Settings. Moves to Settings in Phase 5. Risk: Low.
+- **TD-012** (Phase 2): Count-in duration fixed at 3s. Move to Settings in Phase 5 as a user-adjustable preference. Risk: Low.
 - **TD-002** (Phase 3): Hard-coded English language hint for Whisper. Swedish arrives in Phase 5. Risk: Low.
 - **TD-003** (Phase 3): IP-based rate limiter only; authenticated-user tier added in Phase 4. Risk: Low.
 - **TD-004** (Phase 4): `isAdmin` flag set by hand in D1 until Phase 6 automates it. Acceptable because only Magnus needs admin before Phase 6. Risk: Low.
