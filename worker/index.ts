@@ -6,11 +6,8 @@ import { applySecurityHeaders } from './lib/securityHeaders';
 
 export interface Env {
   ASSETS: Fetcher;
-  // Future bindings declared here as they are added in later phases:
-  // DB: D1Database;
-  // SESSIONS: KVNamespace;
-  // RATE_LIMITS: KVNamespace;
-  // AI: Ai;
+  // Additional bindings are declared here as they are activated per-phase.
+  // The canonical list of planned bindings lives in wrangler.toml.
 }
 
 export default {

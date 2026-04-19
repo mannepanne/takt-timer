@@ -1,7 +1,23 @@
 // ABOUT: Applies a baseline security header set to every outbound response.
 // ABOUT: Tightened further in Phase 6; this set is safe for a content-only shell.
 
+const CSP_DIRECTIVES: Array<[string, string]> = [
+  ['default-src', "'self'"],
+  ['script-src', "'self' https://static.cloudflareinsights.com"],
+  // 'unsafe-inline' on style-src is required while Home.tsx uses inline style objects.
+  // Tracked as TD-010; remove before Phase 4 ships passkey UI.
+  ['style-src', "'self' https://fonts.googleapis.com 'unsafe-inline'"],
+  ['font-src', "'self' https://fonts.gstatic.com"],
+  ['img-src', "'self' data:"],
+  ['connect-src', "'self' https://cloudflareinsights.com"],
+  ['frame-ancestors', "'none'"],
+  ['base-uri', "'self'"],
+  ['form-action', "'self'"],
+  ['object-src', "'none'"],
+];
+
 const BASELINE_HEADERS: Record<string, string> = {
+  'Content-Security-Policy': CSP_DIRECTIVES.map(([k, v]) => `${k} ${v}`).join('; '),
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'X-Content-Type-Options': 'nosniff',

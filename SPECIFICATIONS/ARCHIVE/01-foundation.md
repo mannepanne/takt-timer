@@ -45,12 +45,13 @@ Stand up the skeleton: a deployable Vite + React + TypeScript SPA served by a si
 
 ### Acceptance criteria
 
-- [ ] `pnpm dev` (or equivalent) starts the Vite dev server with hot reload.
-- [ ] `pnpm deploy` publishes to production; `takt.hultberg.org` renders the wordmark, an empty Home placeholder, and the phone-frame on desktop.
-- [ ] A PR opened against `main` gets a preview URL automatically.
-- [ ] Lighthouse on mobile scores ≥90 for Performance and ≥95 for Accessibility on the empty shell.
-- [ ] CI green: lint passes, typecheck passes, tests pass with ≥95% line/function/statement coverage and ≥90% branch coverage on the (small) code that exists.
-- [ ] Cloudflare Web Analytics shows the first pageview.
+- [x] `pnpm dev` (or equivalent) starts the Vite dev server with hot reload.
+- [x] `pnpm deploy` publishes to production; `takt.hultberg.org` renders the wordmark, an empty Home placeholder, and the phone-frame on desktop.
+- [x] Lighthouse on mobile scores ≥90 for Performance and ≥95 for Accessibility on the empty shell. (Final: 93 / 100 / 100 / 100.)
+- [x] CI green: lint passes, typecheck passes, tests pass with ≥95% line/function/statement coverage and ≥90% branch coverage on the (small) code that exists.
+- [x] Cloudflare Web Analytics shows the first pageview.
+
+**Removed from scope (2026-04-19):** the _"PR opened against main gets a preview URL automatically"_ criterion. Decision: local review against `pnpm dev` / `pnpm dev:all` is sufficient for this project's size and team (one developer plus AI). Preview URLs add CF account clutter and deploy-pipeline complexity without a proportional benefit. Revisit only if the team grows or the surface area of per-PR visual regressions becomes significant.
 
 ---
 

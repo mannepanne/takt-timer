@@ -1,34 +1,39 @@
-// ABOUT: Home screen placeholder for Phase 1 — TopBar and a calm empty body.
-// ABOUT: Real content (mic button, prompt, sparkline, last-session card) lands in Phase 2+.
+// ABOUT: Catch-all 404 route. Calm language, gentle nudge back to Home.
 
 import { Link } from 'react-router-dom';
 
+import { Icon } from '@/components/icons';
 import { TopBar } from '@/components/TopBar';
 
-export function Home() {
+export function NotFound() {
   return (
     <div className="screen">
-      <TopBar />
+      <TopBar
+        left={
+          <Link to="/" className="icon-btn" aria-label="Back to Home">
+            <Icon.ChevronLeft />
+          </Link>
+        }
+      />
 
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1 }} />
 
         <div style={{ padding: '0 28px', textAlign: 'center' }}>
           <div className="eyebrow" style={{ marginBottom: 14, color: 'var(--ink-3)' }}>
-            Setting up
+            404
           </div>
           <h1
             style={{
               fontSize: 28,
               fontWeight: 500,
               letterSpacing: '-0.02em',
-              color: 'var(--ink)',
               lineHeight: 1.2,
               margin: 0,
               textWrap: 'balance',
             }}
           >
-            Takt is under construction.
+            Nothing here.
           </h1>
           <p
             style={{
@@ -39,7 +44,7 @@ export function Home() {
               textWrap: 'balance',
             }}
           >
-            The timer, voice, and everything else arrive in the phases ahead.
+            That page doesn't exist — or hasn't been built yet.
           </p>
         </div>
 
@@ -48,7 +53,7 @@ export function Home() {
 
       <div style={{ padding: '0 24px 28px', textAlign: 'center' }}>
         <Link
-          to="/privacy"
+          to="/"
           style={{
             fontSize: 13,
             color: 'var(--ink-3)',
@@ -56,7 +61,7 @@ export function Home() {
             letterSpacing: 0.2,
           }}
         >
-          Privacy
+          Back to Home
         </Link>
       </div>
     </div>

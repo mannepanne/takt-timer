@@ -35,13 +35,13 @@ describe('Home (Phase 1 placeholder)', () => {
     expect(screen.getByRole('main')).toBeInTheDocument();
   });
 
-  it('disables the presets and settings buttons until later phases', () => {
+  it('does not render Presets/Settings buttons while they are unimplemented', () => {
     render(
       <MemoryRouter>
         <Home />
       </MemoryRouter>,
     );
-    expect(screen.getByRole('button', { name: 'Presets' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Settings' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Presets' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Settings' })).toBeNull();
   });
 });

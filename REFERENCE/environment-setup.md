@@ -3,6 +3,7 @@
 **When to read this:** Setting up local development for the first time, adding a new Cloudflare binding or secret, or deploying to production.
 
 **Related documents:**
+
 - [CLAUDE.md](../CLAUDE.md) — project navigation.
 - [troubleshooting.md](./troubleshooting.md) — common setup issues.
 
@@ -11,6 +12,7 @@
 ## Overview
 
 Takt is Cloudflare-native. Almost everything lives under a single Cloudflare account:
+
 - **One Worker** hosts both the Vite-built SPA (via Workers Assets) and the `/api/*` routes.
 - **D1** stores users, presets, and session history.
 - **KV** stores session tokens and rate-limit counters.
@@ -57,11 +59,15 @@ cp .dev.vars.template .dev.vars
 
 ### 5. Run it locally
 
+Pick the right script for what you're iterating on:
+
 ```bash
-pnpm dev
+pnpm dev          # Vite only — fast HMR for SPA work
+pnpm dev:all      # Vite + Wrangler in parallel (SPA on 5173, Worker on 8787)
+pnpm worker:dev   # Wrangler only — Worker dev runtime with /api routes
 ```
 
-This starts the Vite dev server and Wrangler in parallel. The app is served on a local port (printed in the output); API routes and Cloudflare bindings are available via Wrangler's dev runtime.
+`pnpm dev:all` is the usual choice when you need both halves of the app. Front-end-only changes don't need the Worker running.
 
 ---
 
@@ -69,14 +75,17 @@ This starts the Vite dev server and Wrangler in parallel. The app is served on a
 
 These are provisioned once per environment. Document the actual names and IDs in `wrangler.toml`; the table below is the canonical list.
 
-| Resource | Purpose | Binding name | Notes |
-|---|---|---|---|
-| Worker | Serves SPA + API | — | Custom domain `takt.hultberg.org` |
-| D1 database | Users, presets, sessions | `DB` | Migrations in `/migrations` |
-| KV namespace | Session tokens, rate-limit counters | `SESSIONS`, `RATE_LIMITS` | Separate namespaces for clarity |
-| Workers AI | Whisper + Llama | `AI` | Bound in `wrangler.toml` |
-| Access application | Admin gate at `/admin` | — | Configured in Cloudflare dashboard |
-| Web Analytics token | Analytics snippet in `index.html` | — | Beacon script loads from Cloudflare |
+Most rows are commented out in `wrangler.toml` until the phase that needs them lands — the _Status_ column reflects reality.
+
+| Resource                           | Purpose                                     | Binding       | Status                                                                  |
+| ---------------------------------- | ------------------------------------------- | ------------- | ----------------------------------------------------------------------- |
+| Worker                             | Serves SPA + API                            | —             | Live. Custom domain `takt.hultberg.org`.                                |
+| Web Analytics token                | Analytics beacon in `index.html`            | —             | Live. Token is public by design.                                        |
+| Access application                 | Admin gate at `/admin`                      | —             | Activated in Phase 6. Configured in the Cloudflare dashboard, not code. |
+| KV namespace — rate-limit counters | Anonymous + authenticated voice-call quotas | `RATE_LIMITS` | Activated in Phase 3.                                                   |
+| KV namespace — session tokens      | Signed cookie → userHandle lookup           | `SESSIONS`    | Activated in Phase 4.                                                   |
+| D1 database                        | Users, presets, session history             | `DB`          | Activated in Phase 4. Migrations in `/migrations`.                      |
+| Workers AI                         | Whisper + Llama inference                   | `AI`          | Activated in Phase 3.                                                   |
 
 Exact resource IDs are kept out of this document — they live in `wrangler.toml` (committed) and Cloudflare's dashboard (not committed).
 
@@ -88,11 +97,13 @@ Takt is deliberately secret-light. The Cloudflare account credentials are held b
 
 **Application secrets that do exist:**
 
-| Secret | Purpose | How to obtain | Set via |
-|---|---|---|---|
-| `SESSION_COOKIE_SECRET` | Signs session cookies | Generate a random 32+ byte value | `pnpm dlx wrangler secret put SESSION_COOKIE_SECRET` |
-| `WEBAUTHN_RP_ID` | WebAuthn relying-party ID | Set to `takt.hultberg.org` (production) / `localhost` (local) | `.dev.vars` locally; Worker secret in production |
-| `WEBAUTHN_ORIGIN` | Allowed origin for WebAuthn | `https://takt.hultberg.org` (production) / `http://localhost:<port>` (local) | `.dev.vars` locally; Worker secret in production |
+| Secret                  | Purpose                     | How to obtain                                                                          | Set via                                              |
+| ----------------------- | --------------------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `SESSION_COOKIE_SECRET` | Signs session cookies       | Generate a random 32+ byte value                                                       | `pnpm dlx wrangler secret put SESSION_COOKIE_SECRET` |
+| `WEBAUTHN_RP_ID`        | WebAuthn relying-party ID   | Set to `takt.hultberg.org` (production) / `localhost` (local)                          | `.dev.vars` locally; Worker secret in production     |
+| `WEBAUTHN_ORIGIN`       | Allowed origin for WebAuthn | `https://takt.hultberg.org` (production) / `http://localhost:8787` (local Worker port) | `.dev.vars` locally; Worker secret in production     |
+
+WebAuthn bindings are inert until Phase 4 ships account registration. `WEBAUTHN_ORIGIN` points at the _Worker_ dev port (8787) — not Vite's 5173 — because WebAuthn requests go through the Worker.
 
 `.dev.vars` template (created in Phase 1):
 
@@ -131,8 +142,8 @@ pnpm dlx wrangler secret list
 pnpm dlx wrangler secret put <NAME>
 pnpm dlx wrangler secret delete <NAME>
 
-# Run a D1 migration
-pnpm dlx wrangler d1 migrations apply <DB_NAME>
+# Run a D1 migration (database name is `takt`)
+pnpm dlx wrangler d1 migrations apply takt
 
 # Tail production logs
 pnpm dlx wrangler tail
