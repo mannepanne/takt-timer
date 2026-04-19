@@ -25,4 +25,13 @@ describe('App', () => {
       screen.getByRole('heading', { name: /no email\. no phone\. no personal details\./i }),
     ).toBeInTheDocument();
   });
+
+  it('renders the NotFound route for unknown paths', () => {
+    render(
+      <MemoryRouter initialEntries={['/some/unknown/path']}>
+        <App />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole('heading', { name: /nothing here/i })).toBeInTheDocument();
+  });
 });

@@ -13,7 +13,6 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      '@worker': path.resolve(__dirname, './worker'),
     },
   },
   test: {

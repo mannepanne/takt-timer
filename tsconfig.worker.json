@@ -15,11 +15,6 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
 
-    "baseUrl": ".",
-    "paths": {
-      "@worker/*": ["worker/*"]
-    },
-
     "types": ["@cloudflare/workers-types"]
   },
   "include": ["worker"]

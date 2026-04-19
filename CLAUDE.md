@@ -123,7 +123,7 @@ _Note: CLAUDE.md files are kept short (<300 lines). Details live in subdirectory
 
 - **Target:** ESNext (Worker runtime is modern).
 - **Strict mode:** enabled — always.
-- **Path alias:** `@/` maps to `./src/` (SPA code); `@worker/` maps to `./worker/` (Worker code).
+- **Path alias:** `@/` maps to `./src/` (SPA code). Worker code uses relative imports because esbuild (Wrangler's bundler) doesn't honour tsconfig paths.
 - **Types:** React, Vite, Cloudflare Workers types (`@cloudflare/workers-types`).
 
 ## Testing
