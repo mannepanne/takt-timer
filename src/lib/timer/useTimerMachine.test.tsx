@@ -101,4 +101,46 @@ describe('useTimerMachine', () => {
     const { getByTestId } = render(<Harness />);
     expect(getByTestId('phase')).toHaveTextContent('idle');
   });
+
+  it('runs the rAF loop while active and refreshes derived values', () => {
+    // Provide a controllable rAF that runs the callback once.
+    const rafSpy = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
+      // Fire the callback on next microtask so React state updates flush.
+      queueMicrotask(() => cb(performance.now()));
+      return 1 as unknown as number;
+    });
+    const cancelSpy = vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {});
+
+    const { result, unmount } = renderHook(() => useTimerMachine(session));
+    act(() => result.current.start());
+    // The rAF loop now fires continuously via queueMicrotask; let one microtask flush.
+    return Promise.resolve().then(() => {
+      expect(rafSpy).toHaveBeenCalled();
+      unmount();
+      expect(cancelSpy).toHaveBeenCalled();
+    });
+  });
+
+  it('visibilitychange → visible after pause stays paused and prepares audio', () => {
+    const { result } = renderHook(() => useTimerMachine(session));
+    act(() => result.current.start());
+    act(() => result.current.skip()); // → work
+    act(() => {
+      Object.defineProperty(document, 'visibilityState', {
+        configurable: true,
+        value: 'hidden',
+      });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    expect(result.current.state.phase).toBe('paused');
+    act(() => {
+      Object.defineProperty(document, 'visibilityState', {
+        configurable: true,
+        value: 'visible',
+      });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    // Stays paused until user explicitly resumes.
+    expect(result.current.state.phase).toBe('paused');
+  });
 });

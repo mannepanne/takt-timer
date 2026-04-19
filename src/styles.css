@@ -809,3 +809,451 @@ input {
 .quick-pill:active {
   transform: scale(0.94);
 }
+.quick-pill.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent-deep);
+}
+
+/* ───────── Phase 2: home hero ───────── */
+.home-hero {
+  padding: 0 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+}
+.home-prompt-eyebrow {
+  margin-bottom: 14px;
+}
+.home-prompt-title {
+  font-size: 30px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  line-height: 1.15;
+  max-width: 300px;
+  text-wrap: balance;
+  margin: 0;
+}
+.home-prompt-example {
+  font-size: 15px;
+  color: var(--ink-3);
+  margin-top: 14px;
+  max-width: 300px;
+  line-height: 1.5;
+  text-wrap: balance;
+}
+.home-footer {
+  padding: 0 24px 28px;
+  display: flex;
+  justify-content: center;
+}
+.home-footer a {
+  font-size: 13px;
+  color: var(--ink-3);
+  text-decoration: none;
+  letter-spacing: 0.2px;
+}
+.home-cta-row {
+  display: flex;
+  justify-content: center;
+  padding: 0 24px 12px;
+}
+
+/* ───────── Phase 2: demo mic button ───────── */
+.mic-button-demo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.mic-button-demo-dot {
+  width: 112px;
+  height: 112px;
+  border-radius: 999px;
+  background: var(--paper-2);
+  color: var(--ink-3);
+  display: grid;
+  place-items: center;
+  cursor: not-allowed;
+  border: 1px dashed var(--rule-strong);
+  box-shadow: none;
+  opacity: 0.7;
+}
+.mic-button-demo-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--mute);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ───────── Phase 2: last-session quick-start card ───────── */
+.last-session-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid var(--rule);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 160ms var(--ease),
+    transform 100ms var(--ease);
+}
+.last-session-card:hover {
+  border-color: var(--rule-strong);
+}
+.last-session-card:active {
+  transform: scale(0.99);
+}
+.last-session-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  display: grid;
+  place-items: center;
+  color: var(--accent-deep);
+  flex: 0 0 auto;
+}
+.last-session-card-body {
+  flex: 1;
+  min-width: 0;
+}
+.last-session-card-eyebrow {
+  color: var(--ink-3);
+}
+.last-session-card-text {
+  font-size: 15px;
+  font-weight: 500;
+  margin-top: 2px;
+  letter-spacing: -0.2px;
+  color: var(--ink);
+}
+.last-session-card-meta {
+  color: var(--ink-3);
+  font-weight: 400;
+}
+.last-session-card-wrap {
+  padding: 0 20px 24px;
+}
+
+/* ───────── Phase 2: Interpretation chips row ───────── */
+.interpretation-chips {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 0 20px;
+}
+.interpretation-chips .chip {
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 16px;
+  min-height: 64px;
+}
+
+/* ───────── Phase 2: Stepper sheet (extends .drawer) ───────── */
+.stepper-sheet {
+  z-index: 102;
+}
+.stepper-sheet-body {
+  padding: 0 24px 28px;
+}
+.stepper-sheet-label {
+  font-size: 13px;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 600;
+}
+.stepper-sheet-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 20px;
+}
+.stepper-sheet-display {
+  flex: 1;
+  text-align: center;
+}
+.stepper-sheet-value {
+  font-size: 56px;
+  font-weight: 300;
+  letter-spacing: -0.04em;
+  color: var(--ink);
+  line-height: 1;
+}
+.stepper-sheet-unit {
+  font-size: 12px;
+  color: var(--ink-3);
+  margin-top: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.stepper-btn-glyph {
+  font-size: 28px;
+  font-weight: 300;
+  line-height: 1;
+}
+.stepper-btn[disabled] {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.stepper-sheet-presets {
+  display: flex;
+  gap: 8px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.stepper-sheet-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 24px;
+}
+.stepper-sheet-actions .btn {
+  flex: 1;
+}
+
+/* ───────── Phase 2: Configure route ───────── */
+.configure-screen-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 28px;
+}
+.configure-actions {
+  padding: 0 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ───────── Phase 2: Run route ───────── */
+.run-screen.work {
+  background: var(--paper);
+}
+.run-screen.rest {
+  background: var(--paper-2);
+}
+.run-header {
+  padding-top: 22px;
+}
+.run-phase-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+  white-space: nowrap;
+}
+.run-phase-label.rest {
+  color: var(--accent-deep);
+}
+.run-pip-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  animation: flashIn 900ms var(--ease);
+}
+.run-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+  position: relative;
+}
+.run-timer-big {
+  font-size: 120px;
+  color: var(--ink);
+  font-weight: 300;
+}
+.run-timer-countin {
+  font-size: 200px;
+  color: var(--ink);
+  font-weight: 200;
+}
+.run-cue-slot {
+  margin-top: 30px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.run-cue-chip {
+  padding: 8px 16px;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.1px;
+  animation: flashIn 1.6s var(--ease);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.run-controls {
+  padding: 0 24px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+.run-ctrl-secondary {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink-2);
+  border: 1px solid var(--rule);
+  display: grid;
+  place-items: center;
+}
+.run-ctrl-secondary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.run-ctrl-primary {
+  width: 76px;
+  height: 76px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 12px 32px rgba(14, 17, 22, 0.18);
+}
+.run-sound-toggle {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  color: var(--ink-3);
+  display: grid;
+  place-items: center;
+  background: transparent;
+}
+.run-sound-toggle.off {
+  opacity: 0.5;
+  text-decoration: line-through;
+  text-decoration-thickness: 1.6px;
+}
+
+/* ───────── Phase 2: pause toast ───────── */
+.pause-toast-dialog {
+  position: absolute;
+  inset: 0;
+  background: rgba(14, 17, 22, 0.55);
+  display: grid;
+  place-items: center;
+  z-index: 60;
+  padding: 24px;
+}
+.pause-toast-dialog .pause-toast-card {
+  background: var(--paper);
+  border-radius: 20px;
+  padding: 24px;
+  text-align: center;
+  max-width: 320px;
+}
+.pause-toast-card h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.3px;
+}
+.pause-toast-card p {
+  margin: 0 0 20px;
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
+/* ───────── Phase 2: Complete route ───────── */
+.complete-screen-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 32px;
+}
+.complete-eyebrow-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent-deep);
+}
+.complete-title {
+  font-size: 42px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  margin: 14px 0 0;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+.complete-subtitle {
+  font-size: 15px;
+  color: var(--ink-3);
+  margin-top: 8px;
+  line-height: 1.5;
+}
+.complete-divider {
+  height: 1px;
+  background: var(--rule);
+  margin: 32px 0;
+}
+.complete-totals {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.complete-totals-value {
+  font-size: 34px;
+  font-weight: 300;
+  letter-spacing: -0.03em;
+  margin-top: 6px;
+}
+.complete-actions {
+  padding: 0 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.complete-actions .btn {
+  width: 100%;
+}
+
+/* ───────── Reduced motion ───────── */
+@media (prefers-reduced-motion: reduce) {
+  .mic-pulse-ring,
+  .mic-pulse-once,
+  .run-cue-chip,
+  .run-pip-chip,
+  .proc-dots .pdot {
+    animation: none !important;
+  }
+  .fade-enter-active,
+  .timer-display.fade-enter-active {
+    animation: none !important;
+    transition: none !important;
+  }
+}
