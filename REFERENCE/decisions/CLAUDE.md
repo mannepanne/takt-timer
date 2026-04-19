@@ -21,6 +21,7 @@ Auto-loaded when working with files in this directory. Documents architectural d
 ## When to create an ADR
 
 **Create an ADR when making decisions that:**
+
 - Affect architecture beyond today's PR
 - Choose between meaningful alternatives (library, pattern, API design)
 - Involve significant trade-offs
@@ -28,6 +29,7 @@ Auto-loaded when working with files in this directory. Documents architectural d
 - Will constrain or enable future work
 
 **Don't create for:**
+
 - Tactical implementation details (belongs in code comments)
 - Obvious choices (no alternatives considered)
 - Easily reversible decisions
@@ -42,24 +44,28 @@ Auto-loaded when working with files in this directory. Documents architectural d
 ### When decision is made
 
 **Claude's role:**
+
 1. Recognize when a decision "outlasts today's PR"
 2. Prompt: "This decision affects future architecture. Should I create an ADR in REFERENCE/decisions/?"
 3. User confirms or declines
 4. If confirmed, Claude creates ADR using template format
 
 **User's role:**
+
 - Confirm when Claude suggests ADR
 - Or request ADR explicitly: "Let's document this decision"
 
 ### Before making similar decision
 
 **Search precedent first:**
+
 ```bash
 grep -r "library" REFERENCE/decisions/
 grep -r "authentication" REFERENCE/decisions/
 ```
 
 **Follow existing ADR unless:**
+
 - New information invalidates the reasoning
 - Context has changed significantly
 - Trade-offs no longer apply
@@ -75,6 +81,7 @@ grep -r "authentication" REFERENCE/decisions/
 **Example:** `2026-03-29-jwt-authentication.md`
 
 **Template:**
+
 ```markdown
 # ADR: {What you decided}
 
@@ -131,6 +138,7 @@ grep -r "authentication" REFERENCE/decisions/
 
 **Format:** Listed chronologically (newest first)
 
+- **2026-04-19** — [State machines as pure reducers returning effects-as-data](./2026-04-19-reducer-plus-effects-pattern.md) — shape for every state machine in the project; locks the pattern Phase 2 shipped with so Phase 3/4/6 extend rather than reinvent.
 - **2026-04-19** — [Vite + React SPA over Next.js for Takt](./2026-04-19-vite-spa-over-nextjs.md) — deviation from project-wide Next.js default, justified by app-not-site nature of Takt.
 - **2026-04-19** — [Port prototype CSS instead of Tailwind + shadcn/ui](./2026-04-19-port-prototype-css.md) — deviation from project-wide Tailwind default, the prototype is the design and utility-class rewrite buys nothing.
 
@@ -145,12 +153,14 @@ See [TEMPLATE-adr.md](./TEMPLATE-adr.md) for a complete example.
 ## Integration with other docs
 
 **ADRs complement:**
+
 - **SPECIFICATIONS/** - Plans reference ADRs for context ("We're doing X because ADR-015")
 - **REFERENCE/** - How-it-works docs reference ADRs for "why this way"
 - **Code comments** - Link to relevant ADR for architectural choices
 - **PR descriptions** - Mention ADR if decision was made during PR work
 
 **ADRs are permanent:**
+
 - Committed to version control
 - Survive compaction, crashes, months
 - Searchable and linkable
@@ -161,6 +171,7 @@ See [TEMPLATE-adr.md](./TEMPLATE-adr.md) for a complete example.
 ## Best practices
 
 **Writing ADRs:**
+
 - Be specific about alternatives (not "considered other options")
 - Explain reasoning clearly (someone reading 6 months later should understand)
 - Include trade-offs honestly (every choice has downsides)
@@ -168,12 +179,14 @@ See [TEMPLATE-adr.md](./TEMPLATE-adr.md) for a complete example.
 - Keep concise but complete
 
 **Maintaining ADRs:**
+
 - Never delete (mark as Superseded instead)
 - Update index in this CLAUDE.md when adding new ADR
 - Link related ADRs together
 - Reference from specs/docs where relevant
 
 **Using ADRs:**
+
 - Search before making similar decision
 - Follow precedent unless context changed
 - Create new ADR if superseding old decision
@@ -184,6 +197,7 @@ See [TEMPLATE-adr.md](./TEMPLATE-adr.md) for a complete example.
 ## Credits
 
 Inspired by:
+
 - [Michael Nygard's ADR pattern](http://thinkrelevance.com/blog/2011/11/15/documenting-architecture-decisions)
 - LinkedIn post about preventing re-debate of settled decisions
 - Experience with Claude Code sessions losing decision context
