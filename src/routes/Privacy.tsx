@@ -16,8 +16,8 @@ export function Privacy() {
         }
       />
 
-      <div className="scroll" style={{ padding: '8px 24px 40px', flex: 1 }}>
-        <div className="eyebrow" style={{ marginBottom: 10 }}>
+      <main className="scroll" style={{ padding: '8px 24px 40px', flex: 1 }}>
+        <div className="eyebrow" style={{ marginBottom: 10, color: 'var(--ink-3)' }}>
           Privacy
         </div>
         <h1
@@ -38,10 +38,10 @@ export function Privacy() {
           register), and your own session history. We never ask for your email, your phone, or your
           name.
         </p>
-        <p style={{ color: 'var(--mute)', fontSize: 13, lineHeight: 1.6, marginTop: 24 }}>
+        <p style={{ color: 'var(--ink-3)', fontSize: 13, lineHeight: 1.6, marginTop: 24 }}>
           Stub page — full content ships in Phase 5 (English and Swedish).
         </p>
-      </div>
+      </main>
     </div>
   );
 }

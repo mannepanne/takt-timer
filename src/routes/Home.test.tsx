@@ -15,6 +15,26 @@ describe('Home (Phase 1 placeholder)', () => {
     expect(screen.getByRole('link', { name: /privacy/i })).toHaveAttribute('href', '/privacy');
   });
 
+  it('has a top-level heading so screen readers can orient', () => {
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+      /takt is under construction/i,
+    );
+  });
+
+  it('wraps the primary content in a main landmark', () => {
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole('main')).toBeInTheDocument();
+  });
+
   it('disables the presets and settings buttons until later phases', () => {
     render(
       <MemoryRouter>
