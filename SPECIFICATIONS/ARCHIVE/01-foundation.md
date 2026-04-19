@@ -59,11 +59,13 @@ Stand up the skeleton: a deployable Vite + React + TypeScript SPA served by a si
 ### Architecture decisions
 
 **Single Worker with Workers Assets serves both SPA and API**
+
 - Choice: one Worker, one bundle, one deploy. Static assets served via Workers Assets, API routes on `/api/*`.
 - Rationale: fewer moving parts, single custom-domain configuration, unified observability.
 - Alternatives considered: Cloudflare Pages + separate Worker (two deploy targets), Pages Functions (ties the API to Pages lifecycle). Neither buys us anything for a project this size.
 
 **Client router and migration library chosen at phase start, not now**
+
 - These are small, reversible decisions. Pick once, document the choice in the PR description. No ADR needed unless the discussion runs long.
 
 ### Technology choices
@@ -78,6 +80,7 @@ Stand up the skeleton: a deployable Vite + React + TypeScript SPA served by a si
 ### Key files and components
 
 **New files to create (illustrative, not exhaustive):**
+
 ```
 /
 ├── wrangler.toml
@@ -121,6 +124,7 @@ No application schema this phase. The D1 database is provisioned and the migrati
 **Coverage targets:** per project default (lines/functions/statements ≥95%, branches ≥90%).
 
 **Key test files:**
+
 - `Wordmark.test.tsx` — renders text and bar.
 - `TopBar.test.tsx` — slots render, wordmark present.
 - `PhoneFrame.test.tsx` — desktop viewport shows frame, mobile viewport does not.
@@ -160,6 +164,7 @@ No application schema this phase. The D1 database is provisioned and the migrati
 Use `/review-pr-team` — this phase has architectural impact (deploy pipeline, domain config, CI).
 
 **Deployment steps:**
+
 1. Merge to `main`.
 2. GitHub Actions builds and runs `wrangler deploy`.
 3. Verify `takt.hultberg.org/api/health` returns OK.

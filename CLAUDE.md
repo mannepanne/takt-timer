@@ -9,12 +9,13 @@ When asked to remember anything, add project memory in this CLAUDE.md (project r
 
 ## Project overview
 
-**Takt** — a voice-driven, mobile-first interval timer. Tagline: *Takt — keep it going.*
+**Takt** — a voice-driven, mobile-first interval timer. Tagline: _Takt — keep it going._
 
 Built for Magnus's rehab training, released to the world because the problem — a dead-simple interval timer without the feature bloat — isn't unique to him. Voice configures a session, touch runs it, passkeys enable optional cross-device sync without storing any personal details.
 
 **Core workflow:**
-1. Tap the mic, say *"Three sets of one minute each, thirty seconds rest in between"*.
+
+1. Tap the mic, say _"Three sets of one minute each, thirty seconds rest in between"_.
 2. Confirm the parsed session on the Interpretation screen, or edit numerically.
 3. Run the session with count-in, beeps, haptics, and progress bar.
 4. Land on Complete; optionally "Save as preset" (registered users).
@@ -24,6 +25,7 @@ Built for Magnus's rehab training, released to the world because the problem —
 ## Architecture overview
 
 **Stack:**
+
 - **Framework:** Vite + React + TypeScript (strict mode) — see [ADR 2026-04-19 — Vite SPA over Next.js](./REFERENCE/decisions/2026-04-19-vite-spa-over-nextjs.md).
 - **Styling:** Ported from the Claude Design prototype's hand-written CSS, with CSS custom properties driving the accent-colour theming — see [ADR 2026-04-19 — Port prototype CSS](./REFERENCE/decisions/2026-04-19-port-prototype-css.md).
 - **Hosting:** Single Cloudflare Worker with Workers Assets, serving both the SPA bundle and `/api/*` routes.
@@ -36,6 +38,7 @@ Built for Magnus's rehab training, released to the world because the problem —
 - **PWA:** Service worker + manifest, installable to home screen, a configured session runs fully offline.
 
 **Key integrations:**
+
 - Cloudflare Workers AI (`@cf/openai/whisper-large-v3-turbo` + a Llama model) — voice pipeline.
 - Cloudflare Access with Magnus's existing Google IdP policy — admin gate.
 - Cloudflare Web Analytics — traffic visibility.
@@ -46,23 +49,28 @@ Built for Magnus's rehab training, released to the world because the problem —
 
 Development is organised into six sequential phases. Each phase has its own spec with scope, acceptance criteria, testing strategy, and PR workflow.
 
-1. [01-foundation.md](./SPECIFICATIONS/01-foundation.md) — scaffolding, domain, CI, design system port (3–5 days)
+1. ~~[01-foundation.md](./SPECIFICATIONS/ARCHIVE/01-foundation.md)~~ — ✅ complete, archived
 2. [02-core-timer.md](./SPECIFICATIONS/02-core-timer.md) — usable tap-only timer with offline PWA (5–8 days)
 3. [03-voice.md](./SPECIFICATIONS/03-voice.md) — Whisper + Llama voice pipeline (4–6 days)
 4. [04-accounts-and-presets.md](./SPECIFICATIONS/04-accounts-and-presets.md) — passkey auth, presets, history sync (7–10 days)
 5. [05-i18n-settings-onboarding.md](./SPECIFICATIONS/05-i18n-settings-onboarding.md) — English + Swedish, Settings, Onboarding, Privacy policy (4–6 days)
 6. [06-admin-and-launch.md](./SPECIFICATIONS/06-admin-and-launch.md) — admin backend, retention purge, hardening, launch (4–6 days)
 
-**Current phase:** Phase 1 — Foundation (not started).
+**Current phase:** Phase 2 — Core timer (not started).
+
+**Live at:** https://takt.hultberg.org — Phase 1 shell deployed 2026-04-19.
 
 ### SPECIFICATIONS/
+
 - [01–06 phase files](./SPECIFICATIONS/) — active work-in-progress specs.
 - [ORIGINAL_IDEA/project-outline.md](./SPECIFICATIONS/ORIGINAL_IDEA/project-outline.md) — master product spec.
 - [prototype-design-files/](./SPECIFICATIONS/prototype-design-files/) — the Claude Design prototype; the visual reference for v1.
 - [ARCHIVE/](./SPECIFICATIONS/ARCHIVE/) — completed phase specs.
 
 ### REFERENCE/
+
 How-it-works documentation and operational reference:
+
 - [testing-strategy.md](./REFERENCE/testing-strategy.md) — TDD, Vitest, coverage targets, what to mock.
 - [environment-setup.md](./REFERENCE/environment-setup.md) — Cloudflare account, Wrangler, D1/KV/Workers AI setup.
 - [technical-debt.md](./REFERENCE/technical-debt.md) — accepted shortcuts and deferred improvements.
@@ -70,22 +78,25 @@ How-it-works documentation and operational reference:
 - [pr-review-workflow.md](./REFERENCE/pr-review-workflow.md) — how to use `/review-spec`, `/review-pr`, `/review-pr-team`.
 - [decisions/](./REFERENCE/decisions/) — Architecture Decision Records. Consult before making decisions in the same space.
 
-*Note: CLAUDE.md files are kept short (<300 lines). Details live in subdirectory files that auto-load when relevant.*
+_Note: CLAUDE.md files are kept short (<300 lines). Details live in subdirectory files that auto-load when relevant._
 
 ## Code conventions
 
 ### File headers
+
 ```typescript
 // ABOUT: Brief description of file purpose
 // ABOUT: Key functionality or responsibility
 ```
 
 ### Naming
+
 - Descriptive names: `TimerMachine`, `VoiceOverlay`, `parseIntent`, not `Helper`, `Util`, `doIt`.
 - TypeScript conventions: `camelCase` for variables and functions, `PascalCase` for types and components.
 - Avoid temporal references: no "new", "improved", "old" in names or comments.
 
 ### Comments
+
 - Evergreen (describe what the code does, not how it evolved).
 - Minimal — prefer self-documenting code.
 - Explain non-obvious decisions, hidden constraints, subtle invariants.
@@ -95,10 +106,12 @@ How-it-works documentation and operational reference:
 **CRITICAL: ALL code changes require a feature branch + PR. Zero exceptions.**
 
 **Step 0 before any changes:**
+
 - [ ] On a feature branch, not `main`?
 - [ ] Branch named `feature/`, `fix/`, or `refactor/`?
 
 **Implementation steps:**
+
 1. Create feature branch.
 2. Read the relevant phase spec in [SPECIFICATIONS/](./SPECIFICATIONS/).
 3. Run `/review-spec` for non-trivial specs before writing code.
@@ -116,10 +129,12 @@ How-it-works documentation and operational reference:
 ## Testing
 
 Tests serve dual purpose:
+
 1. **Validation** — verify code works.
 2. **Directional context** — executable specifications for future work.
 
 **Commands:**
+
 ```bash
 pnpm test                # Run all tests
 pnpm test:watch          # Watch mode
@@ -134,12 +149,14 @@ pnpm typecheck           # TypeScript type checking
 ## Quick reference links
 
 **Planning & specs:**
+
 - Project outline → [SPECIFICATIONS/ORIGINAL_IDEA/project-outline.md](./SPECIFICATIONS/ORIGINAL_IDEA/project-outline.md)
 - Current phase → see "Implementation phases" above.
 - Completed specs → [ARCHIVE/](./SPECIFICATIONS/ARCHIVE/)
 - ADRs → [REFERENCE/decisions/](./REFERENCE/decisions/)
 
 **Reference docs:**
+
 - Environment setup → [environment-setup.md](./REFERENCE/environment-setup.md)
 - Testing → [testing-strategy.md](./REFERENCE/testing-strategy.md)
 - Technical debt → [technical-debt.md](./REFERENCE/technical-debt.md)
