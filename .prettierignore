@@ -1,0 +1,7 @@
+node_modules
+dist
+coverage
+.wrangler
+SPECIFICATIONS/prototype-design-files
+migrations
+pnpm-lock.yaml

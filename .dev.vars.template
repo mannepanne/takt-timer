@@ -1,0 +1,18 @@
+# Local development secrets for the Worker (not used by the Vite SPA).
+# Copy this file to `.dev.vars` and fill in real values.
+# `.dev.vars` is gitignored — never commit it.
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Phase 1 — no secrets required. The placeholders below activate in Phase 4.
+# ──────────────────────────────────────────────────────────────────────────────
+
+# WebAuthn relying-party ID. Must match the origin the app is served from.
+# Local dev: `localhost`   Production: `takt.hultberg.org`
+# WEBAUTHN_RP_ID=localhost
+
+# WebAuthn allowed origin.
+# Local dev: `http://localhost:8787`   Production: `https://takt.hultberg.org`
+# WEBAUTHN_ORIGIN=http://localhost:8787
+
+# Cookie signing secret. Generate a fresh random 32+ byte value for each environment.
+# SESSION_COOKIE_SECRET=change-me-to-something-random
