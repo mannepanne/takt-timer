@@ -73,7 +73,7 @@ These are debt items declared in phase specs that will become active when the ph
 
 ## Resolved items
 
-### TD-007: `@worker/*` TypeScript path alias — resolved 2026-04-19 (PR #4)
+### TD-007: `@worker/*` TypeScript path alias — resolved 2026-04-19 (PR #3)
 
 - **Location:** `tsconfig.worker.json`, `vitest.config.ts`.
 - **Issue:** The alias resolved in Vitest (via `vitest.config.ts`) but not in production (Wrangler's esbuild doesn't honour tsconfig paths). Tests could pass while the Worker bundle broke.
