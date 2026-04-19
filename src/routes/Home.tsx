@@ -22,45 +22,48 @@ export function Home() {
         }
       />
 
-      <div style={{ flex: 1 }} />
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1 }} />
 
-      <div style={{ padding: '0 28px', textAlign: 'center' }}>
-        <div className="eyebrow" style={{ marginBottom: 14 }}>
-          Setting up
+        <div style={{ padding: '0 28px', textAlign: 'center' }}>
+          <div className="eyebrow" style={{ marginBottom: 14, color: 'var(--ink-3)' }}>
+            Setting up
+          </div>
+          <h1
+            style={{
+              fontSize: 28,
+              fontWeight: 500,
+              letterSpacing: '-0.02em',
+              color: 'var(--ink)',
+              lineHeight: 1.2,
+              margin: 0,
+              textWrap: 'balance',
+            }}
+          >
+            Takt is under construction.
+          </h1>
+          <p
+            style={{
+              fontSize: 14,
+              color: 'var(--ink-3)',
+              marginTop: 14,
+              lineHeight: 1.5,
+              textWrap: 'balance',
+            }}
+          >
+            The timer, voice, and everything else arrive in the phases ahead.
+          </p>
         </div>
-        <div
-          style={{
-            fontSize: 28,
-            fontWeight: 500,
-            letterSpacing: '-0.02em',
-            color: 'var(--ink)',
-            lineHeight: 1.2,
-            textWrap: 'balance',
-          }}
-        >
-          Takt is under construction.
-        </div>
-        <div
-          style={{
-            fontSize: 14,
-            color: 'var(--mute)',
-            marginTop: 14,
-            lineHeight: 1.5,
-            textWrap: 'balance',
-          }}
-        >
-          The timer, voice, and everything else arrive in the phases ahead.
-        </div>
-      </div>
 
-      <div style={{ flex: 1 }} />
+        <div style={{ flex: 1 }} />
+      </main>
 
       <div style={{ padding: '0 24px 28px', textAlign: 'center' }}>
         <Link
           to="/privacy"
           style={{
-            fontSize: 12,
-            color: 'var(--mute)',
+            fontSize: 13,
+            color: 'var(--ink-3)',
             textDecoration: 'none',
             letterSpacing: 0.2,
           }}
