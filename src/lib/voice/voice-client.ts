@@ -5,6 +5,26 @@
 import { readNdjsonStream, type StreamLine } from './stream';
 import type { ErrorReason, ParsedSession, VoiceEvent } from './types';
 
+const ERROR_REASONS: ReadonlySet<ErrorReason> = new Set<ErrorReason>([
+  'upload-empty',
+  'upload-too-large',
+  'origin-not-allowed',
+  'empty-transcript',
+  'language-unsupported',
+  'whisper-error',
+  'llama-error',
+  'not-a-session',
+  'schema-failed',
+  'method-not-allowed',
+  'rate-limited',
+  'network-error',
+  'malformed-stream',
+]);
+
+function isErrorReason(value: unknown): value is ErrorReason {
+  return typeof value === 'string' && ERROR_REASONS.has(value as ErrorReason);
+}
+
 type ServerWhisperEvent = {
   kind: 'whisper';
   transcript?: string;
@@ -109,6 +129,7 @@ function dispatchLine(line: StreamLine<ServerEvent>, dispatch: VoiceDispatch): b
     return true;
   }
   if (event.kind === 'error') {
+    if (!isErrorReason(event.reason)) return false;
     dispatch({
       type: 'errorArrived',
       reason: event.reason,
@@ -127,9 +148,13 @@ async function extractErrorReason(
     const text = await response.text();
     const firstLine = text.split('\n').find((line) => line.trim());
     if (firstLine) {
-      const parsed = JSON.parse(firstLine) as ServerErrorEvent;
-      if (parsed.kind === 'error' && parsed.reason) {
-        return { reason: parsed.reason, retryAfterSec: parsed.retryAfterSec };
+      const parsed = JSON.parse(firstLine) as Partial<ServerErrorEvent> & {
+        [k: string]: unknown;
+      };
+      if (parsed.kind === 'error' && isErrorReason(parsed.reason)) {
+        const retryAfterSec =
+          typeof parsed.retryAfterSec === 'number' ? parsed.retryAfterSec : undefined;
+        return { reason: parsed.reason, retryAfterSec };
       }
     }
   } catch {

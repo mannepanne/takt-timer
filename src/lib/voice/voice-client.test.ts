@@ -47,6 +47,33 @@ describe('postVoice', () => {
     ]);
   });
 
+  it('dispatches errorArrived(empty-transcript) when Whisper returns no text', async () => {
+    const { events, dispatch } = makeDispatch();
+    const fetchFn = vi.fn(async () =>
+      ndjsonResponse([
+        '{"kind":"whisper","transcript":"","language":"en","whisperMs":820}',
+        '{"kind":"error","reason":"empty-transcript"}',
+      ]),
+    );
+    await postVoice(BLOB, dispatch, { fetchFn });
+    expect(events[0]).toMatchObject({ type: 'transcriptArrived', transcript: '', language: 'en' });
+    expect(events[1]).toMatchObject({ type: 'errorArrived', reason: 'empty-transcript' });
+  });
+
+  it('rejects streamed error events with unknown reason codes as malformed-stream', async () => {
+    // Narrowing check in voice-client guards against the server contract widening silently —
+    // an unknown reason string is treated as stream corruption, not passed through.
+    const { events, dispatch } = makeDispatch();
+    const fetchFn = vi.fn(async () =>
+      ndjsonResponse([
+        '{"kind":"whisper","transcript":"x"}',
+        '{"kind":"error","reason":"some-future-reason"}',
+      ]),
+    );
+    await postVoice(BLOB, dispatch, { fetchFn });
+    expect(events.at(-1)).toEqual({ type: 'errorArrived', reason: 'malformed-stream' });
+  });
+
   it('dispatches errorArrived when the server streams a parse error', async () => {
     const { events, dispatch } = makeDispatch();
     const fetchFn = vi.fn(async () =>

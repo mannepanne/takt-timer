@@ -16,10 +16,14 @@ export async function* readNdjsonStream<T = unknown>(
   const decoder = new TextDecoder();
   let buffer = '';
 
+  let streamClosed = false;
   try {
     while (true) {
       const { value, done } = await reader.read();
-      if (done) break;
+      if (done) {
+        streamClosed = true;
+        break;
+      }
       if (!value) continue;
 
       buffer += decoder.decode(value, { stream: true });
@@ -33,6 +37,16 @@ export async function* readNdjsonStream<T = unknown>(
       }
     }
   } finally {
+    // If the consumer bailed early (early return, throw), actively cancel the underlying
+    // stream so the network layer stops buffering. If the stream closed naturally, just
+    // release the lock.
+    if (!streamClosed) {
+      try {
+        await reader.cancel();
+      } catch {
+        // best effort
+      }
+    }
     reader.releaseLock();
   }
 

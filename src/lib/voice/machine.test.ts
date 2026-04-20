@@ -138,6 +138,37 @@ describe('voice machine', () => {
       expect(effects).toEqual([]);
     });
 
+    it('transcriptArrived with language omitted → parsing with language undefined (pass-through policy)', () => {
+      // ADR 2026-04-20 Option C: when Whisper returns no language, pass through to Llama
+      // rather than rejecting. The machine preserves undefined so the UI can log or surface it.
+      const { next } = step(state, { type: 'transcriptArrived', transcript: 'some audio' });
+      expect(next).toEqual({ phase: 'parsing', transcript: 'some audio', language: undefined });
+    });
+
+    it('errorArrived(empty-transcript) → parse-error (Whisper returned no text)', () => {
+      const { next } = step(state, { type: 'errorArrived', reason: 'empty-transcript' });
+      expect(next).toEqual({
+        phase: 'parse-error',
+        reason: 'empty-transcript',
+        transcript: undefined,
+      });
+    });
+
+    it('errorArrived(rate-limited) without retryAfterSec defaults to 0 (intentional fallback)', () => {
+      // Server contract requires retryAfterSec on rate-limited per ADR 2026-04-20. If it's
+      // missing we default to 0 rather than throwing — visible as "0 seconds" in the UI, which
+      // is an honest signal that the server response was malformed rather than a silent crash.
+      const { next } = step(state, { type: 'errorArrived', reason: 'rate-limited' });
+      expect(next).toEqual({ phase: 'rate-limited', retryAfterSec: 0 });
+    });
+
+    it('errorArrived(language-unsupported) without detectedLanguage defaults to empty string', () => {
+      // Same fallback shape as retryAfterSec above — an empty detected tag is an honest signal
+      // that the server omitted the field, not a silent crash.
+      const { next } = step(state, { type: 'errorArrived', reason: 'language-unsupported' });
+      expect(next).toEqual({ phase: 'language-mismatch', detected: '' });
+    });
+
     it('errorArrived(whisper-error) → parse-error', () => {
       const { next, effects } = step(state, { type: 'errorArrived', reason: 'whisper-error' });
       expect(next).toEqual({
