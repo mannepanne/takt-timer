@@ -7,6 +7,7 @@
 
 import type { Env } from '../../index';
 import { isAllowedOrigin } from '../../lib/isAllowedOrigin';
+import { toSafeErrorMessage } from '../../lib/toSafeErrorMessage';
 
 import { parseWithLlama } from './llama';
 import { transcribe } from './whisper';
@@ -118,8 +119,8 @@ export async function parseVoice(request: Request, env: Env): Promise<Response> 
       try {
         whisper = await transcribe(env.AI, audioBytes);
       } catch (err) {
-        const message = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
-        await writer.write(jsonLine({ kind: 'error', reason: 'whisper-error', message }));
+        toSafeErrorMessage(err, 'whisper-error');
+        await writer.write(jsonLine({ kind: 'error', reason: 'whisper-error' }));
         return;
       }
 
@@ -141,6 +142,8 @@ export async function parseVoice(request: Request, env: Env): Promise<Response> 
       }
 
       if (language && !SUPPORTED_LANGUAGES.has(language)) {
+        // The detected-language tag is public info on the stream — safe to echo per the
+        // error-content-safety contract (see ADR 2026-04-20).
         await writer.write(
           jsonLine({
             kind: 'error',
@@ -156,32 +159,13 @@ export async function parseVoice(request: Request, env: Env): Promise<Response> 
 
       if (!llama.ok) {
         if (llama.reason === 'not-a-session') {
-          await writer.write(
-            jsonLine({
-              kind: 'error',
-              reason: 'not-a-session',
-              message: llama.message,
-              totalMs,
-            }),
-          );
+          await writer.write(jsonLine({ kind: 'error', reason: 'not-a-session', totalMs }));
         } else if (llama.reason === 'model-error') {
-          await writer.write(
-            jsonLine({
-              kind: 'error',
-              reason: 'llama-error',
-              message: llama.message,
-              totalMs,
-            }),
-          );
+          toSafeErrorMessage(llama.message, 'llama-error', { totalMs });
+          await writer.write(jsonLine({ kind: 'error', reason: 'llama-error', totalMs }));
         } else {
-          await writer.write(
-            jsonLine({
-              kind: 'error',
-              reason: 'schema-failed',
-              message: llama.message,
-              totalMs,
-            }),
-          );
+          toSafeErrorMessage(llama.message, 'schema-failed', { totalMs });
+          await writer.write(jsonLine({ kind: 'error', reason: 'schema-failed', totalMs }));
         }
         return;
       }
@@ -197,9 +181,9 @@ export async function parseVoice(request: Request, env: Env): Promise<Response> 
       );
     } catch (err) {
       // Final safety net — shouldn't happen, but we never want to leave the stream hanging.
-      const message = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+      toSafeErrorMessage(err, 'llama-error', { stage: 'unhandled' });
       try {
-        await writer.write(jsonLine({ kind: 'error', reason: 'llama-error', message }));
+        await writer.write(jsonLine({ kind: 'error', reason: 'llama-error' }));
       } catch {
         // If the writer is already closed, swallow.
       }

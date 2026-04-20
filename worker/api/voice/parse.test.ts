@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Env } from '../../index';
 
@@ -52,6 +52,17 @@ async function readNdjson(res: Response): Promise<Array<Record<string, unknown>>
 }
 
 describe('POST /api/voice/parse (streaming)', () => {
+  let errorSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    // toSafeErrorMessage logs via console.error — silence expected noise for error-path tests.
+    errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    errorSpy.mockRestore();
+  });
+
   it('rejects non-POST requests', async () => {
     const env = makeEnv({});
     const res = await parseVoice(makeRequest(new Uint8Array(), 'GET'), env);
