@@ -42,7 +42,7 @@ enabled = true
 # Then paste the returned id below.
 [[kv_namespaces]]
 binding = "RATE_LIMITS"
-id = "<FILL_IN_AFTER_PROVISIONING>"
+id = "e4b953eb2e2c4aa5a3dda7daca86eb95"
 
 # Workers AI — Whisper + Llama. Activated in Phase 3 for the voice pipeline.
 [ai]
