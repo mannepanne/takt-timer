@@ -192,6 +192,110 @@ describe('useVoiceMachine', () => {
     expect(result.current.state.phase).toBe('idle');
   });
 
+  it('cancel during the permission prompt discards the in-flight recorder', async () => {
+    // Controlled getUserMedia — we resolve it manually AFTER the user has cancelled.
+    let resolveGum: (value: MediaStream) => void = () => {};
+    const gumPromise = new Promise<MediaStream>((resolve) => {
+      resolveGum = resolve;
+    });
+    const tracks = [{ stop: vi.fn() }];
+    const discardSpy = vi.fn();
+    const MockMediaRecorder = vi.fn(() => {
+      const recorder: MockRecorder = {
+        state: 'recording',
+        ondataavailable: null,
+        onerror: null,
+        onstop: null,
+        start() {
+          recorder.state = 'recording';
+        },
+        stop() {
+          // discard() → handle.stop() → we track via discardSpy below on the handle.
+          recorder.state = 'inactive';
+          recorder.onstop?.();
+        },
+      };
+      currentRecorder = recorder;
+      return recorder;
+    }) as unknown as typeof MediaRecorder & { isTypeSupported: (t: string) => boolean };
+    (MockMediaRecorder as unknown as { isTypeSupported: (t: string) => boolean }).isTypeSupported =
+      () => true;
+    vi.stubGlobal('MediaRecorder', MockMediaRecorder);
+    vi.stubGlobal('navigator', {
+      ...navigator,
+      onLine: true,
+      mediaDevices: { getUserMedia: vi.fn(() => gumPromise) },
+      audioSession: { type: 'ambient' },
+    });
+
+    const { result } = renderHook(() => useVoiceMachine(), { wrapper });
+    act(() => result.current.micTap());
+    expect(result.current.state.phase).toBe('requesting-permission');
+
+    // User cancels while the prompt is still open.
+    act(() => result.current.cancel());
+    expect(result.current.state.phase).toBe('idle');
+
+    // Now the getUserMedia promise resolves — the hook should see the cancel sentinel
+    // and discard the handle rather than store it and dispatch permissionGranted.
+    await act(async () => {
+      resolveGum({ getTracks: () => tracks } as unknown as MediaStream);
+      await gumPromise;
+      // Allow the microtask queue to flush so the IIFE's then-branch can run.
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    // State must remain idle — no permissionGranted leaked through.
+    expect(result.current.state.phase).toBe('idle');
+    // And the recorder handle's discard path should have been triggered on the stream.
+    expect(tracks[0].stop).toHaveBeenCalled();
+    discardSpy.mockClear();
+  });
+
+  it('NotFoundError (no mic hardware) → browser-unsupported, not permission-denied', async () => {
+    installBrowserMocks({ getUserMediaThrows: new DOMException('no mic', 'NotFoundError') });
+    const { result } = renderHook(() => useVoiceMachine(), { wrapper });
+    act(() => result.current.micTap());
+    await waitFor(() => expect(result.current.state.phase).toBe('browser-unsupported'));
+  });
+
+  it('NotReadableError (mic busy) → browser-unsupported', async () => {
+    installBrowserMocks({ getUserMediaThrows: new DOMException('busy', 'NotReadableError') });
+    const { result } = renderHook(() => useVoiceMachine(), { wrapper });
+    act(() => result.current.micTap());
+    await waitFor(() => expect(result.current.state.phase).toBe('browser-unsupported'));
+  });
+
+  it('unknown error without a standard name → permission-denied (conservative default)', async () => {
+    installBrowserMocks({ getUserMediaThrows: new Error('something weird') });
+    const { result } = renderHook(() => useVoiceMachine(), { wrapper });
+    act(() => result.current.micTap());
+    await waitFor(() => expect(result.current.state.phase).toBe('permission-denied'));
+  });
+
+  it('blobEmpty triggers a retry toast that auto-dismisses', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('fetch', vi.fn());
+    const { result } = renderHook(() => useVoiceMachine(), { wrapper });
+    act(() => result.current.micTap());
+    await vi.waitFor(() => expect(result.current.state.phase).toBe('listening'));
+
+    act(() => {
+      deliverBlob(10); // Below MIN_AUDIO_BYTES
+      result.current.userStop();
+    });
+
+    await vi.waitFor(() => expect(result.current.retryToastVisible).toBe(true));
+
+    act(() => {
+      vi.advanceTimersByTime(3_000);
+    });
+
+    expect(result.current.retryToastVisible).toBe(false);
+    vi.useRealTimers();
+  });
+
   it('unmount cleans up: restores ambient audio', async () => {
     const audioSession = { type: 'ambient' };
     vi.stubGlobal('navigator', {

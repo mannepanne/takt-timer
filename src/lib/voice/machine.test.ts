@@ -75,6 +75,14 @@ describe('voice machine', () => {
       expect(next).toEqual({ phase: 'idle' });
       expectEffects(effects, 'setAudioCategory');
     });
+
+    it('hardwareUnavailable → browser-unsupported, restores ambient', () => {
+      // Hardware missing / busy / unsupported MIME / constraint reject — the user
+      // can't fix this from browser settings, so the sheet shows unsupported copy.
+      const { next, effects } = step(state, { type: 'hardwareUnavailable' });
+      expect(next).toEqual({ phase: 'browser-unsupported' });
+      expectEffects(effects, 'setAudioCategory');
+    });
   });
 
   describe('from listening', () => {

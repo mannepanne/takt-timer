@@ -1,4 +1,4 @@
-// ABOUT: Home screen — demo mic button (Phase 3 arrives), Configure CTA,
+// ABOUT: Home screen — mic button (opens the Voice overlay), Configure CTA,
 // ABOUT: optional last-session quick-start card, optional sparkline chip.
 
 import { useEffect, useState } from 'react';
