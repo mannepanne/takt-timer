@@ -10,7 +10,22 @@ type AiCallStub = {
   llamaShouldThrow?: boolean;
 };
 
-function makeEnv(stub: AiCallStub): Env {
+function makeKv(seed: Record<string, string> = {}): KVNamespace {
+  const store = new Map<string, string>(Object.entries(seed));
+  return {
+    get: vi.fn(async (key: string) => store.get(key) ?? null),
+    put: vi.fn(async (key: string, value: string) => {
+      store.set(key, value);
+    }),
+    delete: vi.fn(async (key: string) => {
+      store.delete(key);
+    }),
+    list: vi.fn(),
+    getWithMetadata: vi.fn(),
+  } as unknown as KVNamespace;
+}
+
+function makeEnv(stub: AiCallStub, kv: KVNamespace = makeKv()): Env {
   const responses = stub.llamaResponses ? [...stub.llamaResponses] : [];
   return {
     ASSETS: { fetch: vi.fn() } as unknown as Fetcher,
@@ -25,6 +40,7 @@ function makeEnv(stub: AiCallStub): Env {
         return { response: responses.shift() ?? '' };
       }),
     } as unknown as Ai,
+    RATE_LIMITS: kv,
   };
 }
 
@@ -197,13 +213,14 @@ describe('POST /api/voice/parse (streaming)', () => {
   });
 
   it('emits whisper-error when transcription throws', async () => {
-    const env = {
+    const env: Env = {
       ASSETS: { fetch: vi.fn() } as unknown as Fetcher,
       AI: {
         run: vi.fn(async () => {
           throw new Error('Whisper boom');
         }),
       } as unknown as Ai,
+      RATE_LIMITS: makeKv(),
     };
     const res = await parseVoice(makeRequest(), env);
     const events = await readNdjson(res);
@@ -219,6 +236,33 @@ describe('POST /api/voice/parse (streaming)', () => {
     const events = await readNdjson(res);
     expect(events[0]).toMatchObject({ kind: 'whisper' });
     expect(events[1]).toMatchObject({ kind: 'error', reason: 'llama-error' });
+  });
+
+  it('returns rate-limited (429) once the daily cap is hit for the caller IP', async () => {
+    // Seed the KV with a counter at the cap for the hash of the default test IP.
+    // Easiest is to drive 20 calls through and observe the 21st.
+    const kv = makeKv();
+    const env = makeEnv(
+      {
+        whisper: { text: 'three sets of one minute', language: 'en' },
+        llamaResponses: Array.from({ length: 25 }, () => '{"sets":3,"workSec":60,"restSec":0}'),
+      },
+      kv,
+    );
+    const req = () =>
+      new Request('https://takt.hultberg.org/api/voice/parse', {
+        method: 'POST',
+        body: new Uint8Array(2048),
+        headers: { 'cf-connecting-ip': '203.0.113.99' },
+      });
+    for (let i = 0; i < 20; i++) {
+      await parseVoice(req(), env);
+    }
+    const res = await parseVoice(req(), env);
+    expect(res.status).toBe(429);
+    const events = await readNdjson(res);
+    expect(events[0]).toMatchObject({ kind: 'error', reason: 'rate-limited' });
+    expect(typeof events[0].retryAfterSec).toBe('number');
   });
 
   it('accepts Icelandic through the gate (Whisper sometimes misclassifies Swedish as Icelandic)', async () => {

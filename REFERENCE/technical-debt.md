@@ -56,6 +56,15 @@ Tracks known limitations, accepted shortcuts, and deferred improvements in Takt.
 - **Risk:** Low for now, rises with each phase.
 - **Resolution phase:** Phase 4, when auth and WebAuthn libraries enter the dep tree.
 
+### TD-017: Minimum-viable rate limiter in place of the Phase 3 proper design
+
+- **Location:** `worker/api/voice/rate-limit.ts`, `worker/api/voice/parse.ts` (the `checkAndIncrementRateLimit` call).
+- **Issue:** The Phase 3 spike ships a coarse 20/day-per-IP-hash KV-backed limiter — a cost-control guard, not the Phase 3 proper design. Missing: tuned 3/day anonymous cap, authenticated-user tier (Phase 4 dependency), `retryAfter` UX copy, dev-bypass flag, and the `ALLOW_RATE_LIMIT_BYPASS` env var support the spec calls for.
+- **Why accepted:** Size cap + origin check alone only reduce cost-per-abuse; the limiter is what caps total spend. Landing even a coarse limiter with the spike closes the live exposure. The full design lands with Phase 3 proper alongside the KV-vs-native Rate Limiting ADR.
+- **Risk:** Low. 20/day is permissive enough that legitimate users won't hit it during the spike, strict enough to cap adversarial abuse at a predictable daily neuron spend.
+- **Resolution phase:** Phase 3 proper.
+- **Future fix:** Replace with the full limiter: 3/day anonymous, higher authenticated tier (Phase 4), dev-bypass flag, `retryAfter` UX, and an ADR covering KV's eventual-consistency race. The call site in `parse.ts` should survive unchanged; only `rate-limit.ts` needs to rewrite.
+
 ### TD-001: Sound toggle lives on the Running screen, not in Settings
 
 - **Location:** `src/routes/Run.tsx` — top-right toggle; preference persisted in `takt.sound.v1`.
