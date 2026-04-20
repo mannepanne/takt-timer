@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { readNdjsonStream } from './stream';
+import { readNdjsonStream, type StreamLine } from './stream';
 
 function streamFromChunks(...chunks: string[]): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder();
@@ -12,8 +12,8 @@ function streamFromChunks(...chunks: string[]): ReadableStream<Uint8Array> {
   });
 }
 
-async function collect<T>(stream: ReadableStream<Uint8Array>) {
-  const out = [];
+async function collect<T>(stream: ReadableStream<Uint8Array>): Promise<StreamLine<T>[]> {
+  const out: StreamLine<T>[] = [];
   for await (const line of readNdjsonStream<T>(stream)) out.push(line);
   return out;
 }

@@ -3,8 +3,6 @@
 
 export type ParsedSession = { sets: number; workSec: number; restSec: number };
 
-export type SupportedLanguage = 'en' | 'sv' | 'is' | 'no' | 'nn' | 'nb' | 'da';
-
 export type ErrorReason =
   | 'upload-empty'
   | 'upload-too-large'
@@ -49,8 +47,9 @@ export type VoiceEvent =
   | { type: 'retry' };
 
 // Effects the machine asks the host (React hook, test harness) to execute.
-// iOS audioSession toggling lives here — Phase 2 sets 'ambient' for music coexistence;
-// capture requires 'play-and-record'. The machine flips the category on every entry/exit.
+// iOS audioSession toggling lives here — the timer keeps the category on 'ambient' so
+// background music coexists; mic capture requires 'play-and-record'. The machine flips
+// the category on every overlay entry/exit.
 export type AudioCategory = 'ambient' | 'play-and-record';
 
 export type Effect =
