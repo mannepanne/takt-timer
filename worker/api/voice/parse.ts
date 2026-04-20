@@ -6,6 +6,7 @@
 // ABOUT: once the second event arrives. No rate limiting in the spike — that lands with Phase 3 proper.
 
 import type { Env } from '../../index';
+import { isAllowedOrigin } from '../../lib/isAllowedOrigin';
 
 import { parseWithLlama } from './llama';
 import { transcribe } from './whisper';
@@ -42,15 +43,18 @@ type ErrorEvent = {
   reason:
     | 'upload-empty'
     | 'upload-too-large'
+    | 'origin-not-allowed'
     | 'empty-transcript'
     | 'language-unsupported'
     | 'whisper-error'
     | 'llama-error'
     | 'not-a-session'
     | 'schema-failed'
-    | 'method-not-allowed';
+    | 'method-not-allowed'
+    | 'rate-limited';
   message?: string;
   totalMs?: number;
+  retryAfterSec?: number;
 };
 
 type Event = WhisperEvent | ParsedEvent | ErrorEvent;
@@ -82,6 +86,10 @@ function errorResponse(event: ErrorEvent, status: number): Response {
 export async function parseVoice(request: Request, env: Env): Promise<Response> {
   if (request.method !== 'POST') {
     return errorResponse({ kind: 'error', reason: 'method-not-allowed' }, 405);
+  }
+
+  if (!isAllowedOrigin(request)) {
+    return errorResponse({ kind: 'error', reason: 'origin-not-allowed' }, 403);
   }
 
   // Fast-fail on Content-Length before buffering the body. Attackers can omit or lie about
