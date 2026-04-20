@@ -71,8 +71,8 @@ Output: {"sets":5,"workSec":45,"restSec":15}
 Input: "banana kayak helicopter"
 Output: {"error":"not-a-session"}`;
 
-/** Extract the first balanced JSON object from a string. */
-function extractJsonObject(text: string): string | null {
+/** Extract the first balanced JSON object from a string. Exported for direct unit testing. */
+export function extractJsonObject(text: string): string | null {
   const start = text.indexOf('{');
   if (start < 0) return null;
   let depth = 0;
