@@ -60,6 +60,29 @@ describe('POST /api/voice/parse (streaming)', () => {
     expect(events[0]).toMatchObject({ kind: 'error', reason: 'upload-empty' });
   });
 
+  it('returns upload-too-large when the audio payload exceeds MAX_AUDIO_BYTES', async () => {
+    const env = makeEnv({});
+    // 4 MB — one megabyte over the 3 MB cap.
+    const tooBig = new Uint8Array(4 * 1024 * 1024);
+    const res = await parseVoice(makeRequest(tooBig), env);
+    expect(res.status).toBe(413);
+    const events = await readNdjson(res);
+    expect(events[0]).toMatchObject({ kind: 'error', reason: 'upload-too-large' });
+  });
+
+  it('returns upload-too-large via Content-Length fast-fail without buffering the body', async () => {
+    const env = makeEnv({});
+    const req = new Request('https://takt.hultberg.org/api/voice/parse', {
+      method: 'POST',
+      body: new Uint8Array(2048),
+      headers: { 'content-length': String(10 * 1024 * 1024) },
+    });
+    const res = await parseVoice(req, env);
+    expect(res.status).toBe(413);
+    const events = await readNdjson(res);
+    expect(events[0]).toMatchObject({ kind: 'error', reason: 'upload-too-large' });
+  });
+
   it('emits whisper then parsed for a canonical English phrase', async () => {
     const env = makeEnv({
       whisper: { text: 'Three sets of one minute, 30 seconds rest', language: 'en' },
