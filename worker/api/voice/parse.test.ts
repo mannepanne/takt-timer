@@ -35,6 +35,14 @@ function makeRequest(body: BodyInit = new Uint8Array(2048), method: string = 'PO
   });
 }
 
+function makeCrossOriginRequest(): Request {
+  return new Request('https://takt.hultberg.org/api/voice/parse', {
+    method: 'POST',
+    body: new Uint8Array(2048),
+    headers: { origin: 'https://evil.example.com' },
+  });
+}
+
 async function readNdjson(res: Response): Promise<Array<Record<string, unknown>>> {
   const text = await res.text();
   return text
@@ -50,6 +58,14 @@ describe('POST /api/voice/parse (streaming)', () => {
     expect(res.status).toBe(405);
     const events = await readNdjson(res);
     expect(events).toEqual([{ kind: 'error', reason: 'method-not-allowed' }]);
+  });
+
+  it('rejects cross-origin requests with origin-not-allowed', async () => {
+    const env = makeEnv({});
+    const res = await parseVoice(makeCrossOriginRequest(), env);
+    expect(res.status).toBe(403);
+    const events = await readNdjson(res);
+    expect(events[0]).toMatchObject({ kind: 'error', reason: 'origin-not-allowed' });
   });
 
   it('returns upload-empty when the audio payload is too small', async () => {
