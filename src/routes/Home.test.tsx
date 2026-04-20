@@ -36,10 +36,10 @@ describe('Home', () => {
     localStorage.clear();
   });
 
-  it('renders the prompt and demo mic button', () => {
+  it('renders the prompt and mic button', () => {
     renderHome();
     expect(screen.getByRole('heading', { name: /what cadence do you need/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /voice input — coming soon/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /start voice input/i })).toBeInTheDocument();
   });
 
   it('Configure CTA navigates to /configure', async () => {

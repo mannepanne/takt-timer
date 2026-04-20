@@ -1,22 +1,43 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { MicButton } from './MicButton';
 
-describe('MicButton (demo)', () => {
-  it('renders an aria-disabled mic affordance with a "coming soon" hint', () => {
-    render(<MicButton />);
-    const btn = screen.getByRole('button', { name: /voice input — coming soon/i });
-    expect(btn).toHaveAttribute('aria-disabled', 'true');
-    expect(btn).toHaveAttribute('tabindex', '-1');
-    expect(screen.getByText(/voice input coming soon/i)).toBeInTheDocument();
+function wrapper({ children }: { children: React.ReactNode }) {
+  return <MemoryRouter>{children}</MemoryRouter>;
+}
+
+describe('MicButton', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
-  it('clicking the demo mic does not throw (preventDefault no-op)', async () => {
-    render(<MicButton />);
-    const btn = screen.getByRole('button', { name: /voice input/i });
+  it('renders an actionable mic button (no longer aria-disabled)', () => {
+    render(<MicButton />, { wrapper });
+    const btn = screen.getByRole('button', { name: /start voice input/i });
+    expect(btn).not.toHaveAttribute('aria-disabled');
+    expect(btn).not.toHaveAttribute('tabindex', '-1');
+  });
+
+  it('clicking the mic opens the Voice overlay', async () => {
+    vi.stubGlobal('MediaRecorder', undefined);
+    vi.stubGlobal('navigator', { ...navigator, onLine: true });
+    render(<MicButton />, { wrapper });
+    const btn = screen.getByRole('button', { name: /start voice input/i });
     await userEvent.click(btn);
-    expect(btn).toBeInTheDocument();
+    // Without MediaRecorder we land in browser-unsupported — overlay opens.
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
+  it('when offline, tapping the mic shows the offline overlay state', async () => {
+    vi.stubGlobal('navigator', { ...navigator, onLine: false });
+    vi.stubGlobal('MediaRecorder', class {});
+    render(<MicButton />, { wrapper });
+    const btn = screen.getByRole('button', { name: /start voice input/i });
+    await userEvent.click(btn);
+    expect(screen.getByRole('heading', { name: /offline/i })).toBeInTheDocument();
   });
 });
