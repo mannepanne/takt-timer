@@ -1412,13 +1412,109 @@ input {
   font-family: 'JetBrains Mono', ui-monospace, monospace;
 }
 
+/* ───────── Voice overlay (Phase 3) ───────── */
+.voice-overlay-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(245, 244, 240, 0.78);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.voice-overlay-sheet {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  border-radius: 20px;
+  padding: 32px 24px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+}
+.voice-overlay-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.voice-overlay-body {
+  margin: 0;
+  color: var(--ink-muted);
+  line-height: 1.4;
+}
+.voice-overlay-transcript {
+  margin: 0;
+  padding: 12px 16px;
+  background: var(--surface-subtle, rgba(0, 0, 0, 0.04));
+  border-radius: 12px;
+  font-style: italic;
+  color: var(--ink);
+  max-width: 100%;
+  word-break: break-word;
+}
+.voice-overlay-mic {
+  width: 88px;
+  height: 88px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink, #fff);
+  display: grid;
+  place-items: center;
+  position: relative;
+  border: none;
+}
+.voice-overlay-mic--button {
+  cursor: pointer;
+}
+.voice-overlay-mic--pulse::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 999px;
+  border: 2px solid var(--accent);
+  animation: micPulse 1.6s var(--ease) infinite;
+  pointer-events: none;
+}
+.voice-overlay-spinner {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 3px solid var(--ink-faint, rgba(0, 0, 0, 0.1));
+  border-top-color: var(--accent);
+  animation: spin 900ms linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.voice-overlay-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+.voice-overlay-cancel {
+  margin-top: 4px;
+  width: 100%;
+}
+
 /* ───────── Reduced motion ───────── */
 @media (prefers-reduced-motion: reduce) {
   .mic-pulse-ring,
   .mic-pulse-once,
   .run-cue-chip,
   .run-pip-chip,
-  .proc-dots .pdot {
+  .proc-dots .pdot,
+  .voice-overlay-mic--pulse::after,
+  .voice-overlay-spinner {
     animation: none !important;
   }
   .fade-enter-active,
