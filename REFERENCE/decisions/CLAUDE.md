@@ -138,6 +138,7 @@ grep -r "authentication" REFERENCE/decisions/
 
 **Format:** Listed chronologically (newest first)
 
+- **2026-04-20** — [Llama-primary voice pipeline with NDJSON-streaming response](./2026-04-20-llama-primary-ndjson-streaming.md) — Phase 3 voice architecture after the spike. Kills the deterministic parser, streams the Whisper transcript before the Llama-parsed session, widens the language gate to Nordic cousins, documents the error-content-safety contract.
 - **2026-04-19** — [State machines as pure reducers returning effects-as-data](./2026-04-19-reducer-plus-effects-pattern.md) — shape for every state machine in the project; locks the pattern Phase 2 shipped with so Phase 3/4/6 extend rather than reinvent.
 - **2026-04-19** — [Vite + React SPA over Next.js for Takt](./2026-04-19-vite-spa-over-nextjs.md) — deviation from project-wide Next.js default, justified by app-not-site nature of Takt.
 - **2026-04-19** — [Port prototype CSS instead of Tailwind + shadcn/ui](./2026-04-19-port-prototype-css.md) — deviation from project-wide Tailwind default, the prototype is the design and utility-class rewrite buys nothing.
