@@ -20,7 +20,7 @@ Before making an architectural decision that outlasts today's PR, consult [../RE
 
 Full product vision: [ORIGINAL_IDEA/project-outline.md](./ORIGINAL_IDEA/project-outline.md).
 
-**Current phase:** Phase 3 — Voice (not started).
+**Current phase:** Phase 3 — Voice (spike complete, main phase in progress).
 
 **Live deployment:** https://takt.hultberg.org — Phase 2 core timer live since 2026-04-19.
 

@@ -43,7 +43,7 @@ Built for Magnus's rehab training, released to the world because the problem —
 - Cloudflare Access with Magnus's existing Google IdP policy — admin gate.
 - Cloudflare Web Analytics — traffic visibility.
 
-**Current status:** Phase 1 (Foundation) and Phase 2 (Core timer) complete and deployed. Phase 3 (Voice) not started.
+**Current status:** Phase 1 (Foundation) and Phase 2 (Core timer) complete and deployed. Phase 3 (Voice) — architecture spike complete (Llama-primary + NDJSON streaming, validated on Android + iOS), main phase in progress.
 
 ## Implementation phases
 
@@ -56,7 +56,7 @@ Development is organised into six sequential phases. Each phase has its own spec
 5. [05-i18n-settings-onboarding.md](./SPECIFICATIONS/05-i18n-settings-onboarding.md) — English + Swedish, Settings, Onboarding, Privacy policy (4–6 days)
 6. [06-admin-and-launch.md](./SPECIFICATIONS/06-admin-and-launch.md) — admin backend, retention purge, hardening, launch (4–6 days)
 
-**Current phase:** Phase 3 — Voice (not started).
+**Current phase:** Phase 3 — Voice (spike complete, main phase in progress).
 
 **Live at:** https://takt.hultberg.org — Phase 2 core timer live since 2026-04-19.
 
