@@ -10,6 +10,7 @@ import { isAllowedOrigin } from '../../lib/isAllowedOrigin';
 import { toSafeErrorMessage } from '../../lib/toSafeErrorMessage';
 
 import { parseWithLlama } from './llama';
+import { checkAndIncrementRateLimit } from './rate-limit';
 import { transcribe } from './whisper';
 
 // Whisper occasionally tags Swedish speech as Icelandic (shared Nordic phonology,
@@ -107,6 +108,16 @@ export async function parseVoice(request: Request, env: Env): Promise<Response> 
   }
   if (audioBytes.byteLength < MIN_AUDIO_BYTES) {
     return errorResponse({ kind: 'error', reason: 'upload-empty' }, 400);
+  }
+
+  // Increment-before-inference — cancelled uploads and failed parses still consume quota,
+  // capping total Workers AI spend under adversarial load. See TD-017.
+  const rateCheck = await checkAndIncrementRateLimit(env.RATE_LIMITS, request);
+  if (!rateCheck.allowed) {
+    return errorResponse(
+      { kind: 'error', reason: 'rate-limited', retryAfterSec: rateCheck.retryAfterSec },
+      429,
+    );
   }
 
   const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();

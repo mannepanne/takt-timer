@@ -35,10 +35,14 @@ enabled = true
 # binding = "SESSIONS"
 # id = "<FILL_IN_FROM_CLOUDFLARE_DASHBOARD>"
 
-# KV — anonymous and authenticated rate-limit counters. Activated in Phase 3.
-# [[kv_namespaces]]
-# binding = "RATE_LIMITS"
-# id = "<FILL_IN_FROM_CLOUDFLARE_DASHBOARD>"
+# KV — anonymous and authenticated rate-limit counters. Activated for the
+# Phase 3 spike as a minimum-viable cost-control guard (TD-017). Phase 3
+# proper ships the full 3/day + authenticated-tier design.
+# Provision the namespace with: `pnpm dlx wrangler kv namespace create RATE_LIMITS`
+# Then paste the returned id below.
+[[kv_namespaces]]
+binding = "RATE_LIMITS"
+id = "<FILL_IN_AFTER_PROVISIONING>"
 
 # Workers AI — Whisper + Llama. Activated in Phase 3 for the voice pipeline.
 [ai]

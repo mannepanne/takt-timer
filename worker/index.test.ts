@@ -8,6 +8,13 @@ function makeEnv(assetBody = 'spa bundle'): Env {
       fetch: vi.fn(async () => new Response(assetBody, { status: 200 })),
     } as unknown as Fetcher,
     AI: { run: vi.fn(async () => ({ text: '' })) } as unknown as Ai,
+    RATE_LIMITS: {
+      get: vi.fn(async () => null),
+      put: vi.fn(async () => {}),
+      delete: vi.fn(async () => {}),
+      list: vi.fn(),
+      getWithMetadata: vi.fn(),
+    } as unknown as KVNamespace,
   };
 }
 

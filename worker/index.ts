@@ -8,6 +8,7 @@ import { applySecurityHeaders } from './lib/securityHeaders';
 export interface Env {
   ASSETS: Fetcher;
   AI: Ai;
+  RATE_LIMITS: KVNamespace;
   // Additional bindings are declared here as they are activated per-phase.
   // The canonical list of planned bindings lives in wrangler.toml.
 }
