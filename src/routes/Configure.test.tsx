@@ -49,4 +49,46 @@ describe('Configure route', () => {
     );
     expect(screen.getByRole('link', { name: 'Back to Home' })).toHaveAttribute('href', '/');
   });
+
+  it('pre-populates the session from location.state (voice handoff)', async () => {
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/configure',
+            state: { session: { sets: 5, workSec: 45, restSec: 15 } },
+          },
+        ]}
+      >
+        <Routes>
+          <Route path="/configure" element={<Configure />} />
+          <Route path="/run" element={<RunStateProbe />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    await userEvent.click(screen.getByRole('button', { name: /^start$/i }));
+    const state = JSON.parse(screen.getByTestId('nav-state').textContent ?? '{}');
+    expect(state.session).toMatchObject({ sets: 5, workSec: 45, restSec: 15 });
+  });
+
+  it('ignores malformed location.state and falls back to defaults', async () => {
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/configure',
+            state: { session: { sets: 'bogus' } },
+          },
+        ]}
+      >
+        <Routes>
+          <Route path="/configure" element={<Configure />} />
+          <Route path="/run" element={<RunStateProbe />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    await userEvent.click(screen.getByRole('button', { name: /^start$/i }));
+    const state = JSON.parse(screen.getByTestId('nav-state').textContent ?? '{}');
+    expect(state.session).toEqual({ sets: 3, workSec: 60, restSec: 30 });
+  });
 });

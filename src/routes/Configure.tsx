@@ -1,8 +1,9 @@
 // ABOUT: Configure route — edit a session's sets/work/rest via the Interpretation chips.
-// ABOUT: Start navigates to /run with the session as router state.
+// ABOUT: Accepts a pre-populated session via location.state.session (voice handoff) and
+// ABOUT: falls back to DEFAULT_SESSION when opened directly from Home. Start navigates to /run.
 
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import { Icon } from '@/components/icons';
 import { Interpretation } from '@/components/Interpretation';
@@ -12,9 +13,28 @@ import type { Session } from '@/lib/timer/types';
 
 const DEFAULT_SESSION: Session = { sets: 3, workSec: 60, restSec: 30 };
 
+function asSession(value: unknown): Session | null {
+  if (!value || typeof value !== 'object') return null;
+  const obj = value as Record<string, unknown>;
+  if (typeof obj.sets !== 'number') return null;
+  if (typeof obj.workSec !== 'number') return null;
+  if (typeof obj.restSec !== 'number') return null;
+  return {
+    sets: obj.sets,
+    workSec: obj.workSec,
+    restSec: obj.restSec,
+    name: typeof obj.name === 'string' ? obj.name : undefined,
+  };
+}
+
 export function Configure() {
   const navigate = useNavigate();
-  const [session, setSession] = useState<Session>(DEFAULT_SESSION);
+  const location = useLocation();
+  // Voice handoff lands a parsed session in location.state. Clamp happens inside
+  // Interpretation's Stepper bounds — zod enforced the server-side envelope already.
+  const initialSession =
+    asSession((location.state as { session?: unknown } | null)?.session) ?? DEFAULT_SESSION;
+  const [session, setSession] = useState<Session>(initialSession);
 
   const start = () => {
     // Unlock audio on this user gesture so the first beep works on iOS Safari.
