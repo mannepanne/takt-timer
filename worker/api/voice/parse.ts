@@ -16,6 +16,12 @@ import { transcribe } from './whisper';
 // Genuine French/German/etc. still get gated and don't burn Llama quota.
 const SUPPORTED_LANGUAGES = new Set(['en', 'sv', 'is', 'no', 'nn', 'nb', 'da']);
 
+const MIN_AUDIO_BYTES = 500;
+// 3 MB is ~30× a typical 8-second opus blob (~100 KB). Generous headroom for any MediaRecorder
+// MIME variant we accept, while capping the blast radius of unauthenticated abuse of the paid
+// Workers AI inference path.
+const MAX_AUDIO_BYTES = 3 * 1024 * 1024;
+
 type WhisperEvent = {
   kind: 'whisper';
   transcript: string;
@@ -35,6 +41,7 @@ type ErrorEvent = {
   kind: 'error';
   reason:
     | 'upload-empty'
+    | 'upload-too-large'
     | 'empty-transcript'
     | 'language-unsupported'
     | 'whisper-error'
@@ -77,9 +84,19 @@ export async function parseVoice(request: Request, env: Env): Promise<Response> 
     return errorResponse({ kind: 'error', reason: 'method-not-allowed' }, 405);
   }
 
+  // Fast-fail on Content-Length before buffering the body. Attackers can omit or lie about
+  // this header, so the belt-and-braces byteLength check below still runs.
+  const declaredLength = request.headers.get('content-length');
+  if (declaredLength && Number(declaredLength) > MAX_AUDIO_BYTES) {
+    return errorResponse({ kind: 'error', reason: 'upload-too-large' }, 413);
+  }
+
   const startedAt = performance.now();
   const audioBytes = new Uint8Array(await request.arrayBuffer());
-  if (audioBytes.byteLength < 500) {
+  if (audioBytes.byteLength > MAX_AUDIO_BYTES) {
+    return errorResponse({ kind: 'error', reason: 'upload-too-large' }, 413);
+  }
+  if (audioBytes.byteLength < MIN_AUDIO_BYTES) {
     return errorResponse({ kind: 'error', reason: 'upload-empty' }, 400);
   }
 
