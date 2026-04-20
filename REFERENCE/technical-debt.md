@@ -56,6 +56,24 @@ Tracks known limitations, accepted shortcuts, and deferred improvements in Takt.
 - **Risk:** Low for now, rises with each phase.
 - **Resolution phase:** Phase 4, when auth and WebAuthn libraries enter the dep tree.
 
+### TD-016: iOS Safari Whisper misclassifies Swedish as Icelandic
+
+- **Location:** Observed at the `/api/voice/parse` endpoint; specifically `worker/api/voice/parse.ts` language-gate block (`SUPPORTED_LANGUAGES`) and the Llama system prompt in `worker/api/voice/llama.ts`.
+- **Issue:** iOS Safari's Whisper path routinely transcribes Swedish speech with Icelandic phonology ("åtta" → "ótta", "sekunder" → "sekundar", "fyrtiofem" → "fyrtífem", "tio" → "tíu"). The language gate accepts `is` (Nordic cousin) so the call reaches Llama, but Llama's Swedish numeral table doesn't cover Icelandic spellings. Result: parsed numbers are sometimes wrong. Real-device bake-off observed ~50% wobble rate on Swedish phrases on iOS; Android and English on all platforms are unaffected.
+- **Why accepted:** The root cause is "no `language` hint passed to Whisper" — and we can't pass one until Phase 5 Settings gives us a user preference (auto-detect is needed for the language gate until then). Interpretation screen shows the parsed session before the timer starts, so users notice and edit wrong numbers. Phase 3 proper adds an interim mitigation (conditional prompt enrichment for `language === 'is'` + Icelandic numeral tokens).
+- **Risk:** **Low for English/Android; Medium for Swedish on iOS.** English is the default and is rock-solid on both platforms.
+- **Resolution phase:** Phase 3 proper ships the prompt-enrichment interim; Phase 5 Settings resolves the root cause by passing `language: 'sv'` to Whisper when the user has selected Swedish.
+- **Future fix:** `whisper.ts` gains an optional `language` param sourced from user preference; the Nordic-cousins gate can narrow back to `{en, sv}` at that point.
+
+### TD-015: KV eventually-consistent rate-limit race
+
+- **Location:** `worker/api/voice/rate-limit.ts` — the `get` → `put` sequence in `checkAndIncrementRateLimit`.
+- **Issue:** KV reads are eventually consistent. Under concurrent requests from the same IP, two workers can each read `current = N` before either writes `N + 1`, letting ~1-2 extra calls slip per IP before the counter catches up.
+- **Why accepted:** Bounded impact (single-digit extra calls per IP per day) against a cost-control limiter that's already a guard rather than a hard ceiling. Durable Objects would give strict consistency but are overkill for 3-per-day semantics.
+- **Risk:** Low. Attacker parallelising from one IP gains at most ~2 extra Workers AI calls before the counter settles.
+- **Resolution phase:** Revisit with Phase 4 authenticated tier — the threat model changes when we're protecting authenticated users' personal caps rather than an anonymous IP-wide aggregate.
+- **Future fix:** If revisit is warranted, move to Durable Objects per IP-hash, or route the authenticated-tier counters through D1 (strongly consistent).
+
 ### TD-017: Minimum-viable rate limiter in place of the Phase 3 proper design
 
 - **Location:** `worker/api/voice/rate-limit.ts`, `worker/api/voice/parse.ts` (the `checkAndIncrementRateLimit` call).
@@ -91,8 +109,7 @@ These are debt items declared in phase specs that will become active when the ph
 - **TD-003** (Phase 3): IP-based rate limiter only; authenticated-user tier added in Phase 4. Risk: Low.
 - **TD-013** (Phase 3): Language toggle UI not shipped — pipeline handles en/sv, UI choice lands Phase 5. Risk: Low.
 - **TD-014** (Phase 3): Silence detection / VAD deferred — hard 8s cap + manual stop only. Risk: Low. Resolution: Phase 5+ if user feedback warrants.
-- **TD-015** (Phase 3): KV eventually-consistent rate-limit race lets 1–2 extra calls slip per IP under concurrent requests. Accepted; revisit with Phase 4 authenticated tier. Risk: Low.
-- **TD-016** (Phase 3): iOS Safari's Whisper path routinely transcribes Swedish speech with Icelandic phonology ("åtta" → "ótta", "sekunder" → "sekundar", "fyrtiofem" → "fyrtífem"). The Llama system prompt's Swedish numeral table doesn't cover these spellings, so on iOS + Swedish the parsed numbers are sometimes wrong. Root cause: no `language` hint passed to Whisper (can't — we need auto-detect for the language gate until Phase 5 Settings gives us a user preference). Interim: the Interpretation screen catches wrong numbers before the timer starts. Resolution: Phase 5 passes `language: 'sv'` to Whisper when the user has selected Swedish. Android and iOS-in-English are unaffected. Risk: Low (English is the default and is rock-solid on both platforms).
+- **TD-004** (Phase 4): `isAdmin` flag set by hand in D1 until Phase 6 automates it. Acceptable because only Magnus needs admin before Phase 6. Risk: Low.
 - **TD-005** (Phase 4): No admin UI yet; users table inspected via direct D1 queries until Phase 6. Risk: Low.
 - **TD-006** (Phase 5): Missing-i18n-key warning is log-only, not a build-time check. Acceptable for two languages; revisit if a third lands. Risk: Low.
 
