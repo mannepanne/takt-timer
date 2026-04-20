@@ -91,4 +91,48 @@ describe('Configure route', () => {
     const state = JSON.parse(screen.getByTestId('nav-state').textContent ?? '{}');
     expect(state.session).toEqual({ sets: 3, workSec: 60, restSec: 30 });
   });
+
+  it.each([
+    { label: 'NaN', session: { sets: Number.NaN, workSec: 60, restSec: 30 } },
+    { label: 'Infinity', session: { sets: Infinity, workSec: 60, restSec: 30 } },
+    { label: 'negative', session: { sets: -1, workSec: 60, restSec: 30 } },
+    { label: 'float', session: { sets: 3.7, workSec: 60, restSec: 30 } },
+    { label: 'out-of-range high', session: { sets: 3, workSec: 99999, restSec: 30 } },
+    { label: 'out-of-range low', session: { sets: 3, workSec: 0, restSec: 30 } },
+    { label: 'zero sets', session: { sets: 0, workSec: 60, restSec: 30 } },
+  ])('rejects $label and falls back to defaults', async ({ session: bad }) => {
+    render(
+      <MemoryRouter initialEntries={[{ pathname: '/configure', state: { session: bad } }]}>
+        <Routes>
+          <Route path="/configure" element={<Configure />} />
+          <Route path="/run" element={<RunStateProbe />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    await userEvent.click(screen.getByRole('button', { name: /^start$/i }));
+    const state = JSON.parse(screen.getByTestId('nav-state').textContent ?? '{}');
+    expect(state.session).toEqual({ sets: 3, workSec: 60, restSec: 30 });
+  });
+
+  it('strips unexpected fields (e.g. name) from location.state — Phase 3 never emits them', async () => {
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/configure',
+            state: { session: { sets: 5, workSec: 45, restSec: 15, name: 'bogus' } },
+          },
+        ]}
+      >
+        <Routes>
+          <Route path="/configure" element={<Configure />} />
+          <Route path="/run" element={<RunStateProbe />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    await userEvent.click(screen.getByRole('button', { name: /^start$/i }));
+    const state = JSON.parse(screen.getByTestId('nav-state').textContent ?? '{}');
+    expect(state.session).toEqual({ sets: 5, workSec: 45, restSec: 15 });
+    expect(state.session.name).toBeUndefined();
+  });
 });

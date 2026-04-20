@@ -36,6 +36,7 @@ export type VoiceEvent =
   | { type: 'micTap'; online: boolean; supported: boolean }
   | { type: 'permissionGranted'; now: number }
   | { type: 'permissionDenied' }
+  | { type: 'hardwareUnavailable' }
   | { type: 'recordingStopped'; blob: Blob }
   | { type: 'recordingCap'; blob: Blob }
   | { type: 'blobEmpty' }

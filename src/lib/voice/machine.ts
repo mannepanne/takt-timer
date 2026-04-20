@@ -52,6 +52,11 @@ export function step(state: VoiceState, event: VoiceEvent): StepResult {
       if (event.type === 'permissionDenied') {
         return { next: { phase: 'permission-denied' }, effects: restoreAmbient() };
       }
+      if (event.type === 'hardwareUnavailable') {
+        // Hardware missing / busy / constraint-reject / unsupported MIME. User can't fix
+        // this from browser settings, so route to the unsupported-browser sheet copy.
+        return { next: { phase: 'browser-unsupported' }, effects: restoreAmbient() };
+      }
       if (event.type === 'cancel') {
         return { next: { phase: 'idle' }, effects: restoreAmbient() };
       }

@@ -17,8 +17,20 @@ import { postVoice } from './voice-client';
 
 const RECORDING_CAP_MS = 8_000;
 const MIN_AUDIO_BYTES = 500;
+const RETRY_TOAST_MS = 3_000;
 
 type StopReason = 'user' | 'cap' | 'cancel';
+
+// Non-permission getUserMedia / MediaRecorder construction errors. Distinct from
+// permissionDenied because the user action required differs: "check browser settings"
+// makes no sense when the mic hardware isn't available or the MIME is unsupported.
+const NON_PERMISSION_ERROR_NAMES = new Set([
+  'NotFoundError',
+  'NotReadableError',
+  'OverconstrainedError',
+  'AbortError',
+  'TypeError', // MediaRecorder constructor rejects invalid MIME as TypeError.
+]);
 
 export type VoiceApi = {
   state: VoiceState;
@@ -26,10 +38,12 @@ export type VoiceApi = {
   userStop: () => void;
   cancel: () => void;
   retry: () => void;
+  retryToastVisible: boolean;
 };
 
 export function useVoiceMachine(): VoiceApi {
   const [state, setState] = useState<VoiceState>(() => initial());
+  const [retryToastVisible, setRetryToastVisible] = useState(false);
   const stateRef = useRef<VoiceState>(state);
   stateRef.current = state;
 
@@ -39,6 +53,11 @@ export function useVoiceMachine(): VoiceApi {
   const capTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const postAbortRef = useRef<AbortController | null>(null);
   const stopReasonRef = useRef<StopReason>('user');
+  const retryToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Cancellation sentinel for the in-flight requestMic effect. Set true when the user
+  // taps Cancel while the OS permission dialog is showing, or when the component unmounts
+  // before getUserMedia resolves. Guards against the recorder starting with no one tracking it.
+  const pendingMicRef = useRef<{ cancelled: boolean } | null>(null);
 
   // sendRef lets effect handlers call send() without stale-closure issues.
   const sendRef = useRef<(event: VoiceEvent) => void>(() => {});
@@ -50,15 +69,18 @@ export function useVoiceMachine(): VoiceApi {
           setAudioCategory(effect.category);
           return;
 
-        case 'requestMic':
+        case 'requestMic': {
+          // Capture a fresh sentinel. If the user cancels during the permission prompt —
+          // or the component unmounts — we flip .cancelled = true and the resolving
+          // getUserMedia promise discards its handle instead of leaving a hot mic.
+          const pending = { cancelled: false };
+          pendingMicRef.current = pending;
           void (async () => {
             try {
               const handle = await micStartRecording({
                 onStop: (blob) => {
-                  // Fires for every stop path: user-tap, cap timer, cancel. The
-                  // stopReasonRef tells us which one triggered it.
                   const reason = stopReasonRef.current;
-                  if (reason === 'cancel') return; // discard path — no dispatch.
+                  if (reason === 'cancel') return;
                   if (reason === 'cap') {
                     sendRef.current({ type: 'recordingCap', blob });
                   } else {
@@ -74,20 +96,29 @@ export function useVoiceMachine(): VoiceApi {
                   sendRef.current({ type: 'errorArrived', reason: 'whisper-error' });
                 },
               });
+              if (pending.cancelled) {
+                handle.discard();
+                return;
+              }
               recorderRef.current = handle;
               sendRef.current({ type: 'permissionGranted', now: performance.now() });
             } catch (err) {
-              const name = (err as { name?: string } | null)?.name;
+              if (pending.cancelled) return;
+              const name = (err as { name?: string } | null)?.name ?? '';
               if (name === 'NotAllowedError' || name === 'SecurityError') {
                 sendRef.current({ type: 'permissionDenied' });
+              } else if (NON_PERMISSION_ERROR_NAMES.has(name)) {
+                // Hardware missing / busy / constraint-reject / unsupported MIME — the
+                // user can't fix this from browser settings. Machine routes us to the
+                // browser-unsupported sheet.
+                sendRef.current({ type: 'hardwareUnavailable' });
               } else {
-                // Unsupported browser / no MIME / hardware error — same calm UI as
-                // permission-denied. A richer split lands with Voice overlay copy.
                 sendRef.current({ type: 'permissionDenied' });
               }
             }
           })();
           return;
+        }
 
         case 'startRecording':
           // mic.startRecording already started the recorder inside 'requestMic'. No-op.
@@ -136,8 +167,12 @@ export function useVoiceMachine(): VoiceApi {
           return;
 
         case 'showRetryToast':
-          // The overlay component owns the toast UI. The machine state carries the
-          // signal (idle-post-blob-empty); the component observes and renders.
+          if (retryToastTimerRef.current) clearTimeout(retryToastTimerRef.current);
+          setRetryToastVisible(true);
+          retryToastTimerRef.current = setTimeout(() => {
+            retryToastTimerRef.current = null;
+            setRetryToastVisible(false);
+          }, RETRY_TOAST_MS);
           return;
 
         case 'navigateToConfigure':
@@ -176,6 +211,10 @@ export function useVoiceMachine(): VoiceApi {
   }, []);
 
   const cancel = useCallback(() => {
+    // Flip the in-flight requestMic sentinel before the state transition. If the user
+    // cancels while the OS permission prompt is up, the resolving getUserMedia promise
+    // will see cancelled=true and discard its handle rather than leaving a live recorder.
+    if (pendingMicRef.current) pendingMicRef.current.cancelled = true;
     send({ type: 'cancel' });
   }, [send]);
 
@@ -184,9 +223,11 @@ export function useVoiceMachine(): VoiceApi {
   }, [send]);
 
   // Unmount cleanup — discard any in-flight recorder, abort any pending POST,
-  // clear the cap timer, restore ambient audio.
+  // clear the cap timer and retry-toast timer, cancel any in-flight requestMic,
+  // restore ambient audio.
   useEffect(
     () => () => {
+      if (pendingMicRef.current) pendingMicRef.current.cancelled = true;
       recorderRef.current?.discard();
       recorderRef.current = null;
       postAbortRef.current?.abort();
@@ -195,10 +236,14 @@ export function useVoiceMachine(): VoiceApi {
         clearTimeout(capTimerRef.current);
         capTimerRef.current = null;
       }
+      if (retryToastTimerRef.current) {
+        clearTimeout(retryToastTimerRef.current);
+        retryToastTimerRef.current = null;
+      }
       setAudioCategory('ambient');
     },
     [],
   );
 
-  return { state, micTap, userStop, cancel, retry };
+  return { state, micTap, userStop, cancel, retry, retryToastVisible };
 }

@@ -5,7 +5,7 @@ import { VoiceOverlay } from '@/components/VoiceOverlay';
 import { useVoiceMachine } from '@/lib/voice/useVoiceMachine';
 
 export function MicButton() {
-  const { state, micTap, userStop, cancel, retry } = useVoiceMachine();
+  const { state, micTap, userStop, cancel, retry, retryToastVisible } = useVoiceMachine();
 
   return (
     <>
@@ -22,6 +22,12 @@ export function MicButton() {
       </div>
 
       <VoiceOverlay state={state} onUserStop={userStop} onCancel={cancel} onRetry={retry} />
+
+      {retryToastVisible && (
+        <div className="mic-retry-toast" role="status" aria-live="polite">
+          Didn&rsquo;t catch that &mdash; tap the mic and try again.
+        </div>
+      )}
     </>
   );
 }

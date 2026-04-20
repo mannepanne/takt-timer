@@ -13,18 +13,28 @@ import type { Session } from '@/lib/timer/types';
 
 const DEFAULT_SESSION: Session = { sets: 3, workSec: 60, restSec: 30 };
 
+// Bounds match the worker-side zod envelope and the Interpretation Stepper limits.
+// Any value outside these ranges — or NaN / Infinity / non-integer — falls back to
+// DEFAULT_SESSION rather than reaching the Stepper, where Math.max(min, NaN) would
+// propagate NaN into the run loop. `name` is stripped; Phase 3 voice never emits it
+// and accepting it would widen the location.state trust boundary unnecessarily.
+function isBoundedInt(value: unknown, min: number, max: number): value is number {
+  return (
+    typeof value === 'number' &&
+    Number.isFinite(value) &&
+    Number.isInteger(value) &&
+    value >= min &&
+    value <= max
+  );
+}
+
 function asSession(value: unknown): Session | null {
   if (!value || typeof value !== 'object') return null;
   const obj = value as Record<string, unknown>;
-  if (typeof obj.sets !== 'number') return null;
-  if (typeof obj.workSec !== 'number') return null;
-  if (typeof obj.restSec !== 'number') return null;
-  return {
-    sets: obj.sets,
-    workSec: obj.workSec,
-    restSec: obj.restSec,
-    name: typeof obj.name === 'string' ? obj.name : undefined,
-  };
+  if (!isBoundedInt(obj.sets, 1, 99)) return null;
+  if (!isBoundedInt(obj.workSec, 5, 3600)) return null;
+  if (!isBoundedInt(obj.restSec, 0, 3600)) return null;
+  return { sets: obj.sets, workSec: obj.workSec, restSec: obj.restSec };
 }
 
 export function Configure() {
