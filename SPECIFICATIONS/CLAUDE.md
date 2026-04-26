@@ -20,7 +20,7 @@ Before making an architectural decision that outlasts today's PR, consult [../RE
 
 Full product vision: [ORIGINAL_IDEA/project-outline.md](./ORIGINAL_IDEA/project-outline.md).
 
-**Current phase:** Phase 3 — Voice (spike complete, main phase in progress).
+**Current phase:** Phase 3 — Voice. Spike (PR #6), B1 plumbing (PR #7), and B2 React/UI (PR #8) merged. B3 (cleanup, full rate limiter, exit-criteria sweep) is the next chunk — start at `03-voice.md` "Phase 3 progress".
 
 **Live deployment:** https://takt.hultberg.org — Phase 2 core timer live since 2026-04-19.
 
