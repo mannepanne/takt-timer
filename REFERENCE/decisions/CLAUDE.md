@@ -138,6 +138,8 @@ grep -r "authentication" REFERENCE/decisions/
 
 **Format:** Listed chronologically (newest first)
 
+- **2026-04-22** — [Opt-in config flag for the review system, with local override](./2026-04-22-prreviewmode-opt-in-config.md) — why `prReviewMode` is a tri-state enum (`enabled` / `disabled` / `prompt-on-first-use`), why the template default is the prompt state, why there's a gitignored local override, and why the gate logic is canonical-not-copied (single source of truth in `.claude/skills/review-gate.md`, referenced from each skill's Step 0 rather than duplicated).
+- **2026-04-22** — [Tiered PR review via a triage dispatcher](./2026-04-22-tiered-pr-review-dispatcher.md) — why `/review-pr` triages into light/standard/team tiers, why the rubric lives in a prompt, and why `/review-pr-team` stays independent.
 - **2026-04-20** — [Llama-primary voice pipeline with NDJSON-streaming response](./2026-04-20-llama-primary-ndjson-streaming.md) — Phase 3 voice architecture after the spike. Kills the deterministic parser, streams the Whisper transcript before the Llama-parsed session, widens the language gate to Nordic cousins, documents the error-content-safety contract.
 - **2026-04-19** — [State machines as pure reducers returning effects-as-data](./2026-04-19-reducer-plus-effects-pattern.md) — shape for every state machine in the project; locks the pattern Phase 2 shipped with so Phase 3/4/6 extend rather than reinvent.
 - **2026-04-19** — [Vite + React SPA over Next.js for Takt](./2026-04-19-vite-spa-over-nextjs.md) — deviation from project-wide Next.js default, justified by app-not-site nature of Takt.

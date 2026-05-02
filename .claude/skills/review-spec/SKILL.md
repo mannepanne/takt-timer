@@ -45,17 +45,19 @@ Agent teams require the feature flag to be enabled in `.claude/settings.json`:
 
 When this skill is invoked with a spec file path or name (e.g., `/review-spec SPECIFICATIONS/07-new-feature.md`):
 
+### Step 0: Review-mode gate
+
+Run the gate defined in [`.claude/skills/review-gate.md`](../review-gate.md) → "Gate logic". When rendering the disabled message, substitute this skill's name: `review-spec`. If the gate tells you to stop, stop. If it tells you to proceed, continue to Step 1.
+
 ### Step 1: Locate the Spec
 
 Resolve the spec file:
+
 - If `$ARGUMENTS` is a full path, use it directly
-- If it's a partial name, search `SPECIFICATIONS/` for a matching file:
-  ```bash
-  find SPECIFICATIONS/ -name "*$ARGUMENTS*" -not -path "*/ARCHIVE/*"
-  ```
+- If it's a partial name, search `SPECIFICATIONS/` for a matching file using the `Glob` tool with pattern `SPECIFICATIONS/*$ARGUMENTS*` and (if nothing matches) `SPECIFICATIONS/**/*$ARGUMENTS*`. Filter out any path containing `/ARCHIVE/` from the results.
 - If ambiguous, ask the user to clarify
 
-Confirm the spec file exists and read the first 50 lines to understand its scope before proceeding.
+Use `Glob`, not `find`, so the resolution stays silent — `find` against arbitrary paths prompts; `Glob` doesn't. Confirm the spec file exists and read the first 50 lines with the `Read` tool to understand its scope before proceeding.
 
 ---
 
@@ -89,6 +91,7 @@ Your task: conduct a strategic challenge review of the spec at `$ARGUMENTS`. Fol
 **PHASE 1: Independent Review**
 
 Each teammate:
+
 1. Follow your agent definition instructions to gather context and conduct your review
 2. Document findings as specified in your agent definition
 3. Stay focused on your specialized perspective
@@ -120,6 +123,7 @@ After all three reviewers complete their independent analysis:
    - Disagreements are valuable — document them clearly
 
 **Discussion Guidelines:**
+
 - Use `broadcast` to share findings with the whole team
 - Use `message` to directly question or challenge a specific reviewer
 - Be rigorous but constructive
@@ -170,6 +174,7 @@ After all teammates complete the discussion phase, gather their final refined fi
 
 **Format per issue:**
 **Issue:** [Description]
+
 - **Raised by:** [which reviewer(s)]
 - **Why blocking:** [specific impact if ignored]
 - **Resolution needed:** [what the spec needs to say to unblock this]
@@ -182,6 +187,7 @@ After all teammates complete the discussion phase, gather their final refined fi
 
 **Format per condition:**
 **Condition:** [Description]
+
 - **Raised by:** [which reviewer(s)]
 - **Risk if ignored:** [specific consequence]
 - **Suggested approach:** [how to address it]
@@ -203,6 +209,7 @@ After all teammates complete the discussion phase, gather their final refined fi
 ### 🤝 Team Discussion Highlights
 
 [Key moments from the collaborative discussion]
+
 - Where reviewers challenged each other and changed their assessment
 - Tradeoffs debated
 - Points of genuine disagreement (documented clearly)
@@ -216,6 +223,7 @@ After all teammates complete the discussion phase, gather their final refined fi
 **Devil's Advocate:** [X fundamental challenges, Y questionable assumptions, Z alternatives proposed]
 
 **Consensus Status:**
+
 - Issues with unanimous agreement: X
 - Issues with 2/3 agreement: Y
 - Issues with split opinions: Z
@@ -245,7 +253,7 @@ After presenting the review:
 /review-spec interest-signals
 ```
 
-Expected time: 5-10 minutes depending on spec size and discussion depth.
+Expected time: 2-7 minutes depending on spec size and discussion depth.
 
 ---
 
