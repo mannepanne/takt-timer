@@ -342,3 +342,35 @@ We value documentation - it enables picking up projects later and communicating 
 - Focus on clarity, completeness, and actionability
 
 **Writing style:** British English, sentence-case headlines, match existing style when editing. Full guide: [documentation-standards.md](./COLLABORATION/documentation-standards.md)
+
+### Proactive Doc-Refresh Offers
+
+Documentation drifts from reality faster than it feels like it should. Don't wait to be asked — proactively offer a documentation sweep at natural breakpoints. Keep it as a single soft offer, not a recurring nag.
+
+**Trigger an offer when any of these occur:**
+
+- A phase completes (spec moved to `SPECIFICATIONS/ARCHIVE/`, or I say "we're done with phase X")
+- When I mention I've merged several PRs recently, or `git log --oneline CLAUDE.md .claude/ REFERENCE/ SPECIFICATIONS/CLAUDE.md` shows many merges since the last docs-touching commit
+- After a significant architectural change (new service, swapped library, restructured folders, new ADR)
+- When CLAUDE.md or REFERENCE/ files haven't been touched in a while but the code has clearly moved on (e.g. tech stack section names something the code no longer uses)
+- When I mention I'm about to onboard someone (collaborator, future-self after a break, the wider team)
+
+**How to offer:** one short, low-pressure sentence at a natural pause — never mid-task, never in the middle of debugging. Example:
+
+> "We've finished phase 2 — want me to do a quick docs sweep before we kick off phase 3? Should take a few minutes and keeps everything coherent."
+
+**Do NOT offer:**
+
+- More than once per natural breakpoint — if I say "not now", drop it until the next trigger fires
+- During active flow (mid-PR, mid-debug, mid-implementation)
+- If a sweep was done within the last few PRs already
+
+**If accepted, the sweep should:**
+
+1. Read root `CLAUDE.md`, `.claude/CLAUDE.md`, all `.claude/COLLABORATION/` files, `SPECIFICATIONS/CLAUDE.md`, and all `REFERENCE/` files
+2. Cross-check against the current code and recent git history
+3. Flag drift (stale references, missing new features, outdated phase status, broken links)
+4. Propose specific edits — don't just rewrite wholesale
+5. Get sign-off before committing
+
+**Detailed templates and process:** [documentation-standards.md](./COLLABORATION/documentation-standards.md)
