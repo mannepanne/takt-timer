@@ -14,16 +14,19 @@ This skill provides comprehensive pull request review using **agent teams** - th
 ## How This Works
 
 **Phase 1: Independent Review**
+
 - Security Specialist, Product Manager, and Senior Architect each review the PR from their unique perspective
 - Each has fresh context (no bias from the main session)
 
 **Phase 2: Collaborative Discussion**
+
 - Reviewers share findings with each other
 - Challenge assumptions and debate severity ratings
 - Propose solutions collaboratively
 - Reach consensus on critical vs non-critical issues
 
 **Phase 3: Synthesis**
+
 - Lead synthesizes the team's collaborative findings
 - Posts unified review to PR with clear consensus/disagreements noted
 
@@ -50,6 +53,12 @@ This project template comes with it enabled. When copying this skill to a differ
 ## Instructions for Claude
 
 When this skill is invoked with a PR number (e.g., `/review-pr-team 1`):
+
+### Step 0: Review-mode gate
+
+Run the gate defined in [`.claude/skills/review-gate.md`](../review-gate.md) → "Gate logic". When rendering the disabled message, substitute this skill's name: `review-pr-team`. If the gate tells you to stop, stop. If it tells you to proceed, continue to Step 1.
+
+_(If you were invoked by `/review-pr` auto-escalating to team tier, the dispatcher has already passed this check — the resolved flag will be `"enabled"` when you get here, and the gate is a fast no-op.)_
 
 ### Step 1: Create Agent Team
 
@@ -84,6 +93,7 @@ Your task: conduct a documentation-focused review of PR #$ARGUMENTS. Check that 
 **PHASE 1: Independent Review**
 
 Each teammate:
+
 1. Follow your agent definition instructions to gather context and conduct review
 2. Document findings as specified in your agent definition
 3. Focus on your specialized perspective
@@ -115,6 +125,7 @@ After all teammates complete their independent analysis:
    - Note: It's OK to have disagreements - document them clearly
 
 **Discussion Guidelines:**
+
 - Use `broadcast` to share findings with the whole team
 - Use `message` to directly question or challenge a specific reviewer
 - Be rigorous but constructive
@@ -128,6 +139,7 @@ After the collaborative discussion, each teammate should have refined their find
 ---
 
 **Team Coordination:**
+
 - All teammates work from the shared task list in parallel
 - Each reviewer conducts their independent review simultaneously
 - Once all teammates are done, open discussion begins for debate and consensus-building
@@ -162,6 +174,7 @@ After all teammates complete the discussion phase:
 > This review was conducted by a team of specialized reviewers who independently analyzed the PR, then discussed findings, debated severity, and reached collaborative consensus.
 
 ### ✅ Completion Requirements Met?
+
 - [ ] Tests exist and pass (95%+ coverage shown)
 - [ ] Documentation updated (check REFERENCE/ if implementation work)
 - [ ] Code quality verified (conventions, no secrets, clean history)
@@ -175,6 +188,7 @@ After all teammates complete the discussion phase:
 
 **Example:**
 **Issue: Hardcoded API key in config.ts:42** 🛡️ Security 🏗️ Architecture
+
 - **Severity:** Critical (unanimous)
 - **Security perspective:** Secrets in code = immediate vulnerability
 - **Architect perspective:** Violates 12-factor app principles
@@ -189,6 +203,7 @@ After all teammates complete the discussion phase:
 
 **Example:**
 **Issue: No error handling in user input handler** 🛡️ Security 📦 Product
+
 - **Initial severity:** Security rated Critical, Product rated Warning
 - **After discussion:** Agreed on Warning (non-critical path, but should fix)
 - **Why not blocking:** Input is already validated upstream (Architect confirmed)
@@ -201,6 +216,7 @@ After all teammates complete the discussion phase:
 
 **Example:**
 **Comprehensive test coverage** ✅ All reviewers
+
 - Unit tests, integration tests, and edge cases covered
 - Architect: "Test structure is exemplary"
 - Product: "Edge cases thoroughly tested"
@@ -214,6 +230,7 @@ After all teammates complete the discussion phase:
 ### 🤝 Team Discussion Highlights
 
 [Capture key moments from the collaborative discussion]
+
 - Where debate changed severity ratings
 - Where one reviewer's insight helped others
 - Tradeoffs that were discussed
@@ -222,12 +239,14 @@ After all teammates complete the discussion phase:
 ### 📊 Review Summary
 
 **Team Composition:**
+
 - 🛡️ Security Specialist: [X critical, Y warnings, Z suggestions]
 - 📦 Product Manager: [X critical, Y warnings, Z suggestions]
 - 🏗️ Senior Architect: [X critical, Y warnings, Z suggestions]
 - ✍️ Technical Writer: [X critical, Y gaps, Z suggestions]
 
 **Consensus Status:**
+
 - Issues with unanimous agreement: X
 - Issues with 2/3 agreement: Y
 - Issues with split opinions: Z (documented above)
@@ -236,14 +255,18 @@ After all teammates complete the discussion phase:
 
 ---
 
-*This review was conducted by an agent team using collaborative discussion. Reviewers independently analyzed the PR, then shared findings, challenged each other's conclusions, and reached consensus through structured debate.*
+_This review was conducted by an agent team using collaborative discussion. Reviewers independently analyzed the PR, then shared findings, challenged each other's conclusions, and reached consensus through structured debate._
 ```
 
-3. **Post the synthesized review** as a comment on the PR:
+3. **Post the synthesized review** as a comment on the PR. Build the body as a string, write it to a temp file via the Write tool (path `SCRATCH/review-pr-$ARGUMENTS-team.md`), then post with `--body-file`:
 
 ```bash
-gh pr comment $ARGUMENTS --body "[markdown content from above]"
+gh pr comment $ARGUMENTS --body-file SCRATCH/review-pr-$ARGUMENTS-team.md
 ```
+
+Using `--body-file` avoids the brittle heredoc-quoting pattern (where the synthesised review containing the literal token `EOF` on its own line would terminate the heredoc early and either mangle the comment or run unintended shell).
+
+**Read-then-Write fallback (avoid `rm -f`).** If the Write tool errors with _"File has not been read yet"_ (because a stale temp file exists at the same path from a prior abandoned run), call **Read on the path first** to satisfy the Write prerequisite, then re-issue the Write. Do **not** use `Bash(rm -f SCRATCH/…)` to clear stale files — `rm -f` is not allowlisted (and shouldn't be broadly allowlisted) so it triggers a manual approval prompt; Read-then-Write stays silent. Don't bother cleaning up the temp file after posting either: the next run handles staleness via the same fallback.
 
 4. **Provide user summary:**
    - Total critical issues found
@@ -263,6 +286,7 @@ After posting the review:
    - Wait for confirmation from each
 
 2. **Clean up team resources:**
+
 ```text
 Clean up the team
 ```
@@ -276,6 +300,7 @@ Clean up the team
 ```
 
 This will:
+
 1. Create agent team with security, product, and architect reviewers
 2. Team gathers their own context (PR details, CLAUDE.md, specs, changed files)
 3. Reviewers independently analyze the PR
@@ -284,7 +309,7 @@ This will:
 6. Post comprehensive review to PR #1
 7. Clean up team
 
-Expected time: 5-10 minutes (depending on PR size and discussion depth)
+Expected time: 2-7 minutes (depending on PR size and discussion depth)
 
 ---
 
@@ -301,6 +326,7 @@ Expected time: 5-10 minutes (depending on PR size and discussion depth)
 ## When to Use Which Review
 
 **Use `/review-pr`:**
+
 - Quick sanity checks
 - Small, straightforward changes
 - Non-critical bug fixes
@@ -308,29 +334,34 @@ Expected time: 5-10 minutes (depending on PR size and discussion depth)
 - You want fast feedback (1-2 minutes)
 
 **Use `/review-pr-team`:**
+
 - Critical infrastructure changes
 - Security-sensitive features
 - Major architectural decisions
 - Complex multi-file changes
 - When multiple perspectives add real value
-- You want thorough collaborative analysis (5-10 minutes)
+- You want thorough collaborative analysis (2-7 minutes)
 
 ---
 
 ## Troubleshooting
 
 **If teammates aren't discussing:**
+
 - Tell them explicitly: "Share your findings via broadcast and debate the severity ratings"
 - Check that they've all completed Phase 1 before expecting Phase 2
 
 **If discussion is too shallow:**
+
 - Encourage deeper debate: "Challenge each other's assumptions more directly"
 - Ask specific questions: "Security reviewer - do you agree with the architect's assessment of this pattern?"
 
 **If team doesn't shut down cleanly:**
+
 - List running teammates and shut them down individually
 - Run cleanup manually after all teammates are stopped
 
 **If you see "session resumption" issues:**
+
 - Known limitation: `/resume` doesn't restore in-process teammates
 - Tell the lead to spawn new teammates if this happens

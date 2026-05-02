@@ -158,6 +158,16 @@ service-account*.json
 # Per-developer Claude Code settings (commit settings.json, not the local overrides)
 .claude/settings.local.json
 
+# Per-clone override for the review-mode flag. The committed
+# .claude/project-config.json governs what cloners inherit; this local file
+# lets a maintainer run a different prReviewMode locally (e.g. "enabled" for
+# dogfooding on the template repo) without flipping the committed default.
+.claude/project-config.local.json
+
+# Temporary scratch files for review skills (gitignored; the Read-then-Write
+# fallback in review-pr/review-pr-team handles stale artefacts across runs)
+SCRATCH/
+
 # Project-specific (add your own below this line)
 # Example:
 # /data/

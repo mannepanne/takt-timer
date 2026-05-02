@@ -117,7 +117,7 @@ _Note: CLAUDE.md files are kept short (<300 lines). Details live in subdirectory
 3. Run `/review-spec` for non-trivial specs before writing code.
 4. Implement with tests (TDD preferred).
 5. Run tests and typecheck before committing.
-6. Open PR; use `/review-pr` for routine changes, `/review-pr-team` for architecture- or security-sensitive work. See [pr-review-workflow.md](./REFERENCE/pr-review-workflow.md).
+6. Open PR; run `/review-pr` — the dispatcher picks the tier automatically. For critical changes where you want to skip triage, use `/review-pr-team`. See [pr-review-workflow.md](./REFERENCE/pr-review-workflow.md).
 
 ## TypeScript configuration
 
