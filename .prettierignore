@@ -5,3 +5,4 @@ coverage
 SPECIFICATIONS/prototype-design-files
 migrations
 pnpm-lock.yaml
+.claude
