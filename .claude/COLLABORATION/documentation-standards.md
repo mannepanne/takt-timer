@@ -11,7 +11,7 @@
 
 Reference guide for creating project documentation.
 
-## Writing Style
+## Writing style
 
 - **British English** — optimise, minimise, colour, etc.
 - **Sentence-case headlines** — only capitalise the first word and proper nouns (e.g. "Getting started with the project", not "Getting Started With The Project")

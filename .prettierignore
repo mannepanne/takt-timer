@@ -5,4 +5,4 @@ coverage
 SPECIFICATIONS/prototype-design-files
 migrations
 pnpm-lock.yaml
-.claude
+.claude # Claude-managed files — Prettier inflates blank lines around list items
