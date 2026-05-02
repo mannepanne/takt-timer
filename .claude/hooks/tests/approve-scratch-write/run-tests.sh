@@ -72,8 +72,12 @@ for in_file in "$FIXTURES"/*.in.json; do
         continue
     fi
 
-    actual=$("$HOOK" < "$in_file" 2>/dev/null)
-    expected=$(cat "$expected_file")
+    # Normalise both sides to compact JSON so the comparison is format-agnostic.
+    # The hook emits compact JSON; expected files may be pretty-printed by tools
+    # like prettier. python3 json.dumps produces the same compact form both ways.
+    # Empty output (passthrough-* fixtures) passes through as an empty string.
+    actual=$(python3 -c "import json,sys; s=sys.stdin.read().strip(); print(json.dumps(json.loads(s))) if s else None" < <("$HOOK" < "$in_file" 2>/dev/null))
+    expected=$(python3 -c "import json,sys; s=sys.stdin.read().strip(); print(json.dumps(json.loads(s))) if s else None" < "$expected_file")
 
     if [ "$actual" = "$expected" ]; then
         PASS=$((PASS + 1))
