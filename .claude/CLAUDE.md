@@ -148,15 +148,7 @@ We prefer free/low-cost, state-of-the-art solutions. Always use latest stable ve
 
 ### Testing Strategy
 
-Tests serve dual purposes: **Validation** (verify code works) and **Directional Context** (guide AI development).
-
-**Core principles:**
-- Write tests first (TDD workflow)
-- Target high coverage (95%+ lines/functions/statements, 90%+ branches)
-- Tests are living specifications
-- Pre-commit: run tests and type-check
-
-**Complete testing guide:** See project-specific testing-strategy.md in REFERENCE/ (loaded when working on tests)
+TDD — write tests first; tests are executable specs. Pre-commit: run tests and typecheck. Coverage targets and full guide: [testing-strategy.md](../REFERENCE/testing-strategy.md).
 
 ### Pre-Implementation Checklist
 
@@ -232,21 +224,9 @@ The goal is tracking our work and enabling collaboration, not perfect git aesthe
 
 ## Claude Code Specific Guidelines
 
-### Tool Usage
-- Use concurrent tool calls when possible (batch independent operations)
-- Prefer Task tool for complex searches to reduce context usage
-- Use TodoWrite/TodoRead for task tracking and project visibility
-
 ### Communication
-- Be concise in responses (aim for < 4 lines unless detail requested)
 - Use `file_path:line_number` format when referencing code locations
-- Avoid unnecessary preamble or postamble
 - When you are using /compact, please focus on our conversation, your most recent (and most significant) learnings, and what you need to do next. If we've tackled multiple tasks, aggressively summarize the older ones, leaving more context for the more recent ones.
-
-### File Operations
-- Always prefer editing existing files over creating new ones
-- Use Read tool before Write/Edit operations
-- Check file structure and patterns before making changes
 
 ### Learning and Memory Management
 - Use and update the project documentation frequently to capture technical insights, failed approaches, and user preferences.
@@ -298,9 +278,4 @@ We value documentation - it enables picking up projects later and communicating 
 - Keep documentation current alongside code changes
 - Focus on clarity, completeness, and actionability
 
-**Writing style:**
-- **British English** - Use British spelling throughout (optimise not optimize, minimise not minimize, colour not color, etc.)
-- **Headline capitalisation** - Only capitalise the first word in headlines and proper nouns, not every word (e.g., "Getting started with the project" not "Getting Started With The Project")
-- **Consistency** - Match the style of existing documentation when editing
-
-**Detailed templates and process:** [documentation-standards.md](./COLLABORATION/documentation-standards.md)
+**Writing style:** British English, sentence-case headlines, match existing style when editing. Full guide: [documentation-standards.md](./COLLABORATION/documentation-standards.md)

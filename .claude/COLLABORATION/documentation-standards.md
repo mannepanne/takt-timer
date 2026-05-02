@@ -3,12 +3,19 @@
 **When to read this:** Creating or updating project documentation, README files, or reference guides.
 
 **Related Documents:**
+
 - [CLAUDE.md](../../CLAUDE.md) - Project navigation index
 - [.claude/CLAUDE.md](../CLAUDE.md) - Collaboration principles
 
 ---
 
 Reference guide for creating project documentation.
+
+## Writing style
+
+- **British English** — optimise, minimise, colour, etc.
+- **Sentence-case headlines** — only capitalise the first word and proper nouns (e.g. "Getting started with the project", not "Getting Started With The Project")
+- **Consistency** — match the style of existing documentation when editing
 
 ## Purpose of Documentation
 
