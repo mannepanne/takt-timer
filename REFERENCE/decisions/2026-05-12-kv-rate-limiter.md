@@ -37,7 +37,7 @@ Three concrete questions had to be answered:
   - The spec asked for 3/day from the start; the spike's 20 was an explicit interim ceiling, not a re-thought design. The spec value won — at 3, "today's allowance" maps cleanly to the user's mental model, and the math on plausible solo-rehab usage gives plenty of headroom. (Magnus's own use during testing is covered by the `wrangler dev` bypass.)
 
 - **Auth tier: wire now vs stub:**
-  - Stubbed. The function accepts an optional `userId` and produces the user-keyed shape when one is supplied, but `parse.ts` doesn't yet resolve a session to a userId — that's Phase 4's job. Wiring it now would require either a placeholder auth dependency or a no-op session cookie reader, both of which would have to be unwound when the real auth lands. The key-shape stub is zero risk, zero infra, and lets Phase 4 plug into a single call site.
+  - Stubbed. The function accepts an optional `userId` and produces the user-keyed shape when one is supplied; the cap stays at `ANON_DAILY_CAP` for both tiers until Phase 4 picks an authenticated-tier number. `parse.ts` doesn't yet resolve a session to a userId — that's Phase 4's job. Wiring it now would require either a placeholder auth dependency or a no-op session cookie reader, both of which would have to be unwound when the real auth lands. The key-shape stub is zero risk, zero infra, and lets Phase 4 plug into a single call site.
 
 ## Reasoning
 
@@ -77,6 +77,11 @@ The flag carries no security value (it's a local-iteration knob, not a credentia
 - We cannot guarantee an exact 3/day enforcement against an adversary issuing concurrent requests (see race window above). If this ever becomes a real abuse signal in logs, the migration path is to swap the read-then-write for a DO call — single function, single call site.
 - Cap changes (e.g. "lift to 5/day" or "split anonymous vs free-tier") require a constant change + redeploy. That is the correct shape — these are policy decisions, not runtime knobs.
 - Adding the authenticated-user higher tier in Phase 4 means deciding what the cap _is_ for authenticated callers, which is currently a placeholder branch returning the same `ANON_DAILY_CAP`. Phase 4 work picks a number with the auth ADR alongside.
+
+**Forward-looking contracts for Phase 4 to honour:**
+
+- _When Phase 4 wires `userId` resolution, the resolved value MUST be a validated opaque identifier (UUID/ULID), not a raw user-supplied string — the KV key is built by string interpolation (`` `ratelimit:user:${userId}:${day}` `` in `rate-limit.ts`) and assumes a constrained character set. An attacker passing `:` or other separator-like characters could collide with another user's bucket or inflate KV storage. Validation belongs at the auth layer (session→userId resolver), not in `resolveKey` — adding a runtime assert inside the limiter would push security work onto the wrong layer and create a logged-in-DoS surface. This aligns with the "validate at system boundaries" rule in `.claude/CLAUDE.md`._
+- _If a future change ever needs bypass in a deployed environment, that is a re-design trigger, not a config change — the flag is doing security work at that point. Do not promote `ALLOW_RATE_LIMIT_BYPASS` to a `wrangler secret` or `wrangler.toml [vars]` entry. `.dev.vars`-only is load-bearing: a deployed bypass is exactly the failure mode this design is avoiding._
 
 ---
 

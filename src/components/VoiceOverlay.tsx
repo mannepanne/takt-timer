@@ -37,8 +37,11 @@ function formatRetryAfter(retryAfterSec: number): string {
   if (!Number.isFinite(retryAfterSec) || retryAfterSec <= 0) {
     return `${RATE_LIMIT_COPY_PREFIX}. ${RATE_LIMIT_COPY_SUFFIX}`;
   }
+  // Under 2h shows in minutes so 61–119min doesn't get over-promised as "2 hours".
+  // Math.floor would under-promise (61min → "1 hour" → retry rejected); Math.ceil
+  // on minutes keeps direction-honesty without inflating the wait.
   const totalMinutes = Math.ceil(retryAfterSec / 60);
-  if (totalMinutes < 60) {
+  if (totalMinutes < 120) {
     const unit = totalMinutes === 1 ? 'minute' : 'minutes';
     return `${RATE_LIMIT_COPY_PREFIX}. Try again in ${totalMinutes} ${unit}. ${RATE_LIMIT_COPY_SUFFIX}`;
   }
