@@ -1,5 +1,5 @@
 // ABOUT: Whisper-turbo wrapper on Cloudflare Workers AI.
-// ABOUT: Spike-scope shape: accepts raw audio bytes, returns { text, language, latencyMs }.
+// ABOUT: Accepts raw audio bytes, returns { text, language, latencyMs }.
 
 type WhisperResult = {
   text: string;
