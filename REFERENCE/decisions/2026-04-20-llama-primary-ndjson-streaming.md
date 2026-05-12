@@ -100,7 +100,7 @@ Workers AI first calls to a cold endpoint add ~3 s to the baseline ~1.5 s warm l
 Without a `language: 'sv'` hint to Whisper, iOS Safari routes Swedish through Icelandic phonology, and Llama's Swedish numeral table doesn't cover the Icelandic spellings (`fyrtífem` vs `fyrtiofem`, `tíu` vs `tio`). Parsed numbers are sometimes wrong. Mitigation: the Interpretation screen shows the parsed session before the timer runs — user sees wrong numbers, edits them, continues. Phase 3 proper adds a conditional prompt-enrichment (append an Icelandic-numeral table to the Llama system prompt when `language === 'is'` + transcript contains Icelandic numeral tokens). Phase 5 Settings resolves the root cause by passing a Whisper language hint. Tracked as TD-016.
 
 **No per-phrase debuggability.**
-When a parse is wrong, there's no "we didn't match pattern X" log line. All we have is the transcript + Llama's raw output. Mitigation: `parse.ts` emits `rawOutput` in parsed events during the spike phase (stripped for production per the Phase 3 proper exit checklist). Structured logs + failure sampling cover the production tail.
+When a parse is wrong, there's no "we didn't match pattern X" log line. All we have is the transcript + Llama's raw output. Mitigation: `parse.ts` does not emit `rawOutput` in client-facing events; the field is retained inside `llama.ts` for the retry shaper (passes the assistant's prior output back into the model on the repair retry). Structured logs + failure sampling cover the production tail.
 
 **Nordic-cousins gate is pragmatic, not principled.**
 `{is, no, nn, nb, da}` in the accept set isn't a design statement that Takt supports those languages — it's a workaround for Whisper mislabelling. A future Whisper version that stops mislabelling Swedish would let us narrow the gate back. Documented here so future maintainers don't assume broader language support than actually exists.
@@ -141,7 +141,7 @@ Not safe — log server-side only:
 - Workers AI request IDs.
 - Retry-attempt details (which attempt failed, what the bad output was).
 - Prompt content or prompt fragments.
-- Raw Llama output (`rawOutput` field is removed when `/spike` ships).
+- Raw Llama output (kept inside `llama.ts` for retry shaping; never emitted on the NDJSON stream).
 
 The `worker/lib/toSafeErrorMessage.ts` helper enforces this contract at the 5 call sites in `parse.ts` and `llama.ts`.
 
