@@ -9,16 +9,16 @@ export function MicButton() {
 
   return (
     <>
-      <div className="mic-button-demo" role="presentation">
+      <div className="mic-button" role="presentation">
         <button
           type="button"
-          className="mic-button-demo-dot"
+          className="mic-button-dot"
           onClick={micTap}
           aria-label="Start voice input"
         >
           <Icon.Mic size={34} />
         </button>
-        <p className="mic-button-demo-hint">Tap the mic, then describe your session</p>
+        <p className="mic-button-hint">Tap the mic, then describe your session</p>
       </div>
 
       <VoiceOverlay state={state} onUserStop={userStop} onCancel={cancel} onRetry={retry} />

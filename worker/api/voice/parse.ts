@@ -3,23 +3,20 @@
 // ABOUT:   {"kind":"whisper", transcript, language, whisperMs}
 // ABOUT:   {"kind":"parsed", session, llamaMs, totalMs} | {"kind":"error", reason, ...}
 // ABOUT: The client displays the transcript the moment the first event arrives, then updates
-// ABOUT: once the second event arrives. No rate limiting in the spike — that lands with Phase 3 proper.
+// ABOUT: once the second event arrives.
 
 import type { Env } from '../../index';
 import { isAllowedOrigin } from '../../lib/isAllowedOrigin';
 import { toSafeErrorMessage } from '../../lib/toSafeErrorMessage';
 
+import { SUPPORTED_LANGUAGES } from './languages';
 import { parseWithLlama } from './llama';
 import { checkAndIncrementRateLimit } from './rate-limit';
 import { transcribe } from './whisper';
 
-// Whisper occasionally tags Swedish speech as Icelandic (shared Nordic phonology,
-// especially open-back vowels: "åtta" → "ótta", "sekunder" → "sekundar"). Accepting the
-// Nordic cousins prevents false rejects; Llama handles the spelling variance fine.
-// Genuine French/German/etc. still get gated and don't burn Llama quota.
-const SUPPORTED_LANGUAGES = new Set(['en', 'sv', 'is', 'no', 'nn', 'nb', 'da']);
-
-const MIN_AUDIO_BYTES = 500;
+// Sub-500-byte uploads are below the floor for any plausible 8s-cap opus blob and indicate
+// a zero-byte iOS first-grab or a truncated request. Reject before burning Workers AI quota.
+export const MIN_AUDIO_BYTES = 500;
 // 3 MB is ~30× a typical 8-second opus blob (~100 KB). Generous headroom for any MediaRecorder
 // MIME variant we accept, while capping the blast radius of unauthenticated abuse of the paid
 // Workers AI inference path.
@@ -37,7 +34,6 @@ type ParsedEvent = {
   session: { sets: number; workSec: number; restSec: number };
   llamaMs: number;
   totalMs: number;
-  rawOutput?: string;
 };
 
 type ErrorEvent = {
@@ -187,7 +183,6 @@ export async function parseVoice(request: Request, env: Env): Promise<Response> 
           session: llama.session,
           llamaMs: llama.latencyMs,
           totalMs,
-          rawOutput: llama.rawOutput,
         }),
       );
     } catch (err) {

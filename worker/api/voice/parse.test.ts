@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Env } from '../../index';
 
-import { parseVoice } from './parse';
+import { MIN_AUDIO_BYTES, parseVoice } from './parse';
 
 type AiCallStub = {
   whisper?: { text?: string; language?: string };
@@ -95,9 +95,9 @@ describe('POST /api/voice/parse (streaming)', () => {
     expect(events[0]).toMatchObject({ kind: 'error', reason: 'origin-not-allowed' });
   });
 
-  it('returns upload-empty when the audio payload is too small', async () => {
+  it('returns upload-empty when the audio payload is below MIN_AUDIO_BYTES', async () => {
     const env = makeEnv({});
-    const res = await parseVoice(makeRequest(new Uint8Array(50)), env);
+    const res = await parseVoice(makeRequest(new Uint8Array(MIN_AUDIO_BYTES - 1)), env);
     expect(res.status).toBe(400);
     const events = await readNdjson(res);
     expect(events[0]).toMatchObject({ kind: 'error', reason: 'upload-empty' });
