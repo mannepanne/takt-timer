@@ -43,7 +43,7 @@ Built for Magnus's rehab training, released to the world because the problem —
 - Cloudflare Access with Magnus's existing Google IdP policy — admin gate.
 - Cloudflare Web Analytics — traffic visibility.
 
-**Current status:** Phase 1 (Foundation) and Phase 2 (Core timer) complete and deployed. Phase 3 (Voice) — spike (PR #6), pure plumbing B1 (PR #7), and React/UI layer B2 (PR #8) all merged and live. B3 (cleanup: full rate limiter + ADR, /spike removal, exit-criteria sweep) is next. See [SPECIFICATIONS/03-voice.md → Phase 3 progress](./SPECIFICATIONS/03-voice.md#phase-3-progress) for the authoritative entry point.
+**Current status:** Phase 1 (Foundation) and Phase 2 (Core timer) complete and deployed. Phase 3 (Voice) — spike (PR #6), pure plumbing B1 (PR #7), React/UI layer B2 (PR #8), and B3a cleanup (PR #15: /spike removal, CSS rename, language-gate lift, `MIN_AUDIO_BYTES`, `rawOutput` strip) all merged and live. B3b (full rate limiter + ADR) and the remaining B3 exit-criteria are next. See [SPECIFICATIONS/03-voice.md → Phase 3 progress](./SPECIFICATIONS/03-voice.md#phase-3-progress) for the authoritative entry point.
 
 ## Implementation phases
 

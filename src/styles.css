@@ -904,6 +904,10 @@ input {
 .mic-button-dot:active {
   transform: scale(0.97);
 }
+.mic-button-dot:focus-visible {
+  outline: 3px solid var(--accent-deep);
+  outline-offset: 3px;
+}
 .mic-button-hint {
   margin: 0;
   font-size: 12px;
