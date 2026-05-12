@@ -239,13 +239,12 @@ describe('POST /api/voice/parse (streaming)', () => {
   });
 
   it('returns rate-limited (429) once the daily cap is hit for the caller IP', async () => {
-    // Seed the KV with a counter at the cap for the hash of the default test IP.
-    // Easiest is to drive 20 calls through and observe the 21st.
+    // Drive 3 successful calls through (the anonymous cap), then observe the 4th.
     const kv = makeKv();
     const env = makeEnv(
       {
         whisper: { text: 'three sets of one minute', language: 'en' },
-        llamaResponses: Array.from({ length: 25 }, () => '{"sets":3,"workSec":60,"restSec":0}'),
+        llamaResponses: Array.from({ length: 5 }, () => '{"sets":3,"workSec":60,"restSec":0}'),
       },
       kv,
     );
@@ -255,7 +254,7 @@ describe('POST /api/voice/parse (streaming)', () => {
         body: new Uint8Array(2048),
         headers: { 'cf-connecting-ip': '203.0.113.99' },
       });
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 3; i++) {
       await parseVoice(req(), env);
     }
     const res = await parseVoice(req(), env);
@@ -263,6 +262,32 @@ describe('POST /api/voice/parse (streaming)', () => {
     const events = await readNdjson(res);
     expect(events[0]).toMatchObject({ kind: 'error', reason: 'rate-limited' });
     expect(typeof events[0].retryAfterSec).toBe('number');
+  });
+
+  it('bypasses the rate limiter when ALLOW_RATE_LIMIT_BYPASS is set', async () => {
+    const kv = makeKv();
+    const env: Env = {
+      ...makeEnv(
+        {
+          whisper: { text: 'three sets of one minute', language: 'en' },
+          llamaResponses: Array.from({ length: 10 }, () => '{"sets":3,"workSec":60,"restSec":0}'),
+        },
+        kv,
+      ),
+      ALLOW_RATE_LIMIT_BYPASS: '1',
+    };
+    const req = () =>
+      new Request('https://takt.hultberg.org/api/voice/parse', {
+        method: 'POST',
+        body: new Uint8Array(2048),
+        headers: { 'cf-connecting-ip': '203.0.113.99' },
+      });
+    // 10 calls — well past the 3/day cap. None should be rate-limited.
+    for (let i = 0; i < 10; i++) {
+      const res = await parseVoice(req(), env);
+      expect(res.status).not.toBe(429);
+    }
+    expect(kv.put as ReturnType<typeof vi.fn>).not.toHaveBeenCalled();
   });
 
   it('accepts Icelandic through the gate (Whisper sometimes misclassifies Swedish as Icelandic)', async () => {

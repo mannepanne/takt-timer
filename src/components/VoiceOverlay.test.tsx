@@ -59,6 +59,28 @@ describe('VoiceOverlay', () => {
     expect(screen.queryByText(/tomorrow/i)).not.toBeInTheDocument();
   });
 
+  it('rate-limited formats retryAfterSec \u2265 2h as hours', () => {
+    renderOverlay({ phase: 'rate-limited', retryAfterSec: 4 * 3600 });
+    expect(screen.getByText(/try again in 4 hours/i)).toBeInTheDocument();
+  });
+
+  it('rate-limited formats sub-hour retryAfterSec as minutes', () => {
+    renderOverlay({ phase: 'rate-limited', retryAfterSec: 12 * 60 });
+    expect(screen.getByText(/try again in 12 minutes/i)).toBeInTheDocument();
+  });
+
+  it('rate-limited formats 61\u2013119min as minutes, not "2 hours" (avoids over-promise)', () => {
+    renderOverlay({ phase: 'rate-limited', retryAfterSec: 75 * 60 });
+    expect(screen.getByText(/try again in 75 minutes/i)).toBeInTheDocument();
+    expect(screen.queryByText(/try again in 2 hours/i)).not.toBeInTheDocument();
+  });
+
+  it('rate-limited handles retryAfterSec=0 without a misleading time hint', () => {
+    renderOverlay({ phase: 'rate-limited', retryAfterSec: 0 });
+    expect(screen.getByText(/today\u2019s voice allowance/i)).toBeInTheDocument();
+    expect(screen.queryByText(/try again in/i)).not.toBeInTheDocument();
+  });
+
   it('parse-error with reason=not-a-session shows the distinct copy', () => {
     renderOverlay({ phase: 'parse-error', reason: 'not-a-session', transcript: 'banana kayak' });
     expect(screen.getByText(/didn\u2019t sound like a session/i)).toBeInTheDocument();

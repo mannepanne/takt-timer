@@ -71,6 +71,14 @@ function ndjsonResponse(readable: ReadableStream, status = 200): Response {
   });
 }
 
+function isRateLimitBypassEnabled(flag: string | undefined): boolean {
+  // Accept "1" or "true" (case-insensitive). Any other value, including unset, leaves the
+  // limiter active. Cloudflare Worker [vars] always arrive as strings, so coerce explicitly.
+  if (!flag) return false;
+  const normalised = flag.toLowerCase();
+  return normalised === '1' || normalised === 'true';
+}
+
 function errorResponse(event: ErrorEvent, status: number): Response {
   const stream = new ReadableStream({
     start(controller) {
@@ -107,8 +115,10 @@ export async function parseVoice(request: Request, env: Env): Promise<Response> 
   }
 
   // Increment-before-inference — cancelled uploads and failed parses still consume quota,
-  // capping total Workers AI spend under adversarial load. See TD-017.
-  const rateCheck = await checkAndIncrementRateLimit(env.RATE_LIMITS, request);
+  // capping total Workers AI spend under adversarial load. Phase 4 will pass the resolved
+  // userId here once session→userId lookup lands.
+  const bypass = isRateLimitBypassEnabled(env.ALLOW_RATE_LIMIT_BYPASS);
+  const rateCheck = await checkAndIncrementRateLimit(env.RATE_LIMITS, request, { bypass });
   if (!rateCheck.allowed) {
     return errorResponse(
       { kind: 'error', reason: 'rate-limited', retryAfterSec: rateCheck.retryAfterSec },

@@ -228,17 +228,17 @@ The implementation is being landed in three reviewed PRs. Use this section as th
 - **PR #7 (B1)** — Pure plumbing. `src/lib/voice/{machine,types,stream,voice-client}.ts` + isolated `worker/api/voice/llama.test.ts`. No browser, no React.
 - **PR #8 (B2)** — Browser/React layer. `src/lib/voice/{mic,useVoiceMachine}.ts`, `src/components/VoiceOverlay.tsx`, live `MicButton.tsx` (replaces the Phase 2 demo), Configure route accepts `location.state.session`. Includes the five PR-review blockers from `/review-pr-team` (mic-stream cancel-race guard, hardware-error split via `hardwareUnavailable` event → `browser-unsupported`, real `showRetryToast` via `retryToastVisible`, tightened `asSession` numeric validation, doc refresh).
 - **PR #15 (B3a cleanup)** — `/spike` route + component + ~127 lines of `.spike-*` CSS deleted; `rawOutput` stripped from the `parsed` NDJSON event (retained internally in `llama.ts` for the retry shaper); `SUPPORTED_LANGUAGES` lifted into `worker/api/voice/languages.ts`; the 500-byte upload floor named as exported `MIN_AUDIO_BYTES`; `mic-button-demo*` CSS family renamed to `mic-button*` with home-screen accent CTA styling + `:focus-visible` rule; stale "Spike-scope" ABOUT comments cleaned from `parse.ts` and `whisper.ts`.
+- **PR #16 (B3b rate limiter + ADR)** — full KV-backed daily-cap rate limiter replaces the TD-017 20/day spike: 3/day anonymous cap keyed `ratelimit:anon:${ipHash}:${utcDay}`, stubbed user-tier key shape (`ratelimit:user:${userId}:${utcDay}`) ready for Phase 4 to plug in, `wrangler dev` bypass via `ALLOW_RATE_LIMIT_BYPASS=1` in `.dev.vars` (gitignored, not under `[vars]`, not a Worker secret), `retryAfterSec`-aware UX copy in `VoiceOverlay` (minutes <2h, hours otherwise — no "tomorrow" copy for UTC safety), and ADR `2026-05-12-kv-rate-limiter.md` documenting why KV beats native Rate Limiting and Durable Objects for this UX. TD-017 moved to Resolved.
 
-**Pending verification:** real-device smoke test of the B2 flow on iPhone + Android using the manual checklist below. Deploy completed 2026-04-20 via `.github/workflows/deploy.yml`. If smoke tests reveal regressions, file fixes against the next branch.
+**Pending verification:** real-device smoke test of the B2 + B3b flow on iPhone + Android using the manual checklist below. Deploy completed 2026-04-20 via `.github/workflows/deploy.yml`. If smoke tests reveal regressions, file fixes against the next branch.
 
-**Remaining work — B3b onwards (next session entry point):**
+**Remaining work — exit criteria (next session entry point):**
 
-- Full rate limiter rewrite + its own ADR (KV vs native Rate Limiting). Replaces TD-017.
 - Remaining architecture-hygiene items in the Pre-commit checklist below (status-code doc, adversarial-transcript test, no-persistence regression test, `requestMic` refactor).
 - Product/UX polish from the B2 review — listed in the Pre-commit checklist's Product and UX section, plus the B2 Review Follow-ups subsection.
 - Spec drift reconciliation (event names, transition table, `language?` optionality) before this file moves to `ARCHIVE/`.
 
-**Branch convention used so far:** `feature/phase-3-voice` (spike, PR #6), `feature/phase-3-voice-overlay` (B1, PR #7), `feature/phase-3-voice-overlay-ui` (B2, PR #8), `feature/phase-3-voice-b3a-cleanup` (B3a, PR #15). Continue the `feature/phase-3-voice-b3<letter>-*` pattern for subsequent slices.
+**Branch convention used so far:** `feature/phase-3-voice` (spike, PR #6), `feature/phase-3-voice-overlay` (B1, PR #7), `feature/phase-3-voice-overlay-ui` (B2, PR #8), `feature/phase-3-voice-b3a-cleanup` (B3a, PR #15), `feature/phase-3-voice-b3b-rate-limiter` (B3b, PR #16). Continue the `feature/phase-3-voice-b3<letter>-*` pattern for subsequent slices.
 
 ---
 
@@ -306,8 +306,8 @@ Gate: ≥90% exact match through the Llama prompt on the full corpus (mocked Whi
 
 ### Rate limiter and ADR
 
-- [ ] Replace TD-017 minimum-viable limiter with the full Phase 3 limiter: 3/day anonymous cap, authenticated-user tier wired (stubbed against Phase 4 auth), `retryAfter` UX copy, `ALLOW_RATE_LIMIT_BYPASS` dev-bypass flag honoured under `wrangler dev`.
-- [ ] ADR written: "KV over native Rate Limiting for daily-cap semantics" (distinct from the Llama-primary ADR — this one covers the rate-limit mechanism choice + race-condition acceptance).
+- [x] Replace TD-017 minimum-viable limiter with the full Phase 3 limiter: 3/day anonymous cap, authenticated-user tier wired (stubbed against Phase 4 auth), `retryAfter` UX copy, `ALLOW_RATE_LIMIT_BYPASS` dev-bypass flag honoured under `wrangler dev`. _(Shipped in PR — Phase 3 B3b.)_
+- [x] ADR written: "KV over native Rate Limiting for daily-cap semantics" (distinct from the Llama-primary ADR — this one covers the rate-limit mechanism choice + race-condition acceptance). _(See [REFERENCE/decisions/2026-05-12-kv-rate-limiter.md](../REFERENCE/decisions/2026-05-12-kv-rate-limiter.md).)_
 
 ### Spike removal checklist
 
@@ -337,6 +337,10 @@ Gate: ≥90% exact match through the Llama prompt on the full corpus (mocked Whi
 - [ ] British English audit of Voice overlay user-facing copy.
 - [ ] Document the `language === undefined` pass-through policy explicitly in the Voice overlay state machine comments — matches ADR 2026-04-20 (Option C: pass through with structured-logging tripwire).
 - [ ] Structured logging tripwire for `language=undefined + not-a-session` signature with hashed IPs.
+
+### B3b review follow-ups (from PR #16 `/review-pr`)
+
+- [ ] **Wire `remaining` through to MicButton's `aria-label`.** Spec line 38 + line 405 call for "Start voice input — 2 attempts left today". `checkAndIncrementRateLimit` already returns `remaining` on the allowed path; surface it via a new NDJSON field (e.g. extend `whisper` or `parsed` events, or add a `quota` event), pipe through `voice-client.ts` → `VoiceApi` → `MicButton`. **Must `isFinite`-guard the value** — the `wrangler dev` bypass returns `Number.POSITIVE_INFINITY` and `JSON.stringify(Infinity) === 'null'`; raw passthrough would either crash JSON or have screen readers announce "Infinity attempts left today". Product W3 from PR #16 review.
 
 ### B2 review follow-ups (UX polish from PR #8 `/review-pr-team`)
 
