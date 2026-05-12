@@ -1,14 +1,20 @@
-// ABOUT: Minimum-viable KV-backed daily-cap rate limiter for the voice endpoint.
-// ABOUT: Coarse 20/day per IP-hash — a cost-control guard, not the Phase 3 proper limiter.
-// ABOUT: See TD-017. Phase 3 proper replaces this with the full 3/day + dev-bypass + retryAfter
-// ABOUT: UX + authenticated-tier design, alongside an ADR on KV vs native Rate Limiting.
+// ABOUT: KV-backed daily-cap rate limiter for /api/voice/parse.
+// ABOUT: 3 calls per UTC day, keyed by hashed IP for anonymous callers and by user ID
+// ABOUT: when one is supplied (Phase 4 plugs in session→userId resolution). A bypass flag
+// ABOUT: short-circuits the counter under `wrangler dev`. Read-then-write — see ADR
+// ABOUT: 2026-05-12-kv-rate-limiter.md for the race-window trade-off.
 
-const DAILY_CAP = 20;
+const ANON_DAILY_CAP = 3;
 const TTL_SECONDS = 26 * 60 * 60; // 26 hours — covers TZ drift around the UTC-day boundary.
 
 export type RateLimitResult =
   | { allowed: true; remaining: number }
   | { allowed: false; retryAfterSec: number };
+
+export type RateLimitOptions = {
+  userId?: string;
+  bypass?: boolean;
+};
 
 /** UTC midnight → now, in seconds. */
 function secondsUntilNextUtcMidnight(): number {
@@ -41,27 +47,41 @@ function ipFromRequest(request: Request): string {
   return request.headers.get('cf-connecting-ip') ?? request.headers.get('x-real-ip') ?? 'unknown';
 }
 
+async function resolveKey(request: Request, userId: string | undefined): Promise<string> {
+  const day = utcDayKey();
+  if (userId) {
+    return `ratelimit:user:${userId}:${day}`;
+  }
+  const ipHash = await hashIp(ipFromRequest(request));
+  return `ratelimit:anon:${ipHash}:${day}`;
+}
+
 /**
  * Increments-then-checks the daily counter. Increment happens before inference so that
  * cancelled uploads and failed parses still consume quota — caps total Workers AI spend.
+ * When `bypass` is set the counter is neither read nor written; intended for `wrangler dev`.
  */
 export async function checkAndIncrementRateLimit(
   kv: KVNamespace,
   request: Request,
+  options: RateLimitOptions = {},
 ): Promise<RateLimitResult> {
-  const ip = ipFromRequest(request);
-  const ipHash = await hashIp(ip);
-  const key = `ratelimit:anon:${ipHash}:${utcDayKey()}`;
+  if (options.bypass) {
+    return { allowed: true, remaining: Number.POSITIVE_INFINITY };
+  }
+
+  const key = await resolveKey(request, options.userId);
+  const cap = ANON_DAILY_CAP; // Authenticated-tier cap is wired in Phase 4 alongside session→userId.
 
   const currentRaw = await kv.get(key);
   const current = currentRaw ? Number(currentRaw) : 0;
 
-  if (current >= DAILY_CAP) {
+  if (current >= cap) {
     return { allowed: false, retryAfterSec: secondsUntilNextUtcMidnight() };
   }
 
   const next = current + 1;
   await kv.put(key, String(next), { expirationTtl: TTL_SECONDS });
 
-  return { allowed: true, remaining: DAILY_CAP - next };
+  return { allowed: true, remaining: cap - next };
 }

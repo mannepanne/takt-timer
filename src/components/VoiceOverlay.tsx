@@ -30,8 +30,22 @@ const PARSE_ERROR_COPY =
   'Couldn\u2019t understand that one. Tap Configure to build a session manually.';
 const NOT_A_SESSION_COPY =
   'That didn\u2019t sound like a session. Try again, or tap Configure to build one manually.';
-const RATE_LIMIT_COPY =
-  'You\u2019ve used today\u2019s voice allowance. Tap Configure to build a session manually.';
+const RATE_LIMIT_COPY_PREFIX = 'You\u2019ve used today\u2019s voice allowance';
+const RATE_LIMIT_COPY_SUFFIX = 'Tap Configure to build a session manually.';
+
+function formatRetryAfter(retryAfterSec: number): string {
+  if (!Number.isFinite(retryAfterSec) || retryAfterSec <= 0) {
+    return `${RATE_LIMIT_COPY_PREFIX}. ${RATE_LIMIT_COPY_SUFFIX}`;
+  }
+  const totalMinutes = Math.ceil(retryAfterSec / 60);
+  if (totalMinutes < 60) {
+    const unit = totalMinutes === 1 ? 'minute' : 'minutes';
+    return `${RATE_LIMIT_COPY_PREFIX}. Try again in ${totalMinutes} ${unit}. ${RATE_LIMIT_COPY_SUFFIX}`;
+  }
+  const hours = Math.ceil(retryAfterSec / 3600);
+  const unit = hours === 1 ? 'hour' : 'hours';
+  return `${RATE_LIMIT_COPY_PREFIX}. Try again in ${hours} ${unit}. ${RATE_LIMIT_COPY_SUFFIX}`;
+}
 
 export function VoiceOverlay({ state, onUserStop, onCancel, onRetry }: Props): React.ReactNode {
   const cancelBtnRef = useRef<HTMLButtonElement | null>(null);
@@ -109,7 +123,12 @@ function renderContent(
         </>
       );
     case 'rate-limited':
-      return errorSheet(titleId, 'Daily voice limit reached', RATE_LIMIT_COPY, onRetry);
+      return errorSheet(
+        titleId,
+        'Daily voice limit reached',
+        formatRetryAfter(state.retryAfterSec),
+        onRetry,
+      );
     case 'language-mismatch':
       return errorSheet(titleId, 'Language not supported', LANGUAGE_COPY, onRetry);
     case 'parse-error':

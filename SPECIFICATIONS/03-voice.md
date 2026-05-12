@@ -306,8 +306,8 @@ Gate: ≥90% exact match through the Llama prompt on the full corpus (mocked Whi
 
 ### Rate limiter and ADR
 
-- [ ] Replace TD-017 minimum-viable limiter with the full Phase 3 limiter: 3/day anonymous cap, authenticated-user tier wired (stubbed against Phase 4 auth), `retryAfter` UX copy, `ALLOW_RATE_LIMIT_BYPASS` dev-bypass flag honoured under `wrangler dev`.
-- [ ] ADR written: "KV over native Rate Limiting for daily-cap semantics" (distinct from the Llama-primary ADR — this one covers the rate-limit mechanism choice + race-condition acceptance).
+- [x] Replace TD-017 minimum-viable limiter with the full Phase 3 limiter: 3/day anonymous cap, authenticated-user tier wired (stubbed against Phase 4 auth), `retryAfter` UX copy, `ALLOW_RATE_LIMIT_BYPASS` dev-bypass flag honoured under `wrangler dev`. _(Shipped in PR — Phase 3 B3b.)_
+- [x] ADR written: "KV over native Rate Limiting for daily-cap semantics" (distinct from the Llama-primary ADR — this one covers the rate-limit mechanism choice + race-condition acceptance). _(See [REFERENCE/decisions/2026-05-12-kv-rate-limiter.md](../REFERENCE/decisions/2026-05-12-kv-rate-limiter.md).)_
 
 ### Spike removal checklist
 

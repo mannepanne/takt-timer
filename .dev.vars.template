@@ -3,7 +3,15 @@
 # `.dev.vars` is gitignored — never commit it.
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Phase 1 — no secrets required. The placeholders below activate in Phase 4.
+# Phase 3 — voice pipeline.
+# ──────────────────────────────────────────────────────────────────────────────
+
+# Skip the daily rate limiter on /api/voice/parse. Set to "1" or "true" so the
+# 3/day cap doesn't block iterative testing. Loaded only by `wrangler dev`.
+# ALLOW_RATE_LIMIT_BYPASS=1
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Phase 4 — accounts and passkeys. Placeholders below activate then.
 # ──────────────────────────────────────────────────────────────────────────────
 
 # WebAuthn relying-party ID. Must match the origin the app is served from.

@@ -74,15 +74,6 @@ Tracks known limitations, accepted shortcuts, and deferred improvements in Takt.
 - **Resolution phase:** Revisit with Phase 4 authenticated tier — the threat model changes when we're protecting authenticated users' personal caps rather than an anonymous IP-wide aggregate.
 - **Future fix:** If revisit is warranted, move to Durable Objects per IP-hash, or route the authenticated-tier counters through D1 (strongly consistent).
 
-### TD-017: Minimum-viable rate limiter in place of the Phase 3 proper design
-
-- **Location:** `worker/api/voice/rate-limit.ts`, `worker/api/voice/parse.ts` (the `checkAndIncrementRateLimit` call).
-- **Issue:** The Phase 3 spike ships a coarse 20/day-per-IP-hash KV-backed limiter — a cost-control guard, not the Phase 3 proper design. Missing: tuned 3/day anonymous cap, authenticated-user tier (Phase 4 dependency), `retryAfter` UX copy, dev-bypass flag, and the `ALLOW_RATE_LIMIT_BYPASS` env var support the spec calls for.
-- **Why accepted:** Size cap + origin check alone only reduce cost-per-abuse; the limiter is what caps total spend. Landing even a coarse limiter with the spike closes the live exposure. The full design lands with Phase 3 proper alongside the KV-vs-native Rate Limiting ADR.
-- **Risk:** Low. 20/day is permissive enough that legitimate users won't hit it during the spike, strict enough to cap adversarial abuse at a predictable daily neuron spend.
-- **Resolution phase:** Phase 3 proper.
-- **Future fix:** Replace with the full limiter: 3/day anonymous, higher authenticated tier (Phase 4), dev-bypass flag, `retryAfter` UX, and an ADR covering KV's eventual-consistency race. The call site in `parse.ts` should survive unchanged; only `rate-limit.ts` needs to rewrite.
-
 ### TD-001: Sound toggle lives on the Running screen, not in Settings
 
 - **Location:** `src/routes/Run.tsx` — top-right toggle; preference persisted in `takt.sound.v1`.
@@ -116,6 +107,12 @@ These are debt items declared in phase specs that will become active when the ph
 ---
 
 ## Resolved items
+
+### TD-017: Minimum-viable rate limiter — resolved 2026-05-12 (Phase 3 B3b)
+
+- **Location:** `worker/api/voice/rate-limit.ts`, `worker/api/voice/parse.ts`.
+- **Issue:** The Phase 3 spike shipped a coarse 20/day-per-IP-hash KV-backed limiter rather than the Phase 3 proper design. Missing: tuned 3/day anonymous cap, authenticated-user-tier key shape, `retryAfter` UX copy, and an `ALLOW_RATE_LIMIT_BYPASS` dev flag.
+- **Resolution:** Replaced with the full limiter — 3/day anonymous cap keyed `ratelimit:anon:${ipHash}:${utcDay}`, stubbed user-tier key shape `ratelimit:user:${userId}:${utcDay}` ready for Phase 4 auth, human-readable hours/minutes `retryAfter` copy in `VoiceOverlay`, and a `.dev.vars`-only `ALLOW_RATE_LIMIT_BYPASS` flag for `wrangler dev`. Rationale in [ADR 2026-05-12 — KV-backed rate limiter](./decisions/2026-05-12-kv-rate-limiter.md). TD-015 (race window) remains open as the accepted trade-off.
 
 ### TD-007: `@worker/*` TypeScript path alias — resolved 2026-04-19 (PR #3)
 

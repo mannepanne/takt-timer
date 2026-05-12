@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { checkAndIncrementRateLimit } from './rate-limit';
 
@@ -27,37 +27,35 @@ function makeRequest(ip: string = '203.0.113.1'): Request {
   });
 }
 
-describe('rate limiter (minimum-viable, 20/day/IP)', () => {
+describe('rate limiter — anonymous (3/day/IP)', () => {
   it('allows the first call for a new IP', async () => {
     const kv = makeKv();
     const result = await checkAndIncrementRateLimit(kv, makeRequest());
-    expect(result).toEqual({ allowed: true, remaining: 19 });
+    expect(result).toEqual({ allowed: true, remaining: 2 });
   });
 
-  it('decrements remaining on subsequent calls', async () => {
+  it('decrements remaining on each call up to the cap', async () => {
     const kv = makeKv();
-    await checkAndIncrementRateLimit(kv, makeRequest());
-    await checkAndIncrementRateLimit(kv, makeRequest());
-    const third = await checkAndIncrementRateLimit(kv, makeRequest());
-    expect(third).toEqual({ allowed: true, remaining: 17 });
+    const a = await checkAndIncrementRateLimit(kv, makeRequest());
+    const b = await checkAndIncrementRateLimit(kv, makeRequest());
+    const c = await checkAndIncrementRateLimit(kv, makeRequest());
+    expect(a).toEqual({ allowed: true, remaining: 2 });
+    expect(b).toEqual({ allowed: true, remaining: 1 });
+    expect(c).toEqual({ allowed: true, remaining: 0 });
   });
 
-  it('rejects with retryAfterSec once the daily cap is reached', async () => {
+  it('rejects with retryAfterSec on the fourth call', async () => {
     const kv = makeKv();
-    // Simulate 20 prior calls. Any key for this IP hash — we just seed any value ≥ cap.
     const req = makeRequest();
-    // Probe the actual key by calling once, then rewind.
     await checkAndIncrementRateLimit(kv, req);
-    // Grab the key our code wrote and set it to the cap.
-    const putCalls = (kv.put as ReturnType<typeof vi.fn>).mock.calls;
-    const key = putCalls[0][0] as string;
-    await kv.put(key, '20', { expirationTtl: 60 });
+    await checkAndIncrementRateLimit(kv, req);
+    await checkAndIncrementRateLimit(kv, req);
 
-    const result = await checkAndIncrementRateLimit(kv, req);
-    expect(result.allowed).toBe(false);
-    if (!result.allowed) {
-      expect(result.retryAfterSec).toBeGreaterThan(0);
-      expect(result.retryAfterSec).toBeLessThanOrEqual(24 * 60 * 60);
+    const fourth = await checkAndIncrementRateLimit(kv, req);
+    expect(fourth.allowed).toBe(false);
+    if (!fourth.allowed) {
+      expect(fourth.retryAfterSec).toBeGreaterThan(0);
+      expect(fourth.retryAfterSec).toBeLessThanOrEqual(24 * 60 * 60);
     }
   });
 
@@ -65,8 +63,8 @@ describe('rate limiter (minimum-viable, 20/day/IP)', () => {
     const kv = makeKv();
     const a = await checkAndIncrementRateLimit(kv, makeRequest('1.2.3.4'));
     const b = await checkAndIncrementRateLimit(kv, makeRequest('5.6.7.8'));
-    expect(a).toEqual({ allowed: true, remaining: 19 });
-    expect(b).toEqual({ allowed: true, remaining: 19 });
+    expect(a).toEqual({ allowed: true, remaining: 2 });
+    expect(b).toEqual({ allowed: true, remaining: 2 });
   });
 
   it('hashes IPs — raw IP does not appear in the KV key', async () => {
@@ -93,7 +91,86 @@ describe('rate limiter (minimum-viable, 20/day/IP)', () => {
     await checkAndIncrementRateLimit(kv, makeRequest());
     const putCalls = (kv.put as ReturnType<typeof vi.fn>).mock.calls;
     const options = putCalls[0][2] as { expirationTtl?: number } | undefined;
-    expect(options?.expirationTtl).toBeGreaterThan(24 * 60 * 60); // > 24h
-    expect(options?.expirationTtl).toBeLessThanOrEqual(27 * 60 * 60); // ≤ 27h
+    expect(options?.expirationTtl).toBeGreaterThan(24 * 60 * 60);
+    expect(options?.expirationTtl).toBeLessThanOrEqual(27 * 60 * 60);
+  });
+});
+
+describe('rate limiter — UTC day rollover', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('writes a new key (and resets remaining) after midnight UTC', async () => {
+    const kv = makeKv();
+    vi.setSystemTime(new Date('2026-05-12T23:59:00Z'));
+    await checkAndIncrementRateLimit(kv, makeRequest());
+    const dayOneKey = (kv.put as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
+    expect(dayOneKey).toMatch(/:2026-05-12$/);
+
+    vi.setSystemTime(new Date('2026-05-13T00:00:01Z'));
+    const result = await checkAndIncrementRateLimit(kv, makeRequest());
+    const dayTwoKey = (kv.put as ReturnType<typeof vi.fn>).mock.calls[1][0] as string;
+    expect(dayTwoKey).toMatch(/:2026-05-13$/);
+    expect(dayTwoKey).not.toBe(dayOneKey);
+    expect(result).toEqual({ allowed: true, remaining: 2 });
+  });
+
+  it('retryAfterSec on cap-rejection equals seconds-until-midnight (±1)', async () => {
+    const kv = makeKv();
+    vi.setSystemTime(new Date('2026-05-12T22:00:00Z'));
+    const req = makeRequest();
+    await checkAndIncrementRateLimit(kv, req);
+    await checkAndIncrementRateLimit(kv, req);
+    await checkAndIncrementRateLimit(kv, req);
+    const rejected = await checkAndIncrementRateLimit(kv, req);
+    expect(rejected.allowed).toBe(false);
+    if (!rejected.allowed) {
+      // 2 hours = 7200s. Allow ±1s for date arithmetic.
+      expect(rejected.retryAfterSec).toBeGreaterThanOrEqual(7199);
+      expect(rejected.retryAfterSec).toBeLessThanOrEqual(7201);
+    }
+  });
+});
+
+describe('rate limiter — dev bypass', () => {
+  it('does not touch KV when bypass is set', async () => {
+    const kv = makeKv();
+    const result = await checkAndIncrementRateLimit(kv, makeRequest(), { bypass: true });
+    expect(result.allowed).toBe(true);
+    expect(kv.get as ReturnType<typeof vi.fn>).not.toHaveBeenCalled();
+    expect(kv.put as ReturnType<typeof vi.fn>).not.toHaveBeenCalled();
+  });
+
+  it('returns infinite remaining when bypass is set so the limiter can never reject', async () => {
+    const kv = makeKv();
+    const result = await checkAndIncrementRateLimit(kv, makeRequest(), { bypass: true });
+    if (result.allowed) {
+      expect(result.remaining).toBe(Number.POSITIVE_INFINITY);
+    }
+  });
+});
+
+describe('rate limiter — authenticated-tier key shape', () => {
+  it('keys on userId (not IP) when userId is supplied', async () => {
+    const kv = makeKv();
+    await checkAndIncrementRateLimit(kv, makeRequest('203.0.113.7'), { userId: 'user-abc' });
+    const key = (kv.put as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
+    expect(key).toMatch(/^ratelimit:user:user-abc:\d{4}-\d{2}-\d{2}$/);
+    expect(key).not.toContain('anon');
+  });
+
+  it('user-tier and anon-tier keys do not collide for the same caller', async () => {
+    const kv = makeKv();
+    const req = makeRequest('203.0.113.7');
+    await checkAndIncrementRateLimit(kv, req);
+    await checkAndIncrementRateLimit(kv, req, { userId: 'user-abc' });
+    const calls = (kv.put as ReturnType<typeof vi.fn>).mock.calls;
+    expect(calls[0][0]).not.toBe(calls[1][0]);
+    expect(calls[0][0]).toMatch(/^ratelimit:anon:/);
+    expect(calls[1][0]).toMatch(/^ratelimit:user:/);
   });
 });
