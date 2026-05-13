@@ -5,7 +5,7 @@ import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 
 import { Icon } from '@/components/icons';
-import type { VoiceState } from '@/lib/voice/types';
+import type { ErrorReason, VoiceState } from '@/lib/voice/types';
 
 type Props = {
   state: VoiceState;
@@ -30,6 +30,8 @@ const PARSE_ERROR_COPY =
   'Couldn\u2019t understand that one. Tap Configure to build a session manually.';
 const NOT_A_SESSION_COPY =
   'That didn\u2019t sound like a session. Try again, or tap Configure to build one manually.';
+const COLD_START_TIMEOUT_COPY =
+  'Voice took longer than expected. Try again, or tap Configure to build a session manually.';
 const RATE_LIMIT_COPY_PREFIX = 'You\u2019ve used today\u2019s voice allowance';
 const RATE_LIMIT_COPY_SUFFIX = 'Tap Configure to build a session manually.';
 
@@ -48,6 +50,12 @@ function formatRetryAfter(retryAfterSec: number): string {
   const hours = Math.ceil(retryAfterSec / 3600);
   const unit = hours === 1 ? 'hour' : 'hours';
   return `${RATE_LIMIT_COPY_PREFIX}. Try again in ${hours} ${unit}. ${RATE_LIMIT_COPY_SUFFIX}`;
+}
+
+function parseErrorCopy(reason: ErrorReason): string {
+  if (reason === 'not-a-session') return NOT_A_SESSION_COPY;
+  if (reason === 'cold-start-timeout') return COLD_START_TIMEOUT_COPY;
+  return PARSE_ERROR_COPY;
 }
 
 export function VoiceOverlay({ state, onUserStop, onCancel, onRetry }: Props): React.ReactNode {
@@ -138,7 +146,7 @@ function renderContent(
       return errorSheet(
         titleId,
         'Let\u2019s try that again',
-        state.reason === 'not-a-session' ? NOT_A_SESSION_COPY : PARSE_ERROR_COPY,
+        parseErrorCopy(state.reason),
         onRetry,
         state.transcript,
       );

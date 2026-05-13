@@ -93,6 +93,11 @@ describe('VoiceOverlay', () => {
     expect(screen.getByText(/couldn\u2019t understand that one/i)).toBeInTheDocument();
   });
 
+  it('parse-error with reason=cold-start-timeout shows the distinct timeout copy', () => {
+    renderOverlay({ phase: 'parse-error', reason: 'cold-start-timeout' });
+    expect(screen.getByText(/voice took longer than expected/i)).toBeInTheDocument();
+  });
+
   it('clicking retry from an error state fires onRetry', async () => {
     const { onRetry } = renderOverlay({ phase: 'offline' });
     await userEvent.click(screen.getByRole('button', { name: /try again/i }));
