@@ -52,10 +52,33 @@ function formatRetryAfter(retryAfterSec: number): string {
   return `${RATE_LIMIT_COPY_PREFIX}. Try again in ${hours} ${unit}. ${RATE_LIMIT_COPY_SUFFIX}`;
 }
 
+// Exhaustive over ErrorReason so the compiler flags any new reason that lands
+// in `parse-error` without a conscious decision about overlay copy. The default
+// arm is unreachable at runtime — `_exhaustive: never` is the type-level guard.
 function parseErrorCopy(reason: ErrorReason): string {
-  if (reason === 'not-a-session') return NOT_A_SESSION_COPY;
-  if (reason === 'cold-start-timeout') return COLD_START_TIMEOUT_COPY;
-  return PARSE_ERROR_COPY;
+  switch (reason) {
+    case 'not-a-session':
+      return NOT_A_SESSION_COPY;
+    case 'cold-start-timeout':
+      return COLD_START_TIMEOUT_COPY;
+    case 'upload-empty':
+    case 'upload-too-large':
+    case 'origin-not-allowed':
+    case 'empty-transcript':
+    case 'language-unsupported':
+    case 'whisper-error':
+    case 'llama-error':
+    case 'schema-failed':
+    case 'method-not-allowed':
+    case 'rate-limited':
+    case 'network-error':
+    case 'malformed-stream':
+      return PARSE_ERROR_COPY;
+    default: {
+      const _exhaustive: never = reason;
+      return _exhaustive;
+    }
+  }
 }
 
 export function VoiceOverlay({ state, onUserStop, onCancel, onRetry }: Props): React.ReactNode {

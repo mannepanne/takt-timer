@@ -20,7 +20,7 @@ Before making an architectural decision that outlasts today's PR, consult [../RE
 
 Full product vision: [ORIGINAL_IDEA/project-outline.md](./ORIGINAL_IDEA/project-outline.md).
 
-**Current phase:** Phase 3 — Voice. Spike (PR #6), B1 plumbing (PR #7), B2 React/UI (PR #8), B3a cleanup (PR #15), and B3b full rate limiter + ADR (PR #16) merged. The remaining B3 exit-criteria are the next chunk — start at `03-voice.md` "Phase 3 progress".
+**Current phase:** Phase 3 — Voice. Spike (PR #6), B1 plumbing (PR #7), B2 React/UI (PR #8), B3a cleanup (PR #15), B3b full rate limiter + ADR (PR #16), and B3c safety harness (PR #17) merged. The remaining B3 exit-criteria are the next chunk — start at `03-voice.md` "Phase 3 progress".
 
 **Live deployment:** https://takt.hultberg.org — Phase 2 core timer live since 2026-04-19.
 

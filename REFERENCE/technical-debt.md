@@ -102,6 +102,7 @@ These are debt items declared in phase specs that will become active when the ph
 - **TD-014** (Phase 3): Silence detection / VAD deferred — hard 8s cap + manual stop only. Risk: Low. Resolution: Phase 5+ if user feedback warrants.
 - **TD-004** (Phase 4): `isAdmin` flag set by hand in D1 until Phase 6 automates it. Acceptable because only Magnus needs admin before Phase 6. Risk: Low.
 - **TD-005** (Phase 4): No admin UI yet; users table inspected via direct D1 queries until Phase 6. Risk: Low.
+- **Phase 4 forward-pointer — no-persistence regression test.** `worker/api/voice/parse.test.ts` covers both the success path and the schema-failed error branch with probe `DB`/`AUDIO_BUCKET`/`USER_DATA` bindings; any Phase 4 change that routes audio bytes or transcripts through new bindings will fail it loudly. That's a feature, not a bug. If a deliberate user-data write becomes part of the parse path (e.g. session history persistence), write an ADR before relaxing the assertion — the test codifies the "no audio stored" privacy promise from `SPECIFICATIONS/ORIGINAL_IDEA/project-outline.md`.
 - **TD-006** (Phase 5): Missing-i18n-key warning is log-only, not a build-time check. Acceptable for two languages; revisit if a third lands. Risk: Low.
 
 ---

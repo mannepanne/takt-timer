@@ -115,6 +115,9 @@ export async function postVoice(
   } catch (err) {
     clearTimeout(timeoutId);
     cleanupAbortListener();
+    // Order matters: user cancel wins over timeout when both signals fire in the
+    // same async turn — reporting "user cancelled" matches the user's intent more
+    // closely than "timed out" when they tapped Cancel right as the timer ran out.
     if (userAborted()) return; // Caller cancelled; do not dispatch.
     if (coldStartTimedOut) {
       dispatch({ type: 'errorArrived', reason: 'cold-start-timeout' });
@@ -161,6 +164,7 @@ export async function postVoice(
       }
     }
   } catch (err) {
+    // Same precedence as the fetch-catch above: user cancel wins over timeout.
     if (userAborted()) return;
     if (coldStartTimedOut) {
       dispatch({ type: 'errorArrived', reason: 'cold-start-timeout' });
