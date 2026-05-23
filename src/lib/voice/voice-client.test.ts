@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { VoiceEvent } from './types';
 import { postVoice } from './voice-client';
@@ -177,6 +177,123 @@ describe('postVoice', () => {
     controller.abort();
     await postVoice(BLOB, dispatch, { fetchFn, signal: controller.signal });
     expect(events).toEqual([]);
+  });
+
+  describe('cold-start timeout', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('aborts and dispatches cold-start-timeout when the worker is slow to respond', async () => {
+      vi.useFakeTimers();
+      const { events, dispatch } = makeDispatch();
+      const fetchFn = vi.fn(
+        (_url: unknown, init: RequestInit = {}) =>
+          new Promise<Response>((_resolve, reject) => {
+            init.signal?.addEventListener('abort', () => {
+              reject(new DOMException('aborted', 'AbortError'));
+            });
+          }),
+      );
+
+      const promise = postVoice(BLOB, dispatch, { fetchFn, coldStartTimeoutMs: 30_000 });
+      await vi.advanceTimersByTimeAsync(30_001);
+      await promise;
+
+      expect(events).toEqual([{ type: 'errorArrived', reason: 'cold-start-timeout' }]);
+    });
+
+    it('fires cold-start-timeout when headers arrive instantly but the body stream stalls', async () => {
+      // TransformStream pattern in the Worker means response headers come back in ms while
+      // the body waits on Workers AI — the timer must be tied to first body line, not headers.
+      vi.useFakeTimers();
+      const { events, dispatch } = makeDispatch();
+      const fetchFn = vi.fn((_url: unknown, init: RequestInit = {}) => {
+        const stalled = new ReadableStream<Uint8Array>({
+          start(controller) {
+            init.signal?.addEventListener('abort', () => {
+              controller.error(new DOMException('aborted', 'AbortError'));
+            });
+          },
+        });
+        return Promise.resolve(
+          new Response(stalled, {
+            status: 200,
+            headers: { 'Content-Type': 'application/x-ndjson' },
+          }),
+        );
+      });
+
+      const promise = postVoice(BLOB, dispatch, { fetchFn, coldStartTimeoutMs: 30_000 });
+      await vi.advanceTimersByTimeAsync(30_001);
+      await promise;
+
+      expect(events).toEqual([{ type: 'errorArrived', reason: 'cold-start-timeout' }]);
+    });
+
+    it('does not fire the timeout once the first stream line arrives, even if the rest is slow', async () => {
+      vi.useFakeTimers();
+      const { events, dispatch } = makeDispatch();
+      const fetchFn = vi.fn((_url: unknown, init: RequestInit = {}) => {
+        const encoder = new TextEncoder();
+        const stream = new ReadableStream<Uint8Array>({
+          start(controller) {
+            // First line arrives quickly — this is what proves the worker is responsive.
+            controller.enqueue(
+              encoder.encode('{"kind":"whisper","transcript":"three sets","language":"en"}\n'),
+            );
+            // Then a long pause before the parsed event — must NOT trip the cold-start timer.
+            setTimeout(() => {
+              controller.enqueue(
+                encoder.encode('{"kind":"parsed","session":{"sets":3,"workSec":60,"restSec":0}}\n'),
+              );
+              controller.close();
+            }, 45_000);
+            init.signal?.addEventListener('abort', () => {
+              controller.error(new DOMException('aborted', 'AbortError'));
+            });
+          },
+        });
+        return Promise.resolve(
+          new Response(stream, {
+            status: 200,
+            headers: { 'Content-Type': 'application/x-ndjson' },
+          }),
+        );
+      });
+
+      const promise = postVoice(BLOB, dispatch, { fetchFn, coldStartTimeoutMs: 30_000 });
+      await vi.advanceTimersByTimeAsync(0);
+      await vi.advanceTimersByTimeAsync(60_000);
+      await promise;
+
+      expect(events.map((e) => e.type)).toEqual(['transcriptArrived', 'sessionArrived']);
+    });
+
+    it('user cancel during the cold-start window stays silent (no cold-start-timeout dispatch)', async () => {
+      vi.useFakeTimers();
+      const { events, dispatch } = makeDispatch();
+      const controller = new AbortController();
+      const fetchFn = vi.fn(
+        (_url: unknown, init: RequestInit = {}) =>
+          new Promise<Response>((_resolve, reject) => {
+            init.signal?.addEventListener('abort', () => {
+              reject(new DOMException('aborted', 'AbortError'));
+            });
+          }),
+      );
+
+      const promise = postVoice(BLOB, dispatch, {
+        fetchFn,
+        signal: controller.signal,
+        coldStartTimeoutMs: 30_000,
+      });
+      controller.abort();
+      await vi.advanceTimersByTimeAsync(0);
+      await promise;
+
+      expect(events).toEqual([]);
+    });
   });
 
   it('sends the Content-Type from the blob', async () => {

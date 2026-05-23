@@ -5,7 +5,7 @@ import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 
 import { Icon } from '@/components/icons';
-import type { VoiceState } from '@/lib/voice/types';
+import type { ErrorReason, VoiceState } from '@/lib/voice/types';
 
 type Props = {
   state: VoiceState;
@@ -30,6 +30,8 @@ const PARSE_ERROR_COPY =
   'Couldn\u2019t understand that one. Tap Configure to build a session manually.';
 const NOT_A_SESSION_COPY =
   'That didn\u2019t sound like a session. Try again, or tap Configure to build one manually.';
+const COLD_START_TIMEOUT_COPY =
+  'Voice took longer than expected. Try again, or tap Configure to build a session manually.';
 const RATE_LIMIT_COPY_PREFIX = 'You\u2019ve used today\u2019s voice allowance';
 const RATE_LIMIT_COPY_SUFFIX = 'Tap Configure to build a session manually.';
 
@@ -46,8 +48,42 @@ function formatRetryAfter(retryAfterSec: number): string {
     return `${RATE_LIMIT_COPY_PREFIX}. Try again in ${totalMinutes} ${unit}. ${RATE_LIMIT_COPY_SUFFIX}`;
   }
   const hours = Math.ceil(retryAfterSec / 3600);
+  // The singular branch is structurally unreachable: this arm only runs when
+  // totalMinutes ≥ 120, which forces hours ≥ 2. The ternary stays as defensive
+  // code in case the 120-minute threshold ever changes.
+  /* v8 ignore next */
   const unit = hours === 1 ? 'hour' : 'hours';
   return `${RATE_LIMIT_COPY_PREFIX}. Try again in ${hours} ${unit}. ${RATE_LIMIT_COPY_SUFFIX}`;
+}
+
+// Exhaustive over ErrorReason so the compiler flags any new reason that lands
+// in `parse-error` without a conscious decision about overlay copy. The default
+// arm is unreachable at runtime — `_exhaustive: never` is the type-level guard.
+function parseErrorCopy(reason: ErrorReason): string {
+  switch (reason) {
+    case 'not-a-session':
+      return NOT_A_SESSION_COPY;
+    case 'cold-start-timeout':
+      return COLD_START_TIMEOUT_COPY;
+    case 'upload-empty':
+    case 'upload-too-large':
+    case 'origin-not-allowed':
+    case 'empty-transcript':
+    case 'language-unsupported':
+    case 'whisper-error':
+    case 'llama-error':
+    case 'schema-failed':
+    case 'method-not-allowed':
+    case 'rate-limited':
+    case 'network-error':
+    case 'malformed-stream':
+      return PARSE_ERROR_COPY;
+    /* v8 ignore next 4 — unreachable; the `never`-typed default is a compile-time guard, not a runtime branch. */
+    default: {
+      const _exhaustive: never = reason;
+      return _exhaustive;
+    }
+  }
 }
 
 export function VoiceOverlay({ state, onUserStop, onCancel, onRetry }: Props): React.ReactNode {
@@ -138,7 +174,7 @@ function renderContent(
       return errorSheet(
         titleId,
         'Let\u2019s try that again',
-        state.reason === 'not-a-session' ? NOT_A_SESSION_COPY : PARSE_ERROR_COPY,
+        parseErrorCopy(state.reason),
         onRetry,
         state.transcript,
       );

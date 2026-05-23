@@ -244,6 +244,15 @@ describe('voice machine', () => {
       });
     });
 
+    it('errorArrived(cold-start-timeout) → parse-error, reason preserved', () => {
+      const { next } = step(state, { type: 'errorArrived', reason: 'cold-start-timeout' });
+      expect(next).toEqual({
+        phase: 'parse-error',
+        reason: 'cold-start-timeout',
+        transcript: 'three sets of one minute',
+      });
+    });
+
     it('cancel → idle, cancels POST and restores ambient', () => {
       const { next, effects } = step(state, { type: 'cancel' });
       expect(next).toEqual({ phase: 'idle' });

@@ -69,6 +69,12 @@ describe('VoiceOverlay', () => {
     expect(screen.getByText(/try again in 12 minutes/i)).toBeInTheDocument();
   });
 
+  it('rate-limited uses singular "minute" when totalMinutes === 1', () => {
+    renderOverlay({ phase: 'rate-limited', retryAfterSec: 60 });
+    expect(screen.getByText(/try again in 1 minute\b/i)).toBeInTheDocument();
+    expect(screen.queryByText(/1 minutes/i)).not.toBeInTheDocument();
+  });
+
   it('rate-limited formats 61\u2013119min as minutes, not "2 hours" (avoids over-promise)', () => {
     renderOverlay({ phase: 'rate-limited', retryAfterSec: 75 * 60 });
     expect(screen.getByText(/try again in 75 minutes/i)).toBeInTheDocument();
@@ -88,9 +94,33 @@ describe('VoiceOverlay', () => {
     expect(screen.getByText(/banana kayak/)).toBeInTheDocument();
   });
 
-  it('parse-error with other reasons shows the generic couldn\u2019t understand copy', () => {
-    renderOverlay({ phase: 'parse-error', reason: 'schema-failed' });
-    expect(screen.getByText(/couldn\u2019t understand that one/i)).toBeInTheDocument();
+  // Exhaustive over the fall-through arm of `parseErrorCopy` so the switch's
+  // case-label branches are all hit at runtime. Adding a new ErrorReason
+  // forces a switch update; this list catches the test-side companion drift.
+  it.each([
+    'upload-empty',
+    'upload-too-large',
+    'origin-not-allowed',
+    'empty-transcript',
+    'language-unsupported',
+    'whisper-error',
+    'llama-error',
+    'schema-failed',
+    'method-not-allowed',
+    'rate-limited',
+    'network-error',
+    'malformed-stream',
+  ] as const)(
+    'parse-error with reason=%s shows the generic couldn\u2019t understand copy',
+    (reason) => {
+      renderOverlay({ phase: 'parse-error', reason });
+      expect(screen.getByText(/couldn\u2019t understand that one/i)).toBeInTheDocument();
+    },
+  );
+
+  it('parse-error with reason=cold-start-timeout shows the distinct timeout copy', () => {
+    renderOverlay({ phase: 'parse-error', reason: 'cold-start-timeout' });
+    expect(screen.getByText(/voice took longer than expected/i)).toBeInTheDocument();
   });
 
   it('clicking retry from an error state fires onRetry', async () => {

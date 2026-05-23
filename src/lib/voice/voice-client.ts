@@ -19,7 +19,14 @@ const ERROR_REASONS: ReadonlySet<ErrorReason> = new Set<ErrorReason>([
   'rate-limited',
   'network-error',
   'malformed-stream',
+  'cold-start-timeout',
 ]);
+
+// Workers AI on a cold instance can take ~20s for the first response. 30s gives a margin
+// over that without leaving the user staring at a spinner for a full minute when the
+// worker is wedged. Surfaces as a distinct error so the UI can offer a retry rather than
+// the generic "couldn't understand that" copy.
+export const COLD_START_TIMEOUT_MS = 30_000;
 
 function isErrorReason(value: unknown): value is ErrorReason {
   return typeof value === 'string' && ERROR_REASONS.has(value as ErrorReason);
@@ -58,6 +65,8 @@ export type VoiceRequestOptions = {
   signal?: AbortSignal;
   /** Optional fetch replacement — defaults to global fetch. */
   fetchFn?: typeof fetch;
+  /** Override the cold-start timeout — tests use a low value with fake timers. */
+  coldStartTimeoutMs?: number;
 };
 
 /**
@@ -72,6 +81,28 @@ export async function postVoice(
 ): Promise<void> {
   const endpoint = options.endpoint ?? '/api/voice/parse';
   const fetchFn = options.fetchFn ?? fetch;
+  const timeoutMs = options.coldStartTimeoutMs ?? COLD_START_TIMEOUT_MS;
+
+  // Internal controller aborts on either user cancel or cold-start timeout. The
+  // `coldStartTimedOut` flag lets the catch handlers distinguish the two — a user cancel
+  // returns silently, a timeout dispatches the dedicated error.
+  const internal = new AbortController();
+  let coldStartTimedOut = false;
+  const forwardAbort = () => internal.abort();
+  if (options.signal) {
+    if (options.signal.aborted) internal.abort();
+    else options.signal.addEventListener('abort', forwardAbort, { once: true });
+  }
+
+  const timeoutId = setTimeout(() => {
+    coldStartTimedOut = true;
+    internal.abort();
+  }, timeoutMs);
+
+  const userAborted = (): boolean => options.signal?.aborted === true;
+  const cleanupAbortListener = () => {
+    options.signal?.removeEventListener('abort', forwardAbort);
+  };
 
   let response: Response;
   try {
@@ -79,27 +110,52 @@ export async function postVoice(
       method: 'POST',
       body: blob,
       headers: { 'Content-Type': blob.type || 'application/octet-stream' },
-      signal: options.signal,
+      signal: internal.signal,
     });
   } catch (err) {
-    if (isAbortError(err)) return; // Caller cancelled; do not dispatch.
+    clearTimeout(timeoutId);
+    cleanupAbortListener();
+    // Order matters: user cancel wins over timeout when both signals fire in the
+    // same async turn — reporting "user cancelled" matches the user's intent more
+    // closely than "timed out" when they tapped Cancel right as the timer ran out.
+    if (userAborted()) return; // Caller cancelled; do not dispatch.
+    if (coldStartTimedOut) {
+      dispatch({ type: 'errorArrived', reason: 'cold-start-timeout' });
+      return;
+    }
+    if (isAbortError(err)) return;
     dispatch({ type: 'errorArrived', reason: 'network-error' });
     return;
   }
 
+  // Do NOT clear the cold-start timer here. The Worker uses a TransformStream
+  // (worker/api/voice/parse.ts returns ndjsonResponse(readable) *before* awaiting
+  // Workers AI), so headers arrive in milliseconds while the actual cold-start
+  // wait is in the body stream. Only the arrival of the first body line proves
+  // the worker is responsive — that's where we clear the timer.
+
   if (!response.ok) {
+    clearTimeout(timeoutId);
+    cleanupAbortListener();
     const reason = await extractErrorReason(response);
     dispatch({ type: 'errorArrived', reason: reason.reason, retryAfterSec: reason.retryAfterSec });
     return;
   }
 
   if (!response.body) {
+    clearTimeout(timeoutId);
+    cleanupAbortListener();
     dispatch({ type: 'errorArrived', reason: 'malformed-stream' });
     return;
   }
 
+  let firstLineReceived = false;
   try {
     for await (const line of readNdjsonStream<ServerEvent>(response.body)) {
+      if (!firstLineReceived) {
+        firstLineReceived = true;
+        clearTimeout(timeoutId);
+      }
       const dispatched = dispatchLine(line, dispatch);
       if (!dispatched) {
         // Malformed JSON or unknown event shape — treat as stream corruption.
@@ -108,8 +164,17 @@ export async function postVoice(
       }
     }
   } catch (err) {
+    // Same precedence as the fetch-catch above: user cancel wins over timeout.
+    if (userAborted()) return;
+    if (coldStartTimedOut) {
+      dispatch({ type: 'errorArrived', reason: 'cold-start-timeout' });
+      return;
+    }
     if (isAbortError(err)) return;
     dispatch({ type: 'errorArrived', reason: 'network-error' });
+  } finally {
+    clearTimeout(timeoutId);
+    cleanupAbortListener();
   }
 }
 

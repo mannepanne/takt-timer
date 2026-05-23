@@ -16,7 +16,8 @@ export type ErrorReason =
   | 'method-not-allowed'
   | 'rate-limited'
   | 'network-error'
-  | 'malformed-stream';
+  | 'malformed-stream'
+  | 'cold-start-timeout';
 
 export type VoiceState =
   | { phase: 'idle' }

@@ -43,7 +43,7 @@ Built for Magnus's rehab training, released to the world because the problem —
 - Cloudflare Access with Magnus's existing Google IdP policy — admin gate.
 - Cloudflare Web Analytics — traffic visibility.
 
-**Current status:** Phase 1 (Foundation) and Phase 2 (Core timer) complete and deployed. Phase 3 (Voice) — spike (PR #6), pure plumbing B1 (PR #7), React/UI layer B2 (PR #8), B3a cleanup (PR #15), and B3b full rate limiter + ADR (PR #16: 3/day anon cap, `.dev.vars` bypass, user-tier key stub, retryAfter UX copy) all merged and live. The remaining B3 exit-criteria are next. See [SPECIFICATIONS/03-voice.md → Phase 3 progress](./SPECIFICATIONS/03-voice.md#phase-3-progress) for the authoritative entry point.
+**Current status:** Phase 1 (Foundation) and Phase 2 (Core timer) complete and deployed. Phase 3 (Voice) — spike (PR #6), pure plumbing B1 (PR #7), React/UI layer B2 (PR #8), B3a cleanup (PR #15), B3b full rate limiter + ADR (PR #16: 3/day anon cap, `.dev.vars` bypass, user-tier key stub, retryAfter UX copy), and B3c safety harness (PR #17: no-persistence regression test, adversarial-transcript test, 30s cold-start `AbortController` + distinct overlay copy) all merged and live. Remaining B3 work: status-code client contract doc, `requestMic` effect refactor, empathy/British-English copy passes, real-device smoke test, then archive. See [SPECIFICATIONS/03-voice.md → Phase 3 progress](./SPECIFICATIONS/03-voice.md#phase-3-progress) for the authoritative entry point.
 
 ## Implementation phases
 
@@ -56,7 +56,7 @@ Development is organised into six sequential phases. Each phase has its own spec
 5. [05-i18n-settings-onboarding.md](./SPECIFICATIONS/05-i18n-settings-onboarding.md) — English + Swedish, Settings, Onboarding, Privacy policy (4–6 days)
 6. [06-admin-and-launch.md](./SPECIFICATIONS/06-admin-and-launch.md) — admin backend, retention purge, hardening, launch (4–6 days)
 
-**Current phase:** Phase 3 — Voice. B1, B2, B3a, and B3b merged; the remaining B3 exit-criteria are the next chunk.
+**Current phase:** Phase 3 — Voice. B1, B2, B3a, B3b, and B3c merged; the remaining B3 exit-criteria (status-code doc, `requestMic` refactor, copy passes, real-device smoke test) are the next chunk before archival.
 
 **Live at:** https://takt.hultberg.org — Phase 2 core timer live since 2026-04-19.
 
