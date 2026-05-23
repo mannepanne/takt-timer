@@ -19,6 +19,7 @@
 ## Scope and deliverables
 
 ### In scope
+
 - [ ] [Specific deliverable 1]
 - [ ] [Specific deliverable 2]
 - [ ] [Specific deliverable 3]
@@ -26,11 +27,13 @@
 - [ ] [Documentation updates]
 
 ### Out of scope
+
 - [Feature or optimisation deferred to later phase]
 - [Nice-to-have that's not critical for this phase]
 - [Advanced functionality saved for future iteration]
 
 ### Acceptance criteria
+
 - [ ] [Specific testable criterion 1]
 - [ ] [Specific testable criterion 2]
 - [ ] [Specific testable criterion 3]
@@ -45,11 +48,13 @@
 ### Architecture decisions
 
 **[Decision 1: e.g., "Authentication Strategy"]**
+
 - Choice: [What you decided to use]
 - Rationale: [Why this choice makes sense]
 - Alternatives considered: [What else you looked at]
 
 **[Decision 2: e.g., "Database Schema"]**
+
 - Choice: [What structure you're using]
 - Rationale: [Why this works for your use case]
 - Alternatives considered: [Other options you evaluated]
@@ -57,6 +62,7 @@
 ### Technology choices
 
 **Framework/Library:** [Name and version]
+
 - Purpose: [What it's used for]
 - Documentation: [Link to docs]
 
@@ -65,6 +71,7 @@
 ### Key files and components
 
 **New files to create:**
+
 ```
 src/
   ├── components/
@@ -78,6 +85,7 @@ src/
 ```
 
 **Files to modify:**
+
 ```
 - [existing-file-1.ts] - [what changes and why]
 - [existing-file-2.ts] - [what changes and why]
@@ -86,6 +94,7 @@ src/
 ### Database schema changes
 
 **New tables:** (if applicable)
+
 ```sql
 CREATE TABLE [table_name] (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -96,11 +105,13 @@ CREATE TABLE [table_name] (
 ```
 
 **Schema modifications:** (if applicable)
+
 ```sql
 ALTER TABLE [existing_table] ADD COLUMN [new_column] [TYPE];
 ```
 
 **Indexes:**
+
 ```sql
 CREATE INDEX idx_[table]_[column] ON [table]([column]);
 ```
@@ -112,12 +123,14 @@ CREATE INDEX idx_[table]_[column] ON [table]([column]);
 ### Unit tests
 
 **Coverage targets:**
+
 - Lines: 95%+
 - Functions: 95%+
 - Branches: 90%+
 - Statements: 95%+
 
 **Key test files:**
+
 - `[ComponentName].test.tsx` - Component behavior and rendering
 - `[utilityName].test.ts` - Business logic and edge cases
 - `[apiRoute].test.ts` - API endpoint responses and errors
@@ -125,6 +138,7 @@ CREATE INDEX idx_[table]_[column] ON [table]([column]);
 ### Integration tests
 
 **Test scenarios:**
+
 - [ ] [End-to-end flow 1]
 - [ ] [End-to-end flow 2]
 - [ ] [Error handling scenario]
@@ -162,6 +176,7 @@ Before creating PR, verify:
 ## PR workflow
 
 ### Branch naming
+
 ```
 feature/phase-[X]-[brief-description]
 ```
@@ -169,33 +184,41 @@ feature/phase-[X]-[brief-description]
 Example: `feature/phase-2-authentication`
 
 ### PR title
+
 ```
 Phase [X]: [Phase Name]
 ```
 
 ### PR description template
+
 ```markdown
 ## Summary
+
 [Brief overview of what this phase implements]
 
 ## Changes
+
 - [Key change 1]
 - [Key change 2]
 - [Key change 3]
 
 ## Testing
+
 - [ ] Unit tests: [X]% coverage
 - [ ] Integration tests passing
 - [ ] Manual testing completed
 
 ## Screenshots/Demo
+
 [If applicable, add screenshots or video demo]
 
 ## Deployment Notes
+
 [Any special deployment steps or environment variables needed]
 ```
 
 ### Review requirements
+
 - [ ] Use `/review-pr` for standard review
 - [ ] Use `/review-pr-team` if this phase involves:
   - Breaking changes
@@ -204,6 +227,7 @@ Phase [X]: [Phase Name]
   - Database migrations
 
 ### Deployment steps
+
 1. [Step 1: e.g., "Run database migrations"]
 2. [Step 2: e.g., "Deploy to staging"]
 3. [Step 3: e.g., "Verify in staging environment"]
@@ -215,22 +239,27 @@ Phase [X]: [Phase Name]
 ## Edge cases and considerations
 
 ### Known risks
+
 - **[Risk 1]:** [Description and mitigation strategy]
 - **[Risk 2]:** [Description and mitigation strategy]
 
 ### Performance considerations
+
 - [Consideration 1: e.g., "API calls are batched to reduce requests"]
 - [Consideration 2: e.g., "Images are lazy-loaded for better performance"]
 
 ### Security considerations
+
 - [Consideration 1: e.g., "All user input is sanitized"]
 - [Consideration 2: e.g., "API endpoints require authentication"]
 
 ### Accessibility considerations
+
 - [Consideration 1: e.g., "All interactive elements are keyboard accessible"]
 - [Consideration 2: e.g., "ARIA labels added for screen readers"]
 
 ### Future optimisation opportunities
+
 - [Optimisation 1: e.g., "Could add caching in Phase 5"]
 - [Optimisation 2: e.g., "Batch operations could be parallelized later"]
 
@@ -239,13 +268,14 @@ Phase [X]: [Phase Name]
 ## Technical debt introduced
 
 **[TD-XXX: Brief description]** (if applicable)
+
 - **Location:** `[file path]` - `[function name]`
 - **Issue:** [What shortcut or limitation exists]
 - **Why accepted:** [Reason for accepting this debt now]
 - **Risk:** Low/Medium/High
 - **Future fix:** [How to address this later]
 
-See [technical-debt.md](../REFERENCE/technical-debt.md) for full tracker.
+Track deferred items as GitHub issues with the `technical-debt` label.
 
 ---
 

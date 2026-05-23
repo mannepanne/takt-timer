@@ -70,4 +70,4 @@ Full product vision: [ORIGINAL_IDEA/project-outline.md](./ORIGINAL_IDEA/project-
 2. Move the phase file to `ARCHIVE/`.
 3. Update how-it-works docs in `REFERENCE/` if implementation reveals anything worth documenting for future work.
 4. Update "Current phase" here and in [root CLAUDE.md](../CLAUDE.md) to point at the next phase.
-5. Resolve any `TD-NNN` items promised in the phase spec, or move them to [technical-debt.md](../REFERENCE/technical-debt.md) if they're now active.
+5. Resolve any deferred items promised in the phase spec, or track them as GitHub issues with the `technical-debt` label if they're now active.

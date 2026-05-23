@@ -429,5 +429,5 @@ Use `/review-pr-team` — voice inference, prompt design, rate limiting, languag
 - [Phase 2 (archived)](./ARCHIVE/02-core-timer.md)
 - [ADR — Reducer-plus-effects pattern](../REFERENCE/decisions/2026-04-19-reducer-plus-effects-pattern.md)
 - [Testing strategy](../REFERENCE/testing-strategy.md)
-- [Technical debt](../REFERENCE/technical-debt.md)
+- Technical debt — GitHub Issues with `technical-debt` label
 - [Prototype Voice overlay: screens.jsx](./prototype-design-files/screens.jsx)

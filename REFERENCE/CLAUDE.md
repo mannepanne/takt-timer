@@ -10,12 +10,6 @@ Auto-loaded when working with files in this directory. How-it-works documentatio
 
 Complete testing philosophy, framework setup (Vitest), test categories, coverage requirements, and CI/CD integration.
 
-### [technical-debt.md](./technical-debt.md)
-
-**When to read:** Planning refactors, reviewing known issues, or documenting accepted shortcuts.
-
-Tracker for known limitations, accepted risks, and deferred improvements with risk assessments.
-
 ### [environment-setup.md](./environment-setup.md)
 
 **When to read:** Setting up local development, configuring secrets, or deploying to production.

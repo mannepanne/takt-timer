@@ -60,16 +60,19 @@ Build the admin surface Magnus needs to operate the service, wire the retention 
 ### Architecture decisions
 
 **Admin UI is a small server-rendered page inside the main Worker, not a separate SPA**
+
 - Choice: a few endpoints under `/admin/*` that return server-rendered HTML with minimal client-side JS (e.g. `htmx` or just `<form>` posts).
 - Rationale: simple, cheap, single deploy. No need for the main SPA's complexity for an audience of one.
 - Alternatives considered: a second SPA (overkill); embedding admin into the main SPA (mixes concerns and bundles).
 
 **Admin identification: Cloudflare Access at the edge, `isAdmin` flag in D1**
+
 - Access passes the authenticated email as a request header (`CF-Access-Authenticated-User-Email` or equivalent). The admin Worker reads it and uses it only to authorise requests and to set `isAdmin = 1` on Magnus's user row when he first registers in the main app.
 - The app never stores the email; it's read for authorisation, not persistence.
 
 **Retention purge as a scheduled Worker, not a one-off script**
-- Choice: Cron Trigger running once per day. Dry-run first week (logs what it *would* delete); real deletes after verification.
+
+- Choice: Cron Trigger running once per day. Dry-run first week (logs what it _would_ delete); real deletes after verification.
 - Rationale: runs reliably, no external infra, logs available.
 
 ### Technology choices
@@ -138,7 +141,7 @@ None new. `isAdmin` column from phase 4 is sufficient. The purge references exis
 - [ ] Uptime check configured and alerting to Magnus.
 - [ ] D1 backup strategy documented in `REFERENCE/environment-setup.md` (even if the strategy is "rely on Cloudflare's built-in export").
 - [ ] Privacy policy re-checked against actual behaviour — no drift from phase 5.
-- [ ] Technical debt document (`REFERENCE/technical-debt.md`) cleaned; any phase-2 through phase-5 debt either resolved or explicitly deferred with a plan.
+- [ ] Open GitHub issues with the `technical-debt` label triaged; any phase-2 through phase-5 debt either resolved (issue closed) or explicitly deferred with a plan recorded on the issue.
 
 ---
 
@@ -181,7 +184,7 @@ Separate from pre-commit. Run after Phase 6 merges, before announcing publicly.
 
 ### Security considerations
 
-- Admin Worker defensively checks the Access header on *every* request — not just the entry point.
+- Admin Worker defensively checks the Access header on _every_ request — not just the entry point.
 - Deleting a user is logged (non-PII) with timestamp and actor, kept for 90 days in structured logs for incident review.
 - CSP tightened and verified; no inline scripts except those fingerprinted or nonced.
 
@@ -203,4 +206,4 @@ None anticipated. Resolve or document any lingering debt from earlier phases dur
 - [Phase 5](./05-i18n-settings-onboarding.md)
 - [Testing strategy](../REFERENCE/testing-strategy.md)
 - [Environment setup](../REFERENCE/environment-setup.md)
-- [Technical debt](../REFERENCE/technical-debt.md)
+- Technical debt — GitHub Issues with `technical-debt` label
