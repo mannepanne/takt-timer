@@ -48,6 +48,10 @@ function formatRetryAfter(retryAfterSec: number): string {
     return `${RATE_LIMIT_COPY_PREFIX}. Try again in ${totalMinutes} ${unit}. ${RATE_LIMIT_COPY_SUFFIX}`;
   }
   const hours = Math.ceil(retryAfterSec / 3600);
+  // The singular branch is structurally unreachable: this arm only runs when
+  // totalMinutes ≥ 120, which forces hours ≥ 2. The ternary stays as defensive
+  // code in case the 120-minute threshold ever changes.
+  /* v8 ignore next */
   const unit = hours === 1 ? 'hour' : 'hours';
   return `${RATE_LIMIT_COPY_PREFIX}. Try again in ${hours} ${unit}. ${RATE_LIMIT_COPY_SUFFIX}`;
 }
@@ -74,6 +78,7 @@ function parseErrorCopy(reason: ErrorReason): string {
     case 'network-error':
     case 'malformed-stream':
       return PARSE_ERROR_COPY;
+    /* v8 ignore next 4 — unreachable; the `never`-typed default is a compile-time guard, not a runtime branch. */
     default: {
       const _exhaustive: never = reason;
       return _exhaustive;
