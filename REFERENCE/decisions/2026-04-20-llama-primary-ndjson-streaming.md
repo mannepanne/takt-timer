@@ -151,6 +151,6 @@ The `worker/lib/toSafeErrorMessage.ts` helper enforces this contract at the 5 ca
 
 - [Phase 3 spec](../../SPECIFICATIONS/03-voice.md) — scope, testing strategy, the Spike outcome section
 - [ADR — Reducer-plus-effects pattern](./2026-04-19-reducer-plus-effects-pattern.md) — shape of the Voice overlay state machine
-- [Technical debt](../technical-debt.md) — TD-016 (iOS Whisper Icelandic misclassification), TD-017 (minimum-viable rate limiter)
+- Open `technical-debt`-labelled GitHub issues — iOS Whisper Icelandic misclassification (formerly TD-016) and the KV rate-limit race window (formerly TD-015); the minimum-viable rate limiter (formerly TD-017) was resolved on 2026-05-12 in Phase 3 B3b.
 - [Prototype voice parser](../../SPECIFICATIONS/prototype-design-files/voice.js) — the parser this ADR rejects
 - `worker/api/voice/parse.ts`, `worker/api/voice/llama.ts`, `worker/api/voice/whisper.ts` — the shipped implementation

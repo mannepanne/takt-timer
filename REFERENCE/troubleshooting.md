@@ -3,9 +3,9 @@
 **When to read this:** Hitting a problem during local development, deployment, or production. Populated as issues are encountered.
 
 **Related documents:**
+
 - [CLAUDE.md](../CLAUDE.md) — project navigation.
 - [environment-setup.md](./environment-setup.md) — environment configuration.
-- [technical-debt.md](./technical-debt.md) — known limitations.
 
 ---
 
@@ -20,10 +20,12 @@ Append new entries here as you encounter and solve issues. Each entry: symptom, 
 **Symptom:** `pnpm dev` fails with "not authenticated" or cannot find the account.
 
 **Resolution:**
+
 ```bash
 pnpm dlx wrangler login
 pnpm dlx wrangler whoami
 ```
+
 Make sure `whoami` shows the Cloudflare account that owns the Takt resources.
 
 ### `.dev.vars` not loading
@@ -31,6 +33,7 @@ Make sure `whoami` shows the Cloudflare account that owns the Takt resources.
 **Symptom:** `SESSION_COOKIE_SECRET` (or similar) is undefined at runtime.
 
 **Resolution:**
+
 - File is at the repo root (same level as `wrangler.toml`).
 - Restart `pnpm dev` after editing.
 - Check for accidental quotes around values — Wrangler takes them literally.
@@ -57,6 +60,7 @@ pnpm typecheck
 **Symptom:** Green locally, red in CI.
 
 Usual causes:
+
 - Node version mismatch — pin the version in `.github/workflows/ci.yml` and `engines` in `package.json`.
 - Environment variables not set in CI (e.g. `WEBAUTHN_RP_ID`).
 - Timezone — tests that compare timestamps need to use `Date.now()` from a mocked clock, not real time.
@@ -83,6 +87,7 @@ pnpm dlx wrangler secret put <NAME>
 **Symptom:** "migration already applied" or hash mismatch.
 
 **Resolution:**
+
 - Never edit an applied migration. Create a new one.
 - If a local dev DB is out of sync, consider resetting it — never reset production.
 
@@ -107,6 +112,7 @@ pnpm dlx wrangler secret put <NAME>
 **Symptom:** Voice call succeeds but transcript is `""`.
 
 **Resolution:**
+
 - Verify the audio blob is non-trivial (`blob.size > 5000` is a sensible floor).
 - Check `MediaRecorder` MIME type — some combinations produce silent audio. `audio/webm;codecs=opus` is the known-good default.
 - Very short recordings (<0.5s) can silently return nothing; enforce a minimum duration client-side.
@@ -116,6 +122,7 @@ pnpm dlx wrangler secret put <NAME>
 **Symptom:** `/api/voice/parse` logs "zod validation failed" repeatedly.
 
 **Resolution:**
+
 - Check the prompt hasn't drifted — the `strict JSON only, no prose` instruction is load-bearing.
 - The phase 3 retry-once fallback catches most of these. If it's persistent, pick a larger model for a session.
 
@@ -128,8 +135,9 @@ pnpm dlx wrangler secret put <NAME>
 **Symptom:** Beeps don't play.
 
 **Resolution:**
+
 - iOS requires `AudioContext` to be resumed from a user gesture. The lazy `getAudio()` wrapper must be called first on a tap handler, not from effect code.
-- Silent switch does *not* silence Web Audio; it does silence HTML audio elements. Use Web Audio only.
+- Silent switch does _not_ silence Web Audio; it does silence HTML audio elements. Use Web Audio only.
 
 ### Timer pauses when backgrounded
 
@@ -142,6 +150,7 @@ pnpm dlx wrangler secret put <NAME>
 **Symptom:** Phone auto-locks mid-session.
 
 **Resolution:**
+
 - Verify `navigator.wakeLock` is available (some browsers don't support it; we degrade silently).
 - On iOS, Wake Lock requires the tab to be foregrounded. This is expected.
 
@@ -154,6 +163,7 @@ pnpm dlx wrangler secret put <NAME>
 **Symptom:** Can create the account, but sign-in returns "unknown credential".
 
 **Resolution:**
+
 - `WEBAUTHN_RP_ID` mismatch between registration and sign-in — must be identical and match the origin.
 - Passkey stored on a different browser profile than the one attempting sign-in.
 

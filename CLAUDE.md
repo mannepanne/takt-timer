@@ -73,7 +73,6 @@ How-it-works documentation and operational reference:
 
 - [testing-strategy.md](./REFERENCE/testing-strategy.md) — TDD, Vitest, coverage targets, what to mock.
 - [environment-setup.md](./REFERENCE/environment-setup.md) — Cloudflare account, Wrangler, D1/KV/Workers AI setup.
-- [technical-debt.md](./REFERENCE/technical-debt.md) — accepted shortcuts and deferred improvements.
 - [troubleshooting.md](./REFERENCE/troubleshooting.md) — common issues (populated as we encounter them).
 - [pr-review-workflow.md](./REFERENCE/pr-review-workflow.md) — how to use `/review-spec`, `/review-pr`, `/review-pr-team`.
 - [decisions/](./REFERENCE/decisions/) — Architecture Decision Records. Consult before making decisions in the same space.
@@ -159,7 +158,7 @@ pnpm typecheck           # TypeScript type checking
 
 - Environment setup → [environment-setup.md](./REFERENCE/environment-setup.md)
 - Testing → [testing-strategy.md](./REFERENCE/testing-strategy.md)
-- Technical debt → [technical-debt.md](./REFERENCE/technical-debt.md)
+- Technical debt → GitHub Issues with `technical-debt` label
 - Troubleshooting → [troubleshooting.md](./REFERENCE/troubleshooting.md)
 
 ## Project-specific notes
