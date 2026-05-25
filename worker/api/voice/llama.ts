@@ -51,6 +51,7 @@ Rules:
 - "half a minute" = 30 seconds, "quarter of a minute" = 15.
 - Swedish numerals: ett=1, två=2, tre=3, fyra=4, fem=5, sex=6, sju=7, åtta=8, nio=9, tio=10, tjugo=20, trettio=30, fyrtio=40, femtio=50, sextio=60, sjuttio=70, åttio=80, nittio=90. Compounds: trettiofem=35, fyrtiofem=45, etc.
 - Swedish units: minut/minuter=minutes, sekund/sekunder=seconds, vila/paus=rest, set/omgång(ar)=sets.
+- "X times" or "do it X times" means sets=X. When "set" and "times" conflict, "times" gives the total repetitions.
 
 Examples:
 Input: "Three sets of one minute each, thirty seconds rest between each"
@@ -67,6 +68,9 @@ Output: {"sets":3,"workSec":60,"restSec":30}
 
 Input: "Fem set om fyrtiofem sekunder och femton sekunder vila"
 Output: {"sets":5,"workSec":45,"restSec":15}
+
+Input: "One set, one minute, three times"
+Output: {"sets":3,"workSec":60,"restSec":0}
 
 Input: "banana kayak helicopter"
 Output: {"error":"not-a-session"}`;
