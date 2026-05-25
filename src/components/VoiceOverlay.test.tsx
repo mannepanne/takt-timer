@@ -53,6 +53,11 @@ describe('VoiceOverlay', () => {
     );
   });
 
+  it('language-mismatch echoes transcript when one is present', () => {
+    renderOverlay({ phase: 'language-mismatch', detected: 'fr', transcript: 'bonjour le monde' });
+    expect(screen.getByText(/bonjour le monde/)).toBeInTheDocument();
+  });
+
   it('rate-limited shows the UTC-safe copy (no "tomorrow")', () => {
     renderOverlay({ phase: 'rate-limited', retryAfterSec: 3600 });
     expect(screen.getByText(/today\u2019s voice allowance/i)).toBeInTheDocument();
@@ -89,7 +94,7 @@ describe('VoiceOverlay', () => {
 
   it('parse-error with reason=not-a-session shows the distinct copy', () => {
     renderOverlay({ phase: 'parse-error', reason: 'not-a-session', transcript: 'banana kayak' });
-    expect(screen.getByText(/didn\u2019t sound like a session/i)).toBeInTheDocument();
+    expect(screen.getByText(/couldn\u2019t make a session from that/i)).toBeInTheDocument();
     // Transcript is echoed so the user sees what Whisper heard
     expect(screen.getByText(/banana kayak/)).toBeInTheDocument();
   });
@@ -110,17 +115,27 @@ describe('VoiceOverlay', () => {
     'rate-limited',
     'network-error',
     'malformed-stream',
-  ] as const)(
-    'parse-error with reason=%s shows the generic couldn\u2019t understand copy',
-    (reason) => {
-      renderOverlay({ phase: 'parse-error', reason });
-      expect(screen.getByText(/couldn\u2019t understand that one/i)).toBeInTheDocument();
-    },
-  );
+  ] as const)('parse-error with reason=%s shows the generic couldn\u2019t build copy', (reason) => {
+    renderOverlay({ phase: 'parse-error', reason });
+    expect(screen.getByText(/couldn\u2019t build a session from that/i)).toBeInTheDocument();
+  });
 
   it('parse-error with reason=cold-start-timeout shows the distinct timeout copy', () => {
     renderOverlay({ phase: 'parse-error', reason: 'cold-start-timeout' });
     expect(screen.getByText(/voice took longer than expected/i)).toBeInTheDocument();
+  });
+
+  it('error-state dialog has aria-describedby pointing at the body paragraph', () => {
+    renderOverlay({ phase: 'offline' });
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveAttribute('aria-describedby', 'voice-overlay-body');
+    expect(document.getElementById('voice-overlay-body')).toBeInTheDocument();
+  });
+
+  it('non-error dialog does not carry aria-describedby', () => {
+    renderOverlay({ phase: 'listening', startedAtMs: 0 });
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).not.toHaveAttribute('aria-describedby');
   });
 
   it('clicking retry from an error state fires onRetry', async () => {

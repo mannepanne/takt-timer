@@ -15,6 +15,11 @@ describe('MicButton', () => {
     vi.restoreAllMocks();
   });
 
+  it('renders the mic hint copy', () => {
+    render(<MicButton />, { wrapper });
+    expect(screen.getByText(/tap the mic/i)).toBeInTheDocument();
+  });
+
   it('renders an actionable mic button (no longer aria-disabled)', () => {
     render(<MicButton />, { wrapper });
     const btn = screen.getByRole('button', { name: /start voice input/i });

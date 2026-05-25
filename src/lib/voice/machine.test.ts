@@ -57,10 +57,10 @@ describe('voice machine', () => {
   describe('from requesting-permission', () => {
     const state: VoiceState = { phase: 'requesting-permission' };
 
-    it('permissionGranted → listening, starts recording and schedules cap', () => {
+    it('permissionGranted → listening, schedules the 8s cap (recording begins atomically in requestMic)', () => {
       const { next, effects } = step(state, { type: 'permissionGranted', now: 1000 });
       expect(next).toEqual({ phase: 'listening', startedAtMs: 1000 });
-      expectEffects(effects, 'startRecording', 'schedule8sCap');
+      expectEffects(effects, 'schedule8sCap');
     });
 
     it('permissionDenied → permission-denied, restores ambient audio', () => {
@@ -174,7 +174,7 @@ describe('voice machine', () => {
       // Same fallback shape as retryAfterSec above — an empty detected tag is an honest signal
       // that the server omitted the field, not a silent crash.
       const { next } = step(state, { type: 'errorArrived', reason: 'language-unsupported' });
-      expect(next).toEqual({ phase: 'language-mismatch', detected: '' });
+      expect(next).toEqual({ phase: 'language-mismatch', detected: '', transcript: undefined });
     });
 
     it('errorArrived(whisper-error) → parse-error', () => {
@@ -202,7 +202,7 @@ describe('voice machine', () => {
         reason: 'language-unsupported',
         detectedLanguage: 'fr',
       });
-      expect(next).toEqual({ phase: 'language-mismatch', detected: 'fr' });
+      expect(next).toEqual({ phase: 'language-mismatch', detected: 'fr', transcript: undefined });
     });
 
     it('cancel → idle, cancels the in-flight POST and restores ambient', () => {
@@ -249,6 +249,19 @@ describe('voice machine', () => {
       expect(next).toEqual({
         phase: 'parse-error',
         reason: 'cold-start-timeout',
+        transcript: 'three sets of one minute',
+      });
+    });
+
+    it('errorArrived(language-unsupported) → language-mismatch, transcript preserved', () => {
+      const { next } = step(state, {
+        type: 'errorArrived',
+        reason: 'language-unsupported',
+        detectedLanguage: 'fr',
+      });
+      expect(next).toEqual({
+        phase: 'language-mismatch',
+        detected: 'fr',
         transcript: 'three sets of one minute',
       });
     });
