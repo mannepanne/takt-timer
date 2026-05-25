@@ -171,6 +171,18 @@ describe('parseWithLlama', () => {
     }
   });
 
+  it('accepts the AI binding returning response as a pre-parsed object (Workers AI quirk)', async () => {
+    // Workers AI sometimes returns { response: <object> } instead of { response: "<string>" }.
+    const ai = {
+      run: vi.fn(async () => ({ response: { sets: 3, workSec: 60, restSec: 0 } })),
+    } as unknown as Ai;
+    const result = await parseWithLlama(ai, 'three sets of one minute');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.session).toEqual({ sets: 3, workSec: 60, restSec: 0 });
+    }
+  });
+
   it('accepts the AI binding returning a bare string instead of { response }', async () => {
     const ai = {
       run: vi.fn(async () => '{"sets":2,"workSec":120,"restSec":60}'),
