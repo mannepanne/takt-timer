@@ -1,5 +1,5 @@
 // ABOUT: MediaRecorder wrapper + iOS AudioSession category toggle for the voice overlay.
-// ABOUT: The state machine (machine.ts) returns effects like 'startRecording' / 'setAudioCategory';
+// ABOUT: The state machine (machine.ts) returns effects like 'requestMic' / 'setAudioCategory';
 // ABOUT: this module is what the React hook calls to actually perform them.
 
 import type { AudioCategory } from './types';

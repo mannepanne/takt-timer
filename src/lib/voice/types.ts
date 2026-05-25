@@ -27,7 +27,7 @@ export type VoiceState =
   | { phase: 'transcribing' }
   | { phase: 'parsing'; transcript: string; language?: string }
   | { phase: 'rate-limited'; retryAfterSec: number }
-  | { phase: 'language-mismatch'; detected: string }
+  | { phase: 'language-mismatch'; detected: string; transcript?: string }
   | { phase: 'parse-error'; reason: ErrorReason; transcript?: string }
   | { phase: 'offline' }
   | { phase: 'permission-denied' }
@@ -57,7 +57,6 @@ export type AudioCategory = 'ambient' | 'play-and-record';
 export type Effect =
   | { type: 'setAudioCategory'; category: AudioCategory }
   | { type: 'requestMic' }
-  | { type: 'startRecording' }
   | { type: 'stopRecording' }
   | { type: 'discardBlob' }
   | { type: 'schedule8sCap' }

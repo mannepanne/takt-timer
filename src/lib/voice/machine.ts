@@ -46,7 +46,7 @@ export function step(state: VoiceState, event: VoiceEvent): StepResult {
       if (event.type === 'permissionGranted') {
         return {
           next: { phase: 'listening', startedAtMs: event.now },
-          effects: [{ type: 'startRecording' }, { type: 'schedule8sCap' }],
+          effects: [{ type: 'schedule8sCap' }],
         };
       }
       if (event.type === 'permissionDenied') {
@@ -147,7 +147,7 @@ function resolveErrorFromStream(
   }
   if (event.reason === 'language-unsupported') {
     return {
-      next: { phase: 'language-mismatch', detected: event.detectedLanguage ?? '' },
+      next: { phase: 'language-mismatch', detected: event.detectedLanguage ?? '', transcript },
       effects: restoreAmbient(),
     };
   }

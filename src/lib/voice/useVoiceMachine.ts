@@ -120,10 +120,6 @@ export function useVoiceMachine(): VoiceApi {
           return;
         }
 
-        case 'startRecording':
-          // mic.startRecording already started the recorder inside 'requestMic'. No-op.
-          return;
-
         case 'stopRecording':
           // Cancel path from the machine (user cancelled mid-listen).
           stopReasonRef.current = 'cancel';

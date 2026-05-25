@@ -18,7 +18,9 @@ export function MicButton() {
         >
           <Icon.Mic size={34} />
         </button>
-        <p className="mic-button-hint">Tap the mic, then describe your session</p>
+        <p className="mic-button-hint">
+          Tap the mic &mdash; say &lsquo;three sets of one minute&rsquo;
+        </p>
       </div>
 
       <VoiceOverlay state={state} onUserStop={userStop} onCancel={cancel} onRetry={retry} />

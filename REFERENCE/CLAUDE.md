@@ -40,6 +40,12 @@ What's caught at block / ask tier, what's deliberately not caught, how the inlin
 
 What the hook approves and why, where it sits in the call path alongside `safety-harness.sh`, what's deliberately out of scope (symlinks, exotic filenames), how to extend, and the rollback path if the upstream defect is fixed. Decision rationale at [`decisions/2026-04-26-scratch-write-pretooluse-hook.md`](./decisions/2026-04-26-scratch-write-pretooluse-hook.md).
 
+### [voice-api-contract.md](./voice-api-contract.md)
+
+**When to read:** Implementing or debugging the voice pipeline client; understanding HTTP status codes vs NDJSON error events; cold-start behaviour; rate-limit bypass.
+
+HTTP contract for `/api/voice/parse` — status codes, NDJSON event shapes (whisper / parsed / error), cold-start AbortController behaviour, and the dev-only rate-limit bypass.
+
 ### [decisions/](./decisions/)
 
 **When to read:** Making architectural decisions, choosing between alternatives, or looking up why something was built the way it was.

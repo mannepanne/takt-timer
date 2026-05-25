@@ -1,0 +1,106 @@
+# Voice API contract — `/api/voice/parse`
+
+How-it-works reference for the voice parse endpoint. Complements the implementation in
+`worker/api/voice/parse.ts` and the ADR at `REFERENCE/decisions/2026-04-20-llama-primary-ndjson-streaming.md`.
+
+---
+
+## HTTP status-code contract
+
+**Pre-stream rejections (no body or single-line NDJSON error body):**
+
+| Status | Reason               | When                                                                                                                                              |
+| ------ | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `400`  | `upload-empty`       | Body is absent or smaller than `MIN_AUDIO_BYTES` (500 bytes).                                                                                     |
+| `403`  | `origin-not-allowed` | `Origin` header is not in the allowed-origins set.                                                                                                |
+| `405`  | `method-not-allowed` | Request method is not `POST`.                                                                                                                     |
+| `413`  | `upload-too-large`   | Body exceeds the 3 MB upload cap.                                                                                                                 |
+| `429`  | `rate-limited`       | Anonymous caller has exceeded 3 calls for the UTC day. Body is a single NDJSON line `{"kind":"error","reason":"rate-limited","retryAfterSec":N}`. |
+
+**Once the stream opens, the status is always `200`.** Inference-level failures (empty transcript,
+language gate rejection, Llama schema failure, etc.) are delivered as `{"kind":"error",...}` events
+inside the NDJSON body — not as non-2xx HTTP codes. Clients must parse the stream events to
+distinguish success from failure after the initial 200.
+
+---
+
+## NDJSON event shapes
+
+`Content-Type: application/x-ndjson; charset=utf-8`
+
+Each line is a complete JSON object followed by `\n`. Two events on the happy path; one on failure.
+
+### Happy path (two events)
+
+**Whisper event** — emitted the moment Whisper returns, before Llama is called:
+
+```json
+{ "kind": "whisper", "transcript": "three sets of one minute", "language": "en", "whisperMs": 1120 }
+```
+
+- `transcript` — the text Whisper produced (may be empty string if nothing was audible; the
+  server then emits an `empty-transcript` error event instead of a Llama call).
+- `language` — the BCP-47 language tag Whisper detected. May be absent if Whisper returned no
+  language (ADR 2026-04-20 Option C: pass through to Llama, log the anomaly).
+- `whisperMs` — Whisper inference latency in milliseconds.
+
+**Parsed event** — emitted after Llama produces a valid session:
+
+```json
+{
+  "kind": "parsed",
+  "session": { "sets": 3, "workSec": 60, "restSec": 30 },
+  "llamaMs": 420,
+  "totalMs": 1540
+}
+```
+
+- `session` — `{ sets: 1–99, workSec: 5–3600, restSec: 0–3600 }`. Validated by zod; values outside
+  these ranges are rejected before this event is emitted.
+- `llamaMs` — Llama inference latency in milliseconds.
+- `totalMs` — wall-clock time from request receipt to this event.
+
+### Error event (replaces or follows the whisper event)
+
+```json
+{ "kind": "error", "reason": "<ErrorReason>", "totalMs": 1200 }
+```
+
+Optional extra fields:
+
+| Field           | Present when                                                                  |
+| --------------- | ----------------------------------------------------------------------------- |
+| `retryAfterSec` | `reason === "rate-limited"` — seconds until the next UTC midnight             |
+| `message`       | `reason === "language-unsupported"` — the detected language tag (e.g. `"fr"`) |
+| `totalMs`       | All error events emitted after inference begins                               |
+
+**`reason` values delivered via the stream (HTTP 200):**
+
+| Reason                 | When                                                                                                                            |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `whisper-error`        | Workers AI Whisper call threw an exception.                                                                                     |
+| `empty-transcript`     | Whisper returned a blank transcript. Quota is charged.                                                                          |
+| `language-unsupported` | Detected language is not in the Nordic-cousins set (`en`, `sv`, `is`, `no`, `nn`, `nb`, `da`). No Llama call; quota is charged. |
+| `not-a-session`        | Llama returned `{ error: "not-a-session" }` — intelligible speech but not a timer description.                                  |
+| `schema-failed`        | Llama output failed zod validation after one repair retry.                                                                      |
+| `llama-error`          | Workers AI Llama call threw an exception.                                                                                       |
+
+---
+
+## Cold-start behaviour
+
+The Worker uses a `TransformStream` and begins writing the HTTP response headers before Workers AI
+is called. As a result, headers arrive at the client within milliseconds even when Whisper or Llama
+are cold. **Headers arriving ≠ stream active.** The first NDJSON line is the true liveness signal.
+
+The client (`voice-client.ts`) arms a 30-second `AbortController` that starts on `fetch()` and is
+cleared only on receipt of the first NDJSON line. A timeout fires `errorArrived(reason: 'cold-start-timeout')`.
+
+---
+
+## Rate-limit bypass (dev only)
+
+When the Worker runs under `wrangler dev` with `ALLOW_RATE_LIMIT_BYPASS=1` in `.dev.vars`, the
+rate-limit check is skipped. `remaining` is returned as `Number.POSITIVE_INFINITY` internally;
+this value is never serialised to the client (JSON.stringify(Infinity) === 'null'). The bypass
+flag is not set in production.

@@ -14,6 +14,8 @@ type Props = {
   onRetry: () => void;
 };
 
+const OVERLAY_BODY_ID = 'voice-overlay-body';
+
 const REQUESTING_COPY = 'Requesting microphone\u2026';
 const LISTENING_COPY = 'Tap to stop when you\u2019re done';
 const UPLOADING_COPY = 'Sending\u2026';
@@ -27,9 +29,9 @@ const OFFLINE_COPY = 'You\u2019re offline. Tap Configure to build a session manu
 const UNSUPPORTED_COPY =
   'This browser doesn\u2019t support voice input. Tap Configure to build a session manually.';
 const PARSE_ERROR_COPY =
-  'Couldn\u2019t understand that one. Tap Configure to build a session manually.';
+  'Couldn\u2019t build a session from that. Tap Configure to build one manually.';
 const NOT_A_SESSION_COPY =
-  'That didn\u2019t sound like a session. Try again, or tap Configure to build one manually.';
+  'Couldn\u2019t make a session from that. Have another go, or tap Configure to build one manually.';
 const COLD_START_TIMEOUT_COPY =
   'Voice took longer than expected. Try again, or tap Configure to build a session manually.';
 const RATE_LIMIT_COPY_PREFIX = 'You\u2019ve used today\u2019s voice allowance';
@@ -103,7 +105,13 @@ export function VoiceOverlay({ state, onUserStop, onCancel, onRetry }: Props): R
   const titleId = `voice-overlay-title-${state.phase}`;
 
   return (
-    <div className="voice-overlay-scrim" role="dialog" aria-modal="true" aria-labelledby={titleId}>
+    <div
+      className="voice-overlay-scrim"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+      aria-describedby={OVERLAY_BODY_ID}
+    >
       <div className="voice-overlay-sheet">
         {renderContent(state, titleId, onUserStop, onRetry)}
 
@@ -169,7 +177,13 @@ function renderContent(
         onRetry,
       );
     case 'language-mismatch':
-      return errorSheet(titleId, 'Language not supported', LANGUAGE_COPY, onRetry);
+      return errorSheet(
+        titleId,
+        'Language not supported',
+        LANGUAGE_COPY,
+        onRetry,
+        state.transcript,
+      );
     case 'parse-error':
       return errorSheet(
         titleId,
@@ -225,7 +239,9 @@ function errorSheet(
           &ldquo;{transcript}&rdquo;
         </p>
       )}
-      <p className="voice-overlay-body">{body}</p>
+      <p id={OVERLAY_BODY_ID} className="voice-overlay-body">
+        {body}
+      </p>
       <div className="voice-overlay-actions">
         <Link to="/configure" className="btn btn-primary">
           Configure manually
