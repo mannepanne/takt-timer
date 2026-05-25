@@ -125,6 +125,19 @@ describe('VoiceOverlay', () => {
     expect(screen.getByText(/voice took longer than expected/i)).toBeInTheDocument();
   });
 
+  it('error-state dialog has aria-describedby pointing at the body paragraph', () => {
+    renderOverlay({ phase: 'offline' });
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveAttribute('aria-describedby', 'voice-overlay-body');
+    expect(document.getElementById('voice-overlay-body')).toBeInTheDocument();
+  });
+
+  it('non-error dialog does not carry aria-describedby', () => {
+    renderOverlay({ phase: 'listening', startedAtMs: 0 });
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).not.toHaveAttribute('aria-describedby');
+  });
+
   it('clicking retry from an error state fires onRetry', async () => {
     const { onRetry } = renderOverlay({ phase: 'offline' });
     await userEvent.click(screen.getByRole('button', { name: /try again/i }));

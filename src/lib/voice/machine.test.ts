@@ -174,7 +174,7 @@ describe('voice machine', () => {
       // Same fallback shape as retryAfterSec above — an empty detected tag is an honest signal
       // that the server omitted the field, not a silent crash.
       const { next } = step(state, { type: 'errorArrived', reason: 'language-unsupported' });
-      expect(next).toEqual({ phase: 'language-mismatch', detected: '' });
+      expect(next).toEqual({ phase: 'language-mismatch', detected: '', transcript: undefined });
     });
 
     it('errorArrived(whisper-error) → parse-error', () => {
@@ -202,7 +202,7 @@ describe('voice machine', () => {
         reason: 'language-unsupported',
         detectedLanguage: 'fr',
       });
-      expect(next).toEqual({ phase: 'language-mismatch', detected: 'fr' });
+      expect(next).toEqual({ phase: 'language-mismatch', detected: 'fr', transcript: undefined });
     });
 
     it('cancel → idle, cancels the in-flight POST and restores ambient', () => {

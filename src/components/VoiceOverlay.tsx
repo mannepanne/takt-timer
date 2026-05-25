@@ -110,7 +110,7 @@ export function VoiceOverlay({ state, onUserStop, onCancel, onRetry }: Props): R
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
-      aria-describedby={OVERLAY_BODY_ID}
+      aria-describedby={isErrorState(state.phase) ? OVERLAY_BODY_ID : undefined}
     >
       <div className="voice-overlay-sheet">
         {renderContent(state, titleId, onUserStop, onRetry)}
