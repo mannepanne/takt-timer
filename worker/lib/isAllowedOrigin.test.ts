@@ -23,10 +23,11 @@ describe('isAllowedOrigin', () => {
     expect(isAllowedOrigin(makeRequest('https://takt.herrings.workers.dev'))).toBe(true);
   });
 
-  it('allows wrangler dev + vite dev localhost origins', () => {
-    expect(isAllowedOrigin(makeRequest('http://localhost:5173'))).toBe(true);
-    expect(isAllowedOrigin(makeRequest('http://localhost:8787'))).toBe(true);
-    expect(isAllowedOrigin(makeRequest('http://127.0.0.1:5173'))).toBe(true);
+  it('allows wrangler dev + vite dev localhost origins (5173–5178 for port-conflict fallback)', () => {
+    for (const port of [5173, 5174, 5175, 5176, 5177, 5178, 8787]) {
+      expect(isAllowedOrigin(makeRequest(`http://localhost:${port}`))).toBe(true);
+      expect(isAllowedOrigin(makeRequest(`http://127.0.0.1:${port}`))).toBe(true);
+    }
   });
 
   it('rejects third-party origins', () => {

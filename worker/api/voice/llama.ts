@@ -121,7 +121,9 @@ async function runLlama(
   });
   const latencyMs = Math.round(performance.now() - started);
   const response = raw as AiChatResponse;
-  const text = typeof response === 'string' ? response : (response.response ?? '');
+  const responseText = typeof response === 'string' ? response : (response.response ?? '');
+  // Workers AI may return response.response as a pre-parsed object instead of a string.
+  const text = typeof responseText === 'string' ? responseText : JSON.stringify(responseText);
   return { rawOutput: text, latencyMs };
 }
 
