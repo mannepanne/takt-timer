@@ -141,7 +141,7 @@ describe('Complete route', () => {
     });
     renderComplete(state);
     await userEvent.click(screen.getByRole('button', { name: /sign in to save/i }));
-    await userEvent.click(screen.getByRole('button', { name: /sign in with passkey/i }));
+    await userEvent.click(screen.getByRole('button', { name: /continue with passkey/i }));
     await waitFor(() => expect(login).toHaveBeenCalledWith({ userHandle: 'u1', isAdmin: false }));
   });
 });

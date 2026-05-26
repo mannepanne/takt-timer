@@ -114,7 +114,7 @@ export function Complete() {
 
       <PasskeyPrompt
         open={signinOpen}
-        mode="signin"
+        mode="discover"
         onSuccess={(user) => {
           login(user);
           setSigninOpen(false);
