@@ -74,7 +74,7 @@ export function PasskeyPrompt({ open, mode, onSuccess, onClose }: Props) {
     <>
       <div
         className={`drawer-backdrop${open ? ' open' : ''}`}
-        onClick={onClose}
+        onClick={loading ? undefined : onClose}
         aria-hidden="true"
       />
       <div className={`drawer${open ? ' open' : ''}`} role="dialog" aria-modal="true">
@@ -90,23 +90,53 @@ export function PasskeyPrompt({ open, mode, onSuccess, onClose }: Props) {
           )}
           {error && <p className="passkey-prompt-error">{error}</p>}
           <div className="passkey-prompt-actions">
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={handleAction}
-              disabled={loading}
-            >
-              {loading
-                ? 'Waiting…'
-                : isDiscovering
-                  ? 'Continue with passkey'
-                  : isRegister
-                    ? 'Create account with passkey'
-                    : 'Sign in with passkey'}
-            </button>
-            <button type="button" className="btn btn-ghost" onClick={onClose} disabled={loading}>
-              Cancel
-            </button>
+            {isRegister && mode === 'discover' ? (
+              // In discover fallback the safe path (cancel + go get the other device) is
+              // styled as primary to reduce the risk of accidentally creating a duplicate account.
+              <>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={onClose}
+                  disabled={loading}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={handleAction}
+                  disabled={loading}
+                >
+                  {loading ? 'Waiting…' : 'Create account with passkey'}
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleAction}
+                  disabled={loading}
+                >
+                  {loading
+                    ? 'Waiting…'
+                    : isDiscovering
+                      ? 'Continue with passkey'
+                      : isRegister
+                        ? 'Create account with passkey'
+                        : 'Sign in with passkey'}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={onClose}
+                  disabled={loading}
+                >
+                  Cancel
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>

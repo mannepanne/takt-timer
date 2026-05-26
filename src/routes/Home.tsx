@@ -40,7 +40,7 @@ export function Home() {
   const [history, setHistory] = useState<CompletedSession[]>([]);
   const [serverLast, setServerLast] = useState<CompletedSession | null>(null);
   const [presetsOpen, setPresetsOpen] = useState(false);
-  const [registerOpen, setRegisterOpen] = useState(false);
+  const [authPromptOpen, setAuthPromptOpen] = useState(false);
   const navigate = useNavigate();
   const { session: authSession, login } = useSession();
 
@@ -60,9 +60,9 @@ export function Home() {
       .catch(() => {});
   }, [isAuthenticated]);
 
-  function handleRegisterSuccess(user: AuthUser) {
+  function handleAuthSuccess(user: AuthUser) {
     login(user);
-    setRegisterOpen(false);
+    setAuthPromptOpen(false);
     importLocalHistory().catch(() => {
       // import failure is non-fatal — account is created regardless
     });
@@ -110,7 +110,7 @@ export function Home() {
               className="icon-btn"
               aria-label="Sign in or create account"
               type="button"
-              onClick={() => setRegisterOpen(true)}
+              onClick={() => setAuthPromptOpen(true)}
             >
               <Icon.User size={20} />
             </button>
@@ -166,10 +166,10 @@ export function Home() {
         <PresetsDrawer open={presetsOpen} onClose={() => setPresetsOpen(false)} />
       )}
       <PasskeyPrompt
-        open={registerOpen}
+        open={authPromptOpen}
         mode="discover"
-        onSuccess={handleRegisterSuccess}
-        onClose={() => setRegisterOpen(false)}
+        onSuccess={handleAuthSuccess}
+        onClose={() => setAuthPromptOpen(false)}
       />
     </div>
   );

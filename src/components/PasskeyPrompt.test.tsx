@@ -128,5 +128,25 @@ describe('PasskeyPrompt', () => {
       );
       expect(screen.queryByText(/different platforms/)).toBeNull();
     });
+
+    it('re-opening after reaching fallback resets to discover-initial state', async () => {
+      vi.mocked(signIn).mockRejectedValueOnce(new Error('no cred'));
+      const onSuccess = vi.fn();
+      const onClose = vi.fn();
+      const { rerender } = render(
+        <PasskeyPrompt open={true} mode="discover" onSuccess={onSuccess} onClose={onClose} />,
+      );
+      fireEvent.click(screen.getByRole('button', { name: /continue with passkey/i }));
+      await waitFor(() =>
+        expect(screen.getByRole('heading')).toHaveTextContent('Create an account'),
+      );
+      rerender(
+        <PasskeyPrompt open={false} mode="discover" onSuccess={onSuccess} onClose={onClose} />,
+      );
+      rerender(
+        <PasskeyPrompt open={true} mode="discover" onSuccess={onSuccess} onClose={onClose} />,
+      );
+      expect(screen.getByRole('heading')).toHaveTextContent('Continue with passkey');
+    });
   });
 });
