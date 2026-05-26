@@ -43,7 +43,7 @@ Built for Magnus's rehab training, released to the world because the problem —
 - Cloudflare Access with Magnus's existing Google IdP policy — admin gate.
 - Cloudflare Web Analytics — traffic visibility.
 
-**Current status:** Phase 1 (Foundation) and Phase 2 (Core timer) complete and deployed. Phase 3 (Voice) — spike (PR #6), pure plumbing B1 (PR #7), React/UI layer B2 (PR #8), B3a cleanup (PR #15), B3b full rate limiter + ADR (PR #16: 3/day anon cap, `.dev.vars` bypass, user-tier key stub, retryAfter UX copy), B3c safety harness (PR #17: no-persistence regression test, adversarial-transcript test, 30s cold-start `AbortController` + distinct overlay copy), and B3d hygiene (PR #27: API contract doc, `requestMic` refactor, copy passes, a11y fixes, spec drift) all merged and live. Remaining B3 work: real-device smoke test, then archive. See [SPECIFICATIONS/03-voice.md → Phase 3 progress](./SPECIFICATIONS/03-voice.md#phase-3-progress) for the authoritative entry point.
+**Current status:** Phases 1–3 complete and deployed. Phase 3 (Voice) shipped across PRs #6–#17, #27–#29; spec archived. Starting Phase 4 (Accounts & Presets).
 
 ## Implementation phases
 
@@ -51,12 +51,12 @@ Development is organised into six sequential phases. Each phase has its own spec
 
 1. ~~[01-foundation.md](./SPECIFICATIONS/ARCHIVE/01-foundation.md)~~ — ✅ complete, archived
 2. ~~[02-core-timer.md](./SPECIFICATIONS/ARCHIVE/02-core-timer.md)~~ — ✅ complete, archived
-3. [03-voice.md](./SPECIFICATIONS/03-voice.md) — Whisper + Llama voice pipeline (4–6 days)
+3. ~~[03-voice.md](./SPECIFICATIONS/ARCHIVE/03-voice.md)~~ — ✅ complete, archived
 4. [04-accounts-and-presets.md](./SPECIFICATIONS/04-accounts-and-presets.md) — passkey auth, presets, history sync (7–10 days)
 5. [05-i18n-settings-onboarding.md](./SPECIFICATIONS/05-i18n-settings-onboarding.md) — English + Swedish, Settings, Onboarding, Privacy policy (4–6 days)
 6. [06-admin-and-launch.md](./SPECIFICATIONS/06-admin-and-launch.md) — admin backend, retention purge, hardening, launch (4–6 days)
 
-**Current phase:** Phase 3 — Voice. B1, B2, B3a, B3b, B3c, and B3d merged; remaining B3 exit-criterion is the real-device smoke test, then archive.
+**Current phase:** Phase 4 — Accounts & Presets. See [SPECIFICATIONS/04-accounts-and-presets.md](./SPECIFICATIONS/04-accounts-and-presets.md).
 
 **Live at:** https://takt.hultberg.org — Phase 2 core timer live since 2026-04-19.
 

@@ -167,6 +167,34 @@ export const Icon = {
       <path d="M9 6l6 6-6 6" />
     </svg>
   ),
+  ChevronUp: ({ size = 22, color = 'currentColor' }: IconProps) => (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M18 15l-6-6-6 6" />
+    </svg>
+  ),
+  ChevronDown: ({ size = 22, color = 'currentColor' }: IconProps) => (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  ),
   Edit: ({ size = 20, color = 'currentColor' }: IconProps) => (
     <svg
       width={size}
@@ -285,6 +313,21 @@ export const Icon = {
       <path d="M21 3v5h-5" />
       <path d="M21 12a9 9 0 0 1-15.5 6.2L3 16" />
       <path d="M3 21v-5h5" />
+    </svg>
+  ),
+  User: ({ size = 22, color = 'currentColor' }: IconProps) => (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
     </svg>
   ),
 };
