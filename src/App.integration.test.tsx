@@ -2,7 +2,7 @@
 // Uses `skip` to blaze through phases; the reducer's tick-based progression is
 // covered exhaustively in src/lib/timer/machine.test.ts.
 
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -55,8 +55,13 @@ describe('Integration — Configure → Run → Complete', () => {
     expect(parsed).toHaveLength(1);
     expect(parsed[0]).toMatchObject({ sets: 3, workSec: 60, restSec: 30 });
 
-    // "Run it again" goes back to /run.
-    await userEvent.click(screen.getByRole('button', { name: /run it again/i }));
+    // "Run it again" goes back to /run (guarded by 400ms pointer-events:none — retry until ready).
+    await waitFor(
+      async () => userEvent.click(screen.getByRole('button', { name: /run it again/i })),
+      {
+        timeout: 600,
+      },
+    );
     expect(await screen.findByLabelText('Stop session')).toBeInTheDocument();
   });
 
