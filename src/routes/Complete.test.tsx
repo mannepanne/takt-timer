@@ -21,12 +21,17 @@ vi.mock('@/lib/history-sync', () => ({ pushSession: vi.fn(async () => {}) }));
 vi.mock('@/lib/presets', () => ({ createPreset: vi.fn(async () => ({})) }));
 vi.mock('@/lib/auth/client', () => ({
   signIn: vi.fn(async () => ({ userHandle: 'u1', isAdmin: false })),
-  register: vi.fn(),
+  register: vi.fn(async () => ({ userHandle: 'u1', isAdmin: false })),
+}));
+vi.mock('@/lib/auth/local-hint', () => ({
+  hasRegisteredBefore: vi.fn(() => false),
+  markRegistered: vi.fn(),
 }));
 
 import { useSession } from '@/lib/auth/session';
 import { lastSession } from '@/lib/history';
 import { pushSession } from '@/lib/history-sync';
+import { hasRegisteredBefore } from '@/lib/auth/local-hint';
 import { Complete } from './Complete';
 
 beforeEach(() => vi.clearAllMocks());
@@ -141,7 +146,8 @@ describe('Complete route', () => {
     await waitFor(() => expect(screen.getByTestId('home')).toBeInTheDocument());
   });
 
-  it('PasskeyPrompt onSuccess calls login with the user and closes the prompt', async () => {
+  it('PasskeyPrompt uses register mode for first-time users (no hint)', async () => {
+    vi.mocked(hasRegisteredBefore).mockReturnValue(false);
     const login = vi.fn();
     vi.mocked(useSession).mockReturnValue({
       session: { status: 'unauthenticated' },
@@ -150,7 +156,24 @@ describe('Complete route', () => {
     });
     renderComplete(state);
     await clickWhenReady(/sign in to save/i);
-    await userEvent.click(screen.getByRole('button', { name: /continue with passkey/i }));
+    // register mode shows "Create account with passkey"
+    expect(
+      screen.getByRole('button', { name: /create account with passkey/i }),
+    ).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /create account with passkey/i }));
     await waitFor(() => expect(login).toHaveBeenCalledWith({ userHandle: 'u1', isAdmin: false }));
+  });
+
+  it('PasskeyPrompt uses signin mode for returning users (hint present)', async () => {
+    vi.mocked(hasRegisteredBefore).mockReturnValue(true);
+    vi.mocked(useSession).mockReturnValue({
+      session: { status: 'unauthenticated' },
+      refresh: vi.fn(),
+      login: vi.fn(),
+    });
+    renderComplete(state);
+    await clickWhenReady(/sign in to save/i);
+    // signin mode shows "Sign in with passkey"
+    expect(screen.getByRole('button', { name: /sign in with passkey/i })).toBeInTheDocument();
   });
 });

@@ -105,6 +105,26 @@ describe('PasskeyPrompt', () => {
     expect(onSuccess).not.toHaveBeenCalled();
   });
 
+  it('shows "Already have an account?" link in register mode', () => {
+    renderPrompt('register');
+    expect(screen.getByRole('button', { name: /already have an account/i })).toBeInTheDocument();
+  });
+
+  it('"Already have an account?" link switches to sign-in UI', async () => {
+    renderPrompt('register');
+    fireEvent.click(screen.getByRole('button', { name: /already have an account/i }));
+    expect(screen.getByRole('heading')).toHaveTextContent('Sign in');
+    expect(screen.getByRole('button', { name: /sign in with passkey/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /already have an account/i })).toBeNull();
+  });
+
+  it('does not show "Already have an account?" in signin or discover mode', () => {
+    renderPrompt('signin');
+    expect(screen.queryByRole('button', { name: /already have an account/i })).toBeNull();
+    renderPrompt('discover');
+    expect(screen.queryByRole('button', { name: /already have an account/i })).toBeNull();
+  });
+
   it('re-opening while loading resets the Waiting… button', async () => {
     vi.mocked(signIn).mockReturnValueOnce(new Promise(() => {}));
     const onSuccess = vi.fn();

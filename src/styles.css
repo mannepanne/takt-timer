@@ -1465,6 +1465,17 @@ input {
   gap: 10px;
   margin-top: 8px;
 }
+.passkey-prompt-switch {
+  background: none;
+  border: none;
+  padding: 4px 0;
+  font-size: 13px;
+  color: var(--ink-2);
+  text-align: center;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 
 /* SavePresetSheet */
 .save-preset-body {
