@@ -53,26 +53,33 @@ export default {
       return applySecurityHeaders(await parseVoice(request, env));
     }
 
-    // ── Auth (no isAllowedOrigin check — passkey ceremonies use fetch from any frame) ──
+    // ── Auth ─────────────────────────────────────────────────────────────────
     if (path === '/api/auth/registration/options' && method === 'POST') {
+      if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
       return applySecurityHeaders(await registrationOptions(request, env));
     }
     if (path === '/api/auth/registration/verify' && method === 'POST') {
+      if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
       return applySecurityHeaders(await registrationVerify(request, env));
     }
     if (path === '/api/auth/signin/options' && method === 'POST') {
+      if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
       return applySecurityHeaders(await signinOptions(request, env));
     }
     if (path === '/api/auth/signin/verify' && method === 'POST') {
+      if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
       return applySecurityHeaders(await signinVerify(request, env));
     }
     if (path === '/api/auth/signout' && method === 'POST') {
+      if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
       return applySecurityHeaders(await signout(request, env));
     }
     if (path === '/api/auth/me' && method === 'GET') {
+      if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
       return applySecurityHeaders(await me(request, env));
     }
     if (path === '/api/auth/delete' && method === 'DELETE') {
+      if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
       return applySecurityHeaders(await deleteAccount(request, env));
     }
 

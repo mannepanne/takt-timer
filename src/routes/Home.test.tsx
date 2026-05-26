@@ -7,9 +7,31 @@ vi.mock('@/lib/auth/session', () => ({
   useSession: vi.fn(() => ({ session: { status: 'unauthenticated' }, refresh: vi.fn() })),
 }));
 vi.mock('@/lib/apiFetch', () => ({ apiFetch: vi.fn() }));
+vi.mock('@/lib/history-sync', () => ({ importLocalHistory: vi.fn().mockResolvedValue(0) }));
+vi.mock('@/components/PasskeyPrompt', () => ({
+  PasskeyPrompt: ({
+    open,
+    mode,
+    onSuccess,
+  }: {
+    open: boolean;
+    mode: string;
+    onSuccess: (u: unknown) => void;
+  }) =>
+    open ? (
+      <div data-testid="passkey-prompt" data-mode={mode}>
+        <button onClick={() => onSuccess({ userHandle: 'u1', isAdmin: false })}>confirm</button>
+      </div>
+    ) : null,
+}));
+vi.mock('@/components/PresetsDrawer', () => ({
+  PresetsDrawer: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="presets-drawer" /> : null,
+}));
 
 import { useSession } from '@/lib/auth/session';
 import { apiFetch } from '@/lib/apiFetch';
+import { importLocalHistory } from '@/lib/history-sync';
 import { Home } from './Home';
 
 function LocProbe() {
@@ -37,6 +59,10 @@ function renderHome() {
 describe('Home', () => {
   beforeEach(() => {
     localStorage.clear();
+    vi.mocked(useSession).mockReturnValue({
+      session: { status: 'unauthenticated' },
+      refresh: vi.fn(),
+    });
   });
 
   afterEach(() => {
@@ -121,5 +147,50 @@ describe('Home', () => {
     );
     renderHome();
     expect(screen.queryByText(/sessions so far/i)).toBeNull();
+  });
+
+  it('unauthenticated users see a Create account button', () => {
+    renderHome();
+    expect(screen.getByRole('button', { name: /create account/i })).toBeInTheDocument();
+  });
+
+  it('Create account button opens PasskeyPrompt in register mode', async () => {
+    renderHome();
+    await userEvent.click(screen.getByRole('button', { name: /create account/i }));
+    expect(screen.getByTestId('passkey-prompt')).toHaveAttribute('data-mode', 'register');
+  });
+
+  it('on register success calls importLocalHistory and refresh', async () => {
+    const refresh = vi.fn();
+    vi.mocked(useSession).mockReturnValue({
+      session: { status: 'unauthenticated' },
+      refresh,
+    });
+    renderHome();
+    await userEvent.click(screen.getByRole('button', { name: /create account/i }));
+    await userEvent.click(screen.getByRole('button', { name: /confirm/i }));
+    await waitFor(() => expect(importLocalHistory).toHaveBeenCalled());
+    expect(refresh).toHaveBeenCalled();
+  });
+
+  it('authenticated users see an Open presets button', () => {
+    vi.mocked(useSession).mockReturnValue({
+      session: { status: 'authenticated', user: { userHandle: 'u1', isAdmin: false } },
+      refresh: vi.fn(),
+    });
+    vi.mocked(apiFetch).mockResolvedValueOnce({ ok: false } as Response);
+    renderHome();
+    expect(screen.getByRole('button', { name: /open presets/i })).toBeInTheDocument();
+  });
+
+  it('Open presets button renders the PresetsDrawer', async () => {
+    vi.mocked(useSession).mockReturnValue({
+      session: { status: 'authenticated', user: { userHandle: 'u1', isAdmin: false } },
+      refresh: vi.fn(),
+    });
+    vi.mocked(apiFetch).mockResolvedValueOnce({ ok: false } as Response);
+    renderHome();
+    await userEvent.click(screen.getByRole('button', { name: /open presets/i }));
+    expect(screen.getByTestId('presets-drawer')).toBeInTheDocument();
   });
 });

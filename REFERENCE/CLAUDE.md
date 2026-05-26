@@ -40,6 +40,12 @@ What's caught at block / ask tier, what's deliberately not caught, how the inlin
 
 What the hook approves and why, where it sits in the call path alongside `safety-harness.sh`, what's deliberately out of scope (symlinks, exotic filenames), how to extend, and the rollback path if the upstream defect is fixed. Decision rationale at [`decisions/2026-04-26-scratch-write-pretooluse-hook.md`](./decisions/2026-04-26-scratch-write-pretooluse-hook.md).
 
+### [auth-and-presets-api.md](./auth-and-presets-api.md)
+
+**When to read:** Implementing or debugging auth flows, presets CRUD, or session history sync; checking exact request/response shapes for client/server contracts.
+
+HTTP contract for `/api/auth/*`, `/api/presets/*`, and `/api/sessions` — registration/sign-in ceremony flow, verify response shapes, preset CRUD, session import, `isAllowedOrigin` guard, and the session cookie.
+
 ### [voice-api-contract.md](./voice-api-contract.md)
 
 **When to read:** Implementing or debugging the voice pipeline client; understanding HTTP status codes vs NDJSON error events; cold-start behaviour; rate-limit bypass.

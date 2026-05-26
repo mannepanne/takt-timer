@@ -63,6 +63,8 @@ Phase 4 introduces optional pseudonymous accounts so users can save presets and 
 
 **Counter-zero skips the cloned-credential signal for synced passkeys.** Synced passkeys inherently cannot signal credential cloning via the counter — that signal is only meaningful for platform-bound hardware keys. We accept this limitation; it is the correct WebAuthn behaviour for the credential type.
 
+**`requireUserVerification: false` on registration and sign-in verify.** Both `registrationVerify` and `signinVerify` pass `requireUserVerification: false` to SimpleWebAuthn, even though `registrationOptions` requests `userVerification: 'preferred'`. This means a user on an unlocked device (no biometric/PIN prompt enforced at verification time) can complete authentication. The trade-off is accepted because: (1) this is a single-user rehab tool — the threat model is "someone else picks up Magnus's unlocked phone", not a corporate multi-user system; (2) enforcing `requireUserVerification: true` would break authentication on some passkey implementations (notably older Android devices) that advertise support but return `UV=false`; (3) the privacy story is unaffected — pseudonymous handles are not worth stealing without the session cookie, which is `HttpOnly` and not exposed to JavaScript. If the threat model changes (shared devices, multi-user), switch both to `requireUserVerification: true`.
+
 ---
 
 ## Implications

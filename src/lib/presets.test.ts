@@ -97,13 +97,13 @@ describe('deletePreset', () => {
 });
 
 describe('reorderPresets', () => {
-  it('POSTs /api/presets/reorder with ids', async () => {
+  it('PATCHes /api/presets/reorder with ids', async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce(mockRes({}) as never);
     await reorderPresets(['a', 'b', 'c']);
     expect(apiFetch).toHaveBeenCalledWith(
       '/api/presets/reorder',
       expect.objectContaining({
-        method: 'POST',
+        method: 'PATCH',
         body: JSON.stringify({ ids: ['a', 'b', 'c'] }),
       }),
     );

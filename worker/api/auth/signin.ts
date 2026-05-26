@@ -97,10 +97,13 @@ export async function signinVerify(request: Request, env: Env): Promise<Response
     isAdmin: user.is_admin === 1,
   });
 
-  return new Response(JSON.stringify({ ok: true }), {
-    headers: {
-      'Content-Type': 'application/json',
-      'Set-Cookie': makeCookieValue(signed),
+  return new Response(
+    JSON.stringify({ userHandle: body.userHandle, isAdmin: user.is_admin === 1 }),
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        'Set-Cookie': makeCookieValue(signed),
+      },
     },
-  });
+  );
 }

@@ -61,7 +61,7 @@ describe('Account', () => {
     expect(screen.getByText(/tap again to confirm/i)).toBeTruthy();
   });
 
-  it('calls DELETE /api/auth/me on second delete click', async () => {
+  it('calls DELETE /api/auth/delete on second delete click', async () => {
     const refresh = vi.fn();
     vi.mocked(useSession).mockReturnValue({
       session: { status: 'authenticated', user: { userHandle: 'u1', isAdmin: false } },
@@ -72,9 +72,18 @@ describe('Account', () => {
     fireEvent.click(screen.getByRole('button', { name: /delete account/i }));
     fireEvent.click(screen.getByRole('button', { name: /tap again/i }));
     await waitFor(() =>
-      expect(apiFetch).toHaveBeenCalledWith('/api/auth/me', { method: 'DELETE' }),
+      expect(apiFetch).toHaveBeenCalledWith('/api/auth/delete', { method: 'DELETE' }),
     );
     expect(refresh).toHaveBeenCalled();
+  });
+
+  it('Cancel button in two-step confirm dismisses the confirmation', () => {
+    renderAccount();
+    fireEvent.click(screen.getByRole('button', { name: /delete account/i }));
+    expect(screen.getByText(/tap again to confirm/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /^cancel$/i }));
+    expect(screen.queryByText(/tap again to confirm/i)).toBeNull();
+    expect(screen.getByRole('button', { name: /delete account/i })).toBeTruthy();
   });
 
   it('shows error message on delete failure', async () => {

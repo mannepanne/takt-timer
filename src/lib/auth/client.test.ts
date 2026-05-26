@@ -44,13 +44,15 @@ describe('register', () => {
     const user = await register();
     expect(user).toEqual(AUTH_USER);
 
-    expect(apiFetch).toHaveBeenNthCalledWith(1, '/api/auth/register/options');
+    expect(apiFetch).toHaveBeenNthCalledWith(1, '/api/auth/registration/options', {
+      method: 'POST',
+    });
     expect(startRegistration).toHaveBeenCalledWith({
       optionsJSON: { challenge: 'chall', rpId: 'localhost' },
     });
     expect(apiFetch).toHaveBeenNthCalledWith(
       2,
-      '/api/auth/register/verify',
+      '/api/auth/registration/verify',
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify({ token: 'tok123', credential }),

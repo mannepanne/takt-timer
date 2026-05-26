@@ -176,7 +176,7 @@ describe('signinVerify', () => {
       env,
     );
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ ok: true });
+    expect(await res.json()).toEqual({ userHandle: VALID_HANDLE, isAdmin: false });
   });
 
   it('creates session and sets cookie on success', async () => {
@@ -193,7 +193,7 @@ describe('signinVerify', () => {
       env,
     );
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ ok: true });
+    expect(await res.json()).toEqual({ userHandle: VALID_HANDLE, isAdmin: false });
     expect(res.headers.get('Set-Cookie')).toContain('signed.token');
     expect(vi.mocked(createSession)).toHaveBeenCalledWith(expect.anything(), {
       userHandle: VALID_HANDLE,

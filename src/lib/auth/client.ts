@@ -21,13 +21,13 @@ function bufferToHex(buf: ArrayBuffer): string {
 }
 
 export async function register(): Promise<AuthUser> {
-  const optRes = await apiFetch('/api/auth/register/options');
+  const optRes = await apiFetch('/api/auth/registration/options', { method: 'POST' });
   if (!optRes.ok) throw new Error('Failed to get registration options');
   const { _token, ...options } = (await optRes.json()) as Record<string, unknown>;
 
   const credential = await startRegistration({ optionsJSON: options as never });
 
-  const verifyRes = await apiFetch('/api/auth/register/verify', {
+  const verifyRes = await apiFetch('/api/auth/registration/verify', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ token: _token, credential }),
@@ -40,7 +40,7 @@ export async function register(): Promise<AuthUser> {
 }
 
 export async function signIn(): Promise<AuthUser> {
-  const optRes = await apiFetch('/api/auth/signin/options');
+  const optRes = await apiFetch('/api/auth/signin/options', { method: 'POST' });
   if (!optRes.ok) throw new Error('Failed to get authentication options');
   const { _token, ...options } = (await optRes.json()) as Record<string, unknown>;
 

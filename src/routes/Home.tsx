@@ -7,11 +7,15 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Icon } from '@/components/icons';
 import { LastSessionCard } from '@/components/LastSessionCard';
 import { MicButton } from '@/components/MicButton';
+import { PasskeyPrompt } from '@/components/PasskeyPrompt';
+import { PresetsDrawer } from '@/components/PresetsDrawer';
 import { Sparkline } from '@/components/Sparkline';
 import { TopBar } from '@/components/TopBar';
+import { type AuthUser } from '@/lib/auth/client';
 import { useSession } from '@/lib/auth/session';
 import { apiFetch } from '@/lib/apiFetch';
 import { readHistory } from '@/lib/history';
+import { importLocalHistory } from '@/lib/history-sync';
 import type { CompletedSession } from '@/lib/timer/types';
 
 type SessionRow = {
@@ -35,8 +39,10 @@ function rowToSession(row: SessionRow): CompletedSession {
 export function Home() {
   const [history, setHistory] = useState<CompletedSession[]>([]);
   const [serverLast, setServerLast] = useState<CompletedSession | null>(null);
+  const [presetsOpen, setPresetsOpen] = useState(false);
+  const [registerOpen, setRegisterOpen] = useState(false);
   const navigate = useNavigate();
-  const { session: authSession } = useSession();
+  const { session: authSession, refresh } = useSession();
 
   const isAuthenticated = authSession.status === 'authenticated';
 
@@ -53,6 +59,16 @@ export function Home() {
       })
       .catch(() => {});
   }, [isAuthenticated]);
+
+  async function handleRegisterSuccess(_user: AuthUser) {
+    try {
+      await importLocalHistory();
+    } catch {
+      // import failure is non-fatal — account is created regardless
+    }
+    refresh();
+    setRegisterOpen(false);
+  }
 
   const sessionCount = history.length;
   const last = isAuthenticated ? serverLast : sessionCount > 0 ? history[sessionCount - 1] : null;
@@ -74,12 +90,33 @@ export function Home() {
   return (
     <div className="screen">
       <TopBar
+        left={
+          isAuthenticated ? (
+            <button
+              className="icon-btn"
+              aria-label="Open presets"
+              type="button"
+              onClick={() => setPresetsOpen(true)}
+            >
+              <Icon.List size={20} />
+            </button>
+          ) : undefined
+        }
         right={
           isAuthenticated ? (
             <Link to="/account" className="icon-btn" aria-label="Account">
               <Icon.User size={20} />
             </Link>
-          ) : undefined
+          ) : (
+            <button
+              className="icon-btn"
+              aria-label="Create account"
+              type="button"
+              onClick={() => setRegisterOpen(true)}
+            >
+              <Icon.User size={20} />
+            </button>
+          )
         }
       />
 
@@ -126,6 +163,16 @@ export function Home() {
       <div className="home-footer">
         <Link to="/privacy">Privacy</Link>
       </div>
+
+      {isAuthenticated && (
+        <PresetsDrawer open={presetsOpen} onClose={() => setPresetsOpen(false)} />
+      )}
+      <PasskeyPrompt
+        open={registerOpen}
+        mode="register"
+        onSuccess={handleRegisterSuccess}
+        onClose={() => setRegisterOpen(false)}
+      />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 // ABOUT: Route dispatch tests for worker/index.ts — verifies each path/method reaches the right handler.
 
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import worker, { type Env } from './index';
 
 // Stub all handlers so we test routing, not handler logic.
@@ -195,5 +195,85 @@ describe('Origin guard', () => {
       ctx(),
     );
     expect(res.status).toBe(403);
+  });
+
+  it('returns 403 for /api/auth/registration/options with disallowed origin', async () => {
+    const res = await worker.fetch(
+      req('/api/auth/registration/options', 'POST', { origin: 'https://evil.example.com' }),
+      makeEnv(),
+      ctx(),
+    );
+    expect(res.status).toBe(403);
+  });
+
+  it('returns 403 for /api/auth/signin/options with disallowed origin', async () => {
+    const res = await worker.fetch(
+      req('/api/auth/signin/options', 'POST', { origin: 'https://evil.example.com' }),
+      makeEnv(),
+      ctx(),
+    );
+    expect(res.status).toBe(403);
+  });
+
+  it('returns 403 for /api/auth/delete with disallowed origin', async () => {
+    const res = await worker.fetch(
+      req('/api/auth/delete', 'DELETE', { origin: 'https://evil.example.com' }),
+      makeEnv(),
+      ctx(),
+    );
+    expect(res.status).toBe(403);
+  });
+});
+
+// Regression tests — verify the five wiring defects fixed in phase 4 stay fixed.
+// These confirm that old/wrong paths fall through to the SPA and do not hit live handlers.
+describe('Wiring regression tests', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('GET /api/auth/register/options (old path+method) falls through to SPA, never hits registrationOptions', async () => {
+    const env = makeEnv();
+    const res = await worker.fetch(req('/api/auth/register/options', 'GET'), env, ctx());
+    expect(vi.mocked(registrationOptions)).not.toHaveBeenCalled();
+    expect(env.ASSETS.fetch).toHaveBeenCalled();
+    expect(res.status).toBe(200); // SPA html
+  });
+
+  it('POST /api/auth/register/options (old path) falls through to SPA, never hits registrationOptions', async () => {
+    const env = makeEnv();
+    const res = await worker.fetch(req('/api/auth/register/options', 'POST'), env, ctx());
+    expect(vi.mocked(registrationOptions)).not.toHaveBeenCalled();
+    expect(env.ASSETS.fetch).toHaveBeenCalled();
+    expect(res.status).toBe(200);
+  });
+
+  it('GET /api/auth/signin/options (old method) falls through to SPA, never hits signinOptions', async () => {
+    const env = makeEnv();
+    const res = await worker.fetch(req('/api/auth/signin/options', 'GET'), env, ctx());
+    expect(vi.mocked(signinOptions)).not.toHaveBeenCalled();
+    expect(env.ASSETS.fetch).toHaveBeenCalled();
+    expect(res.status).toBe(200);
+  });
+
+  it('POST /api/auth/register/verify (old path) falls through to SPA, never hits registrationVerify', async () => {
+    const env = makeEnv();
+    const res = await worker.fetch(req('/api/auth/register/verify', 'POST'), env, ctx());
+    expect(vi.mocked(registrationVerify)).not.toHaveBeenCalled();
+    expect(env.ASSETS.fetch).toHaveBeenCalled();
+    expect(res.status).toBe(200);
+  });
+
+  it('DELETE /api/auth/me (privacy-bug path) falls through to SPA, never hits deleteAccount', async () => {
+    const env = makeEnv();
+    const res = await worker.fetch(req('/api/auth/me', 'DELETE'), env, ctx());
+    expect(vi.mocked(deleteAccount)).not.toHaveBeenCalled();
+    expect(env.ASSETS.fetch).toHaveBeenCalled();
+    expect(res.status).toBe(200); // must NOT silently return 200 from a real delete handler
+  });
+
+  it('POST /api/presets/reorder (old method) returns 405, never hits presetsReorder', async () => {
+    const env = makeEnv();
+    const res = await worker.fetch(req('/api/presets/reorder', 'POST'), env, ctx());
+    expect(vi.mocked(presetsReorder)).not.toHaveBeenCalled();
+    expect(res.status).toBe(405);
   });
 });

@@ -31,7 +31,7 @@ export function Account() {
     setDeleting(true);
     setError(null);
     try {
-      const res = await apiFetch('/api/auth/me', { method: 'DELETE' });
+      const res = await apiFetch('/api/auth/delete', { method: 'DELETE' });
       if (!res.ok) throw new Error('Delete failed');
       refresh();
       navigate('/');
@@ -73,9 +73,18 @@ export function Account() {
             {deleting ? 'Deleting…' : confirmDelete ? 'Tap again to confirm' : 'Delete account'}
           </button>
           {confirmDelete && !deleting && (
-            <p className="account-delete-warning">
-              This will permanently delete your account, presets, and session history.
-            </p>
+            <>
+              <p className="account-delete-warning">
+                This will permanently delete your account, presets, and session history.
+              </p>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => setConfirmDelete(false)}
+              >
+                Cancel
+              </button>
+            </>
           )}
         </div>
       </main>

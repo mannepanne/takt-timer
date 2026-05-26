@@ -167,7 +167,7 @@ describe('registrationVerify', () => {
       env,
     );
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ ok: true });
+    expect(await res.json()).toEqual({ userHandle: 'aabb', isAdmin: false });
     expect(res.headers.get('Set-Cookie')).toContain('signed.token');
     expect(vi.mocked(createSession)).toHaveBeenCalledWith(expect.anything(), {
       userHandle: 'aabb',

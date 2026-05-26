@@ -109,7 +109,7 @@ export async function registrationVerify(request: Request, env: Env): Promise<Re
 
   const signed = await createSession(env, { userHandle, isAdmin: false });
 
-  return new Response(JSON.stringify({ ok: true }), {
+  return new Response(JSON.stringify({ userHandle, isAdmin: false }), {
     headers: {
       'Content-Type': 'application/json',
       'Set-Cookie': makeCookieValue(signed),

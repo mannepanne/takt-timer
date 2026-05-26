@@ -57,7 +57,7 @@ export async function deletePreset(id: string): Promise<void> {
 
 export async function reorderPresets(ids: string[]): Promise<void> {
   const res = await apiFetch('/api/presets/reorder', {
-    method: 'POST',
+    method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ ids }),
   });
