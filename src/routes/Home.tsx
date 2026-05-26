@@ -60,14 +60,12 @@ export function Home() {
       .catch(() => {});
   }, [isAuthenticated]);
 
-  async function handleRegisterSuccess(user: AuthUser) {
-    try {
-      await importLocalHistory();
-    } catch {
-      // import failure is non-fatal — account is created regardless
-    }
+  function handleRegisterSuccess(user: AuthUser) {
     login(user);
     setRegisterOpen(false);
+    importLocalHistory().catch(() => {
+      // import failure is non-fatal — account is created regardless
+    });
   }
 
   const sessionCount = history.length;

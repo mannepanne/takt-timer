@@ -1,5 +1,5 @@
 // ABOUT: React context that exposes the authenticated user to the component tree.
-// ABOUT: Calls GET /api/auth/me on mount; re-fetches when refresh() is called.
+// ABOUT: Hydrates via GET /api/auth/me; login() sets the session directly post-auth.
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 

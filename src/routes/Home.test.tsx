@@ -167,7 +167,7 @@ describe('Home', () => {
     expect(screen.getByTestId('passkey-prompt')).toHaveAttribute('data-mode', 'register');
   });
 
-  it('on register success calls importLocalHistory then login with the user', async () => {
+  it('on register success calls login immediately then imports history in background', async () => {
     const login = vi.fn();
     vi.mocked(useSession).mockReturnValue({
       session: { status: 'unauthenticated' },
@@ -177,8 +177,8 @@ describe('Home', () => {
     renderHome();
     await userEvent.click(screen.getByRole('button', { name: /create account/i }));
     await userEvent.click(screen.getByRole('button', { name: /confirm/i }));
-    await waitFor(() => expect(importLocalHistory).toHaveBeenCalled());
     expect(login).toHaveBeenCalledWith({ userHandle: 'u1', isAdmin: false });
+    await waitFor(() => expect(importLocalHistory).toHaveBeenCalled());
   });
 
   it('on register success calls login even when importLocalHistory throws', async () => {
@@ -192,7 +192,8 @@ describe('Home', () => {
     renderHome();
     await userEvent.click(screen.getByRole('button', { name: /create account/i }));
     await userEvent.click(screen.getByRole('button', { name: /confirm/i }));
-    await waitFor(() => expect(login).toHaveBeenCalledWith({ userHandle: 'u1', isAdmin: false }));
+    expect(login).toHaveBeenCalledWith({ userHandle: 'u1', isAdmin: false });
+    await waitFor(() => expect(importLocalHistory).toHaveBeenCalled());
   });
 
   it('authenticated users see an Open presets button', () => {
