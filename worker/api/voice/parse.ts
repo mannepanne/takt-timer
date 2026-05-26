@@ -8,6 +8,7 @@
 import type { Env } from '../../index';
 import { isAllowedOrigin } from '../../lib/isAllowedOrigin';
 import { toSafeErrorMessage } from '../../lib/toSafeErrorMessage';
+import { getSession } from '../../lib/sessionStore';
 
 import { SUPPORTED_LANGUAGES } from './languages';
 import { parseWithLlama } from './llama';
@@ -114,11 +115,16 @@ export async function parseVoice(request: Request, env: Env): Promise<Response> 
     return errorResponse({ kind: 'error', reason: 'upload-empty' }, 400);
   }
 
-  // Increment-before-inference — cancelled uploads and failed parses still consume quota,
-  // capping total Workers AI spend under adversarial load. Phase 4 will pass the resolved
-  // userId here once session→userId lookup lands.
+  // Resolve session first so authenticated users get the 30/day tier.
+  // An invalid or expired cookie falls through to anonymous rate-limiting — not a 401.
+  const session = await getSession(env, request.headers.get('Cookie'));
+  const userId = session?.userHandle;
+
   const bypass = isRateLimitBypassEnabled(env.ALLOW_RATE_LIMIT_BYPASS);
-  const rateCheck = await checkAndIncrementRateLimit(env.RATE_LIMITS, request, { bypass });
+  const rateCheck = await checkAndIncrementRateLimit(env.RATE_LIMITS, request, {
+    bypass,
+    userId,
+  });
   if (!rateCheck.allowed) {
     return errorResponse(
       { kind: 'error', reason: 'rate-limited', retryAfterSec: rateCheck.retryAfterSec },

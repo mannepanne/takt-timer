@@ -25,15 +25,15 @@ enabled = true
 # ──────────────────────────────────────────────────────────────────────────────
 
 # D1 database — users, presets, sessions. Activated in Phase 4.
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "takt"
-# database_id = "<FILL_IN_FROM_CLOUDFLARE_DASHBOARD>"
+[[d1_databases]]
+binding = "DB"
+database_name = "takt"
+database_id = "f2fd3a7f-c5db-4f61-9d7c-d1add2f881ad"
 
 # KV — session tokens. Activated in Phase 4.
-# [[kv_namespaces]]
-# binding = "SESSIONS"
-# id = "<FILL_IN_FROM_CLOUDFLARE_DASHBOARD>"
+[[kv_namespaces]]
+binding = "SESSIONS"
+id = "9174e638365545d6b73a9d0c922e315c"
 
 # KV — anonymous and authenticated rate-limit counters. 3 calls per UTC day per
 # hashed IP; user-tier key shape stubbed in (Phase 4 plugs in session→userId).

@@ -15,6 +15,17 @@ function makeEnv(assetBody = 'spa bundle'): Env {
       list: vi.fn(),
       getWithMetadata: vi.fn(),
     } as unknown as KVNamespace,
+    DB: {} as D1Database,
+    SESSIONS: {
+      get: vi.fn(async () => null),
+      put: vi.fn(async () => {}),
+      delete: vi.fn(async () => {}),
+      list: vi.fn(),
+      getWithMetadata: vi.fn(),
+    } as unknown as KVNamespace,
+    SESSION_COOKIE_SECRET: 'test-secret',
+    WEBAUTHN_RP_ID: 'localhost',
+    WEBAUTHN_ORIGIN: 'http://localhost:5173',
   };
 }
 

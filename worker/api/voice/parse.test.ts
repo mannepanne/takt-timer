@@ -41,6 +41,11 @@ function makeEnv(stub: AiCallStub, kv: KVNamespace = makeKv()): Env {
       }),
     } as unknown as Ai,
     RATE_LIMITS: kv,
+    DB: {} as D1Database,
+    SESSIONS: makeKv(),
+    SESSION_COOKIE_SECRET: 'test-secret',
+    WEBAUTHN_RP_ID: 'localhost',
+    WEBAUTHN_ORIGIN: 'http://localhost:5173',
   };
 }
 
@@ -221,6 +226,11 @@ describe('POST /api/voice/parse (streaming)', () => {
         }),
       } as unknown as Ai,
       RATE_LIMITS: makeKv(),
+      DB: {} as D1Database,
+      SESSIONS: makeKv(),
+      SESSION_COOKIE_SECRET: 'test-secret',
+      WEBAUTHN_RP_ID: 'localhost',
+      WEBAUTHN_ORIGIN: 'http://localhost:5173',
     };
     const res = await parseVoice(makeRequest(), env);
     const events = await readNdjson(res);

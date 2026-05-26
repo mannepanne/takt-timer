@@ -5,6 +5,7 @@
 // ABOUT: 2026-05-12-kv-rate-limiter.md for the race-window trade-off.
 
 const ANON_DAILY_CAP = 3;
+const AUTH_DAILY_CAP = 30;
 const TTL_SECONDS = 26 * 60 * 60; // 26 hours — covers TZ drift around the UTC-day boundary.
 
 export type RateLimitResult =
@@ -71,7 +72,7 @@ export async function checkAndIncrementRateLimit(
   }
 
   const key = await resolveKey(request, options.userId);
-  const cap = ANON_DAILY_CAP; // Authenticated-tier cap is wired in Phase 4 alongside session→userId.
+  const cap = options.userId ? AUTH_DAILY_CAP : ANON_DAILY_CAP;
 
   const currentRaw = await kv.get(key);
   const current = currentRaw ? Number(currentRaw) : 0;
