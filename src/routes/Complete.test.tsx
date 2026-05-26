@@ -4,7 +4,11 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 vi.mock('@/lib/auth/session', () => ({
-  useSession: vi.fn(() => ({ session: { status: 'unauthenticated' }, refresh: vi.fn() })),
+  useSession: vi.fn(() => ({
+    session: { status: 'unauthenticated' },
+    refresh: vi.fn(),
+    login: vi.fn(),
+  })),
 }));
 vi.mock('@/lib/history', () => ({
   lastSession: vi.fn(() => null),
@@ -91,6 +95,7 @@ describe('Complete route', () => {
     vi.mocked(useSession).mockReturnValue({
       session: { status: 'authenticated', user: { userHandle: 'u1', isAdmin: false } },
       refresh: vi.fn(),
+      login: vi.fn(),
     });
     renderComplete(state);
     expect(screen.getByRole('button', { name: /save as preset/i })).toBeInTheDocument();
@@ -101,6 +106,7 @@ describe('Complete route', () => {
     vi.mocked(useSession).mockReturnValue({
       session: { status: 'authenticated', user: { userHandle: 'u1', isAdmin: false } },
       refresh: vi.fn(),
+      login: vi.fn(),
     });
     vi.mocked(lastSession).mockReturnValue({
       completedAt: state.completedAt,
@@ -117,6 +123,7 @@ describe('Complete route', () => {
     vi.mocked(useSession).mockReturnValue({
       session: { status: 'authenticated', user: { userHandle: 'u1', isAdmin: false } },
       refresh: vi.fn(),
+      login: vi.fn(),
     });
     renderComplete(state);
     await userEvent.click(screen.getByRole('button', { name: /save as preset/i }));
@@ -125,15 +132,16 @@ describe('Complete route', () => {
     await waitFor(() => expect(screen.getByTestId('home')).toBeInTheDocument());
   });
 
-  it('PasskeyPrompt onSuccess calls refresh and closes the prompt', async () => {
-    const refresh = vi.fn();
+  it('PasskeyPrompt onSuccess calls login with the user and closes the prompt', async () => {
+    const login = vi.fn();
     vi.mocked(useSession).mockReturnValue({
       session: { status: 'unauthenticated' },
-      refresh,
+      refresh: vi.fn(),
+      login,
     });
     renderComplete(state);
     await userEvent.click(screen.getByRole('button', { name: /sign in to save/i }));
     await userEvent.click(screen.getByRole('button', { name: /sign in with passkey/i }));
-    await waitFor(() => expect(refresh).toHaveBeenCalled());
+    await waitFor(() => expect(login).toHaveBeenCalledWith({ userHandle: 'u1', isAdmin: false }));
   });
 });

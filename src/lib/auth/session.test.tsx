@@ -57,6 +57,20 @@ describe('SessionProvider / useSession', () => {
     await waitFor(() => expect(result.current.session.status).toBe('authenticated'));
   });
 
+  it('login() sets session to authenticated immediately without a network call', async () => {
+    vi.mocked(getMe).mockResolvedValue(null);
+    const { result } = renderHook(() => useSession(), { wrapper });
+    await waitFor(() => expect(result.current.session.status).toBe('unauthenticated'));
+
+    act(() => result.current.login({ userHandle: 'eeff', isAdmin: false }));
+    expect(result.current.session.status).toBe('authenticated');
+    expect(
+      (result.current.session as { status: 'authenticated'; user: { userHandle: string } }).user
+        .userHandle,
+    ).toBe('eeff');
+    expect(getMe).toHaveBeenCalledTimes(1); // no extra network call
+  });
+
   it('throws when used outside SessionProvider', () => {
     expect(() => renderHook(() => useSession())).toThrow(
       'useSession must be used inside SessionProvider',

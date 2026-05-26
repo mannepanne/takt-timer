@@ -4,7 +4,11 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/lib/auth/session', () => ({
-  useSession: vi.fn(() => ({ session: { status: 'unauthenticated' }, refresh: vi.fn() })),
+  useSession: vi.fn(() => ({
+    session: { status: 'unauthenticated' },
+    refresh: vi.fn(),
+    login: vi.fn(),
+  })),
 }));
 vi.mock('@/lib/apiFetch', () => ({ apiFetch: vi.fn() }));
 vi.mock('@/lib/history-sync', () => ({ importLocalHistory: vi.fn().mockResolvedValue(0) }));
@@ -62,6 +66,7 @@ describe('Home', () => {
     vi.mocked(useSession).mockReturnValue({
       session: { status: 'unauthenticated' },
       refresh: vi.fn(),
+      login: vi.fn(),
     });
   });
 
@@ -118,6 +123,7 @@ describe('Home', () => {
     vi.mocked(useSession).mockReturnValue({
       session: { status: 'authenticated', user: { userHandle: 'u1', isAdmin: false } },
       refresh: vi.fn(),
+      login: vi.fn(),
     });
     const serverSession = {
       completed_at: 1700000000,
@@ -139,6 +145,7 @@ describe('Home', () => {
     vi.mocked(useSession).mockReturnValue({
       session: { status: 'authenticated', user: { userHandle: 'u1', isAdmin: false } },
       refresh: vi.fn(),
+      login: vi.fn(),
     });
     vi.mocked(apiFetch).mockResolvedValueOnce({ ok: false } as Response);
     localStorage.setItem(
@@ -160,36 +167,40 @@ describe('Home', () => {
     expect(screen.getByTestId('passkey-prompt')).toHaveAttribute('data-mode', 'register');
   });
 
-  it('on register success calls importLocalHistory and refresh', async () => {
-    const refresh = vi.fn();
+  it('on register success calls login immediately then imports history in background', async () => {
+    const login = vi.fn();
     vi.mocked(useSession).mockReturnValue({
       session: { status: 'unauthenticated' },
-      refresh,
+      refresh: vi.fn(),
+      login,
     });
     renderHome();
     await userEvent.click(screen.getByRole('button', { name: /create account/i }));
     await userEvent.click(screen.getByRole('button', { name: /confirm/i }));
+    expect(login).toHaveBeenCalledWith({ userHandle: 'u1', isAdmin: false });
     await waitFor(() => expect(importLocalHistory).toHaveBeenCalled());
-    expect(refresh).toHaveBeenCalled();
   });
 
-  it('on register success calls refresh even when importLocalHistory throws', async () => {
-    const refresh = vi.fn();
+  it('on register success calls login even when importLocalHistory throws', async () => {
+    const login = vi.fn();
     vi.mocked(useSession).mockReturnValue({
       session: { status: 'unauthenticated' },
-      refresh,
+      refresh: vi.fn(),
+      login,
     });
     vi.mocked(importLocalHistory).mockRejectedValueOnce(new Error('network'));
     renderHome();
     await userEvent.click(screen.getByRole('button', { name: /create account/i }));
     await userEvent.click(screen.getByRole('button', { name: /confirm/i }));
-    await waitFor(() => expect(refresh).toHaveBeenCalled());
+    expect(login).toHaveBeenCalledWith({ userHandle: 'u1', isAdmin: false });
+    await waitFor(() => expect(importLocalHistory).toHaveBeenCalled());
   });
 
   it('authenticated users see an Open presets button', () => {
     vi.mocked(useSession).mockReturnValue({
       session: { status: 'authenticated', user: { userHandle: 'u1', isAdmin: false } },
       refresh: vi.fn(),
+      login: vi.fn(),
     });
     vi.mocked(apiFetch).mockResolvedValueOnce({ ok: false } as Response);
     renderHome();
@@ -200,6 +211,7 @@ describe('Home', () => {
     vi.mocked(useSession).mockReturnValue({
       session: { status: 'authenticated', user: { userHandle: 'u1', isAdmin: false } },
       refresh: vi.fn(),
+      login: vi.fn(),
     });
     vi.mocked(apiFetch).mockResolvedValueOnce({ ok: false } as Response);
     renderHome();
