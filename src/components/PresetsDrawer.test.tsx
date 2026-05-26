@@ -2,7 +2,38 @@
 
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+
+function LocProbe() {
+  const loc = useLocation();
+  return (
+    <div data-testid="loc">
+      {loc.pathname}
+      {loc.state ? ':' + JSON.stringify(loc.state) : ''}
+    </div>
+  );
+}
+
+function renderDrawerWithRoutes(open = true) {
+  const onClose = vi.fn();
+  render(
+    <MemoryRouter initialEntries={['/']}>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <>
+              <PresetsDrawer open={open} onClose={onClose} />
+              <LocProbe />
+            </>
+          }
+        />
+        <Route path="/run" element={<LocProbe />} />
+      </Routes>
+    </MemoryRouter>,
+  );
+  return { onClose };
+}
 
 vi.mock('@/lib/presets', () => ({
   listPresets: vi.fn(),
@@ -173,5 +204,40 @@ describe('PresetsDrawer', () => {
     // Move Legs (index 0) down — should place it after Arms
     fireEvent.click(screen.getByRole('button', { name: /move legs down/i }));
     await waitFor(() => expect(reorderPresets).toHaveBeenCalledWith(['p2', 'p1']));
+  });
+
+  it('clicking a preset card navigates to /run with session state', async () => {
+    vi.mocked(listPresets).mockResolvedValueOnce([PRESET]);
+    renderDrawerWithRoutes();
+    await waitFor(() => screen.getByText('Legs'));
+    fireEvent.click(screen.getByRole('button', { name: /run legs/i }));
+    await waitFor(() => {
+      const probe = screen.getByTestId('loc');
+      expect(probe.textContent).toContain('/run');
+      expect(probe.textContent).toContain('"sets":3');
+    });
+  });
+
+  it('Enter key in rename input commits the rename', async () => {
+    vi.mocked(listPresets).mockResolvedValueOnce([PRESET]);
+    vi.mocked(updatePreset).mockResolvedValueOnce({ ...PRESET, name: 'Quads' });
+    renderDrawer();
+    await waitFor(() => screen.getByText('Legs'));
+    fireEvent.click(screen.getByRole('button', { name: /rename legs/i }));
+    const input = screen.getByRole('textbox', { name: /rename preset/i });
+    fireEvent.change(input, { target: { value: 'Quads' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    await waitFor(() => expect(updatePreset).toHaveBeenCalledWith('p1', { name: 'Quads' }));
+  });
+
+  it('Escape key in rename input cancels without saving', async () => {
+    vi.mocked(listPresets).mockResolvedValueOnce([PRESET]);
+    renderDrawer();
+    await waitFor(() => screen.getByText('Legs'));
+    fireEvent.click(screen.getByRole('button', { name: /rename legs/i }));
+    expect(screen.getByRole('textbox', { name: /rename preset/i })).toBeTruthy();
+    fireEvent.keyDown(screen.getByRole('textbox', { name: /rename preset/i }), { key: 'Escape' });
+    expect(screen.queryByRole('textbox', { name: /rename preset/i })).toBeNull();
+    expect(updatePreset).not.toHaveBeenCalled();
   });
 });

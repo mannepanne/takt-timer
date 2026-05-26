@@ -173,6 +173,19 @@ describe('Home', () => {
     expect(refresh).toHaveBeenCalled();
   });
 
+  it('on register success calls refresh even when importLocalHistory throws', async () => {
+    const refresh = vi.fn();
+    vi.mocked(useSession).mockReturnValue({
+      session: { status: 'unauthenticated' },
+      refresh,
+    });
+    vi.mocked(importLocalHistory).mockRejectedValueOnce(new Error('network'));
+    renderHome();
+    await userEvent.click(screen.getByRole('button', { name: /create account/i }));
+    await userEvent.click(screen.getByRole('button', { name: /confirm/i }));
+    await waitFor(() => expect(refresh).toHaveBeenCalled());
+  });
+
   it('authenticated users see an Open presets button', () => {
     vi.mocked(useSession).mockReturnValue({
       session: { status: 'authenticated', user: { userHandle: 'u1', isAdmin: false } },
