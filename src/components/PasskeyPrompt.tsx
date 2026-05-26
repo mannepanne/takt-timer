@@ -30,6 +30,7 @@ export function PasskeyPrompt({ open, mode, onSuccess, onClose }: Props) {
   const isDiscovering = mode === 'discover' && effectiveMode === 'signin';
 
   async function handleAction() {
+    if (loading) return;
     setError(null);
     setLoading(true);
     try {

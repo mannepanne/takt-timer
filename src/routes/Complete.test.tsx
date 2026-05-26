@@ -58,6 +58,15 @@ function renderComplete(initialState: unknown) {
   );
 }
 
+// The complete-actions buttons are guarded by pointer-events:none for 400ms after mount to
+// prevent iOS ghost-taps from the Run → Complete navigation. Wrap the first click in waitFor
+// so the test retries until the guard clears without needing fake timers.
+async function clickWhenReady(name: string | RegExp) {
+  await waitFor(async () => userEvent.click(screen.getByRole('button', { name })), {
+    timeout: 600,
+  });
+}
+
 describe('Complete route', () => {
   it('without router state, redirects to Home', () => {
     renderComplete(null);
@@ -74,14 +83,14 @@ describe('Complete route', () => {
 
   it('Run it again navigates to /run with the same session', async () => {
     renderComplete(state);
-    await userEvent.click(screen.getByRole('button', { name: /run it again/i }));
+    await clickWhenReady(/run it again/i);
     const runState = JSON.parse(screen.getByTestId('run-state').textContent ?? '{}');
     expect(runState.session).toEqual(state.session);
   });
 
   it('Done navigates to Home', async () => {
     renderComplete(state);
-    await userEvent.click(screen.getByRole('button', { name: 'Done' }));
+    await clickWhenReady('Done');
     expect(screen.getByTestId('home')).toBeInTheDocument();
   });
 
@@ -126,7 +135,7 @@ describe('Complete route', () => {
       login: vi.fn(),
     });
     renderComplete(state);
-    await userEvent.click(screen.getByRole('button', { name: /save as preset/i }));
+    await clickWhenReady(/save as preset/i);
     await userEvent.type(screen.getByRole('textbox'), 'Leg day');
     await userEvent.click(screen.getByRole('button', { name: /^save$/i }));
     await waitFor(() => expect(screen.getByTestId('home')).toBeInTheDocument());
@@ -140,7 +149,7 @@ describe('Complete route', () => {
       login,
     });
     renderComplete(state);
-    await userEvent.click(screen.getByRole('button', { name: /sign in to save/i }));
+    await clickWhenReady(/sign in to save/i);
     await userEvent.click(screen.getByRole('button', { name: /continue with passkey/i }));
     await waitFor(() => expect(login).toHaveBeenCalledWith({ userHandle: 'u1', isAdmin: false }));
   });

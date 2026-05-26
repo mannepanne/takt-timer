@@ -26,8 +26,16 @@ export function Complete() {
   const state = location.state as CompleteState | null;
   const [saveSheetOpen, setSaveSheetOpen] = useState(false);
   const [signinOpen, setSigninOpen] = useState(false);
+  // Ghost-tap guard: Run → Complete navigation can produce a synthetic iOS click ~300ms
+  // after touchend. Block pointer events for 400ms after mount so the click lands nowhere.
+  const [interactable, setInteractable] = useState(false);
 
   const isAuthenticated = authSession.status === 'authenticated';
+
+  useEffect(() => {
+    const t = setTimeout(() => setInteractable(true), 400);
+    return () => clearTimeout(t);
+  }, []);
 
   useEffect(() => {
     if (!state || !isAuthenticated) return;
@@ -83,7 +91,10 @@ export function Complete() {
         </div>
       </main>
 
-      <div className="complete-actions">
+      <div
+        className="complete-actions"
+        style={interactable ? undefined : { pointerEvents: 'none' }}
+      >
         <button type="button" className="btn btn-primary" onClick={runAgain}>
           <Icon.Play size={18} color="var(--paper)" />
           Run it again
