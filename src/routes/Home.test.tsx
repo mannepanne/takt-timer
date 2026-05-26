@@ -156,15 +156,15 @@ describe('Home', () => {
     expect(screen.queryByText(/sessions so far/i)).toBeNull();
   });
 
-  it('unauthenticated users see a Create account button', () => {
+  it('unauthenticated users see a sign in or create account button', () => {
     renderHome();
-    expect(screen.getByRole('button', { name: /create account/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /sign in or create account/i })).toBeInTheDocument();
   });
 
-  it('Create account button opens PasskeyPrompt in register mode', async () => {
+  it('auth button opens PasskeyPrompt in discover mode', async () => {
     renderHome();
-    await userEvent.click(screen.getByRole('button', { name: /create account/i }));
-    expect(screen.getByTestId('passkey-prompt')).toHaveAttribute('data-mode', 'register');
+    await userEvent.click(screen.getByRole('button', { name: /sign in or create account/i }));
+    expect(screen.getByTestId('passkey-prompt')).toHaveAttribute('data-mode', 'discover');
   });
 
   it('on register success calls login immediately then imports history in background', async () => {
@@ -175,7 +175,7 @@ describe('Home', () => {
       login,
     });
     renderHome();
-    await userEvent.click(screen.getByRole('button', { name: /create account/i }));
+    await userEvent.click(screen.getByRole('button', { name: /sign in or create account/i }));
     await userEvent.click(screen.getByRole('button', { name: /confirm/i }));
     expect(login).toHaveBeenCalledWith({ userHandle: 'u1', isAdmin: false });
     await waitFor(() => expect(importLocalHistory).toHaveBeenCalled());
@@ -190,7 +190,7 @@ describe('Home', () => {
     });
     vi.mocked(importLocalHistory).mockRejectedValueOnce(new Error('network'));
     renderHome();
-    await userEvent.click(screen.getByRole('button', { name: /create account/i }));
+    await userEvent.click(screen.getByRole('button', { name: /sign in or create account/i }));
     await userEvent.click(screen.getByRole('button', { name: /confirm/i }));
     expect(login).toHaveBeenCalledWith({ userHandle: 'u1', isAdmin: false });
     await waitFor(() => expect(importLocalHistory).toHaveBeenCalled());

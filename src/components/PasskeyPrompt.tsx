@@ -1,13 +1,13 @@
 // ABOUT: Bottom-sheet prompt for passkey registration and sign-in.
-// ABOUT: Shows register vs sign-in mode; calls back with the authenticated user on success.
+// ABOUT: discover mode tries sign-in first and falls back to registration if no passkey is found.
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { register, signIn, type AuthUser } from '@/lib/auth/client';
 
 type Props = {
   open: boolean;
-  mode: 'register' | 'signin';
+  mode: 'register' | 'signin' | 'discover';
   onSuccess: (user: AuthUser) => void;
   onClose: () => void;
 };
@@ -15,8 +15,19 @@ type Props = {
 export function PasskeyPrompt({ open, mode, onSuccess, onClose }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [effectiveMode, setEffectiveMode] = useState<'register' | 'signin'>(
+    mode === 'discover' ? 'signin' : mode,
+  );
 
-  const isRegister = mode === 'register';
+  useEffect(() => {
+    if (open) {
+      setEffectiveMode(mode === 'discover' ? 'signin' : mode);
+      setError(null);
+    }
+  }, [open, mode]);
+
+  const isRegister = effectiveMode === 'register';
+  const isDiscovering = mode === 'discover' && effectiveMode === 'signin';
 
   async function handleAction() {
     setError(null);
@@ -25,11 +36,39 @@ export function PasskeyPrompt({ open, mode, onSuccess, onClose }: Props) {
       const user = isRegister ? await register() : await signIn();
       onSuccess(user);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+      if (isDiscovering) {
+        // No passkey found on this device — offer registration instead
+        setEffectiveMode('register');
+      } else {
+        setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
   }
+
+  let title: string;
+  let description: string;
+
+  if (isDiscovering) {
+    title = 'Continue with passkey';
+    description =
+      'If you have a passkey for Takt on this device, your phone will offer it. Otherwise you can create a new account.';
+  } else if (isRegister && mode === 'discover') {
+    title = 'Create an account';
+    description =
+      'No passkey found on this device. You can create a new account, or cancel and sign in on a device where your passkey is saved.';
+  } else if (isRegister) {
+    title = 'Create an account';
+    description =
+      'Your phone will ask you to use Face ID, Touch ID, or your device PIN. No password needed.';
+  } else {
+    title = 'Sign in';
+    description =
+      'Use the passkey you created when you registered. Your phone will verify your identity.';
+  }
+
+  const showNote = isRegister && mode !== 'discover';
 
   return (
     <>
@@ -41,13 +80,9 @@ export function PasskeyPrompt({ open, mode, onSuccess, onClose }: Props) {
       <div className={`drawer${open ? ' open' : ''}`} role="dialog" aria-modal="true">
         <div className="drawer-handle" />
         <div className="passkey-prompt-body">
-          <h2 className="passkey-prompt-title">{isRegister ? 'Create an account' : 'Sign in'}</h2>
-          <p className="passkey-prompt-description">
-            {isRegister
-              ? 'Your phone will ask you to use Face ID, Touch ID, or your device PIN. No password needed.'
-              : 'Use the passkey you created when you registered. Your phone will verify your identity.'}
-          </p>
-          {isRegister && (
+          <h2 className="passkey-prompt-title">{title}</h2>
+          <p className="passkey-prompt-description">{description}</p>
+          {showNote && (
             <p className="passkey-prompt-note">
               If you use different platforms (e.g. Android phone + MacBook), you may need to add
               each device separately.
@@ -63,9 +98,11 @@ export function PasskeyPrompt({ open, mode, onSuccess, onClose }: Props) {
             >
               {loading
                 ? 'Waiting…'
-                : isRegister
-                  ? 'Create account with passkey'
-                  : 'Sign in with passkey'}
+                : isDiscovering
+                  ? 'Continue with passkey'
+                  : isRegister
+                    ? 'Create account with passkey'
+                    : 'Sign in with passkey'}
             </button>
             <button type="button" className="btn btn-ghost" onClick={onClose} disabled={loading}>
               Cancel

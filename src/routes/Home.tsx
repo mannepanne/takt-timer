@@ -108,7 +108,7 @@ export function Home() {
           ) : (
             <button
               className="icon-btn"
-              aria-label="Create account"
+              aria-label="Sign in or create account"
               type="button"
               onClick={() => setRegisterOpen(true)}
             >
@@ -167,7 +167,7 @@ export function Home() {
       )}
       <PasskeyPrompt
         open={registerOpen}
-        mode="register"
+        mode="discover"
         onSuccess={handleRegisterSuccess}
         onClose={() => setRegisterOpen(false)}
       />
