@@ -13,6 +13,10 @@ export type SessionState =
 type SessionContextValue = {
   session: SessionState;
   refresh: () => void;
+  // Sets the session directly from an auth response without a network round-trip.
+  // Use after registration or sign-in where the server has already returned the user.
+  // Avoids the KV eventual-consistency window that refresh() is subject to.
+  login: (user: AuthUser) => void;
 };
 
 const SessionContext = createContext<SessionContextValue | null>(null);
@@ -31,11 +35,19 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       });
   }, []);
 
+  const login = useCallback((user: AuthUser) => {
+    setSession({ status: 'authenticated', user });
+  }, []);
+
   useEffect(() => {
     refresh();
   }, [refresh]);
 
-  return <SessionContext.Provider value={{ session, refresh }}>{children}</SessionContext.Provider>;
+  return (
+    <SessionContext.Provider value={{ session, refresh, login }}>
+      {children}
+    </SessionContext.Provider>
+  );
 }
 
 export function useSession(): SessionContextValue {

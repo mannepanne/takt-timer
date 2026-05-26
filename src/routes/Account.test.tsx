@@ -10,6 +10,7 @@ vi.mock('@/lib/auth/session', () => ({
   useSession: vi.fn(() => ({
     session: { status: 'authenticated', user: { userHandle: 'u1', isAdmin: false } },
     refresh: vi.fn(),
+    login: vi.fn(),
   })),
 }));
 
@@ -47,6 +48,7 @@ describe('Account', () => {
     vi.mocked(useSession).mockReturnValue({
       session: { status: 'authenticated', user: { userHandle: 'u1', isAdmin: false } },
       refresh,
+      login: vi.fn(),
     });
     vi.mocked(signOut).mockResolvedValueOnce();
     renderAccount();
@@ -66,6 +68,7 @@ describe('Account', () => {
     vi.mocked(useSession).mockReturnValue({
       session: { status: 'authenticated', user: { userHandle: 'u1', isAdmin: false } },
       refresh,
+      login: vi.fn(),
     });
     vi.mocked(apiFetch).mockResolvedValueOnce(mockRes({}) as never);
     renderAccount();

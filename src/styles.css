@@ -1431,6 +1431,10 @@ input {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .passkey-prompt-title {
   font-size: 20px;

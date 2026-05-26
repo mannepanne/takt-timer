@@ -22,7 +22,7 @@ type CompleteState = {
 export function Complete() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { session: authSession, refresh } = useSession();
+  const { session: authSession, login } = useSession();
   const state = location.state as CompleteState | null;
   const [saveSheetOpen, setSaveSheetOpen] = useState(false);
   const [signinOpen, setSigninOpen] = useState(false);
@@ -115,8 +115,8 @@ export function Complete() {
       <PasskeyPrompt
         open={signinOpen}
         mode="signin"
-        onSuccess={() => {
-          refresh();
+        onSuccess={(user) => {
+          login(user);
           setSigninOpen(false);
         }}
         onClose={() => setSigninOpen(false)}

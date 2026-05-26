@@ -42,7 +42,7 @@ export function Home() {
   const [presetsOpen, setPresetsOpen] = useState(false);
   const [registerOpen, setRegisterOpen] = useState(false);
   const navigate = useNavigate();
-  const { session: authSession, refresh } = useSession();
+  const { session: authSession, login } = useSession();
 
   const isAuthenticated = authSession.status === 'authenticated';
 
@@ -60,13 +60,13 @@ export function Home() {
       .catch(() => {});
   }, [isAuthenticated]);
 
-  async function handleRegisterSuccess(_user: AuthUser) {
+  async function handleRegisterSuccess(user: AuthUser) {
     try {
       await importLocalHistory();
     } catch {
       // import failure is non-fatal — account is created regardless
     }
-    refresh();
+    login(user);
     setRegisterOpen(false);
   }
 
