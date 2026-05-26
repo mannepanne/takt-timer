@@ -1,5 +1,5 @@
-// ABOUT: localStorage-backed session history for anonymous users.
-// ABOUT: Capped at 30 entries; schema matches the future D1 sessions table for Phase 4 import.
+// ABOUT: localStorage-backed session history; also used by registered users before sync.
+// ABOUT: Capped at 30 entries; schema matches the D1 sessions table for Phase 4 import.
 
 import type { CompletedSession } from '@/lib/timer/types';
 
@@ -61,9 +61,14 @@ export function readHistory(): CompletedSession[] {
 
 export function appendHistory(entry: CompletedSession): CompletedSession[] {
   const current = safeGet();
-  const next = [...current, entry].slice(-MAX_ENTRIES);
+  const withId: CompletedSession = entry.id ? entry : { ...entry, id: crypto.randomUUID() };
+  const next = [...current, withId].slice(-MAX_ENTRIES);
   safeSet(next);
   return next;
+}
+
+export function setHistory(entries: CompletedSession[]): void {
+  safeSet(entries);
 }
 
 export function lastSession(): CompletedSession | null {

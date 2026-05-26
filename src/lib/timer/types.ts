@@ -9,6 +9,7 @@ export type Session = {
 };
 
 export type CompletedSession = {
+  id?: string; // Stable UUID for idempotent server sync; absent on pre-Phase-4 entries.
   completedAt: number;
   totalSec: number;
   sets: number;
