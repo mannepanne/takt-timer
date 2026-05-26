@@ -1,10 +1,16 @@
-// ABOUT: Complete route — totals + "Run it again" / Done. Reads totals from router state.
+// ABOUT: Complete route — totals, "Run it again" / Done, and "Save as preset" for signed-in users.
 
+import { useEffect, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 
 import { Icon } from '@/components/icons';
+import { PasskeyPrompt } from '@/components/PasskeyPrompt';
+import { SavePresetSheet } from '@/components/SavePresetSheet';
 import { TopBar } from '@/components/TopBar';
+import { useSession } from '@/lib/auth/session';
 import { fmtTime } from '@/lib/format';
+import { lastSession } from '@/lib/history';
+import { pushSession } from '@/lib/history-sync';
 import type { Session } from '@/lib/timer/types';
 
 type CompleteState = {
@@ -16,7 +22,22 @@ type CompleteState = {
 export function Complete() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { session: authSession, refresh } = useSession();
   const state = location.state as CompleteState | null;
+  const [saveSheetOpen, setSaveSheetOpen] = useState(false);
+  const [signinOpen, setSigninOpen] = useState(false);
+
+  const isAuthenticated = authSession.status === 'authenticated';
+
+  useEffect(() => {
+    if (!state || !isAuthenticated) return;
+    const completed = lastSession();
+    if (completed && completed.completedAt === state.completedAt) {
+      pushSession(completed).catch(() => {
+        // Best-effort; session already in localStorage.
+      });
+    }
+  }, [state, isAuthenticated]);
 
   if (!state) {
     return <Navigate to="/" replace />;
@@ -67,10 +88,39 @@ export function Complete() {
           <Icon.Play size={18} color="var(--paper)" />
           Run it again
         </button>
+        {isAuthenticated ? (
+          <button type="button" className="btn btn-ghost" onClick={() => setSaveSheetOpen(true)}>
+            Save as preset
+          </button>
+        ) : (
+          <button type="button" className="btn btn-ghost" onClick={() => setSigninOpen(true)}>
+            Sign in to save
+          </button>
+        )}
         <button type="button" className="btn btn-ghost" onClick={done}>
           Done
         </button>
       </div>
+
+      <SavePresetSheet
+        open={saveSheetOpen}
+        session={session}
+        onClose={() => setSaveSheetOpen(false)}
+        onSaved={() => {
+          setSaveSheetOpen(false);
+          done();
+        }}
+      />
+
+      <PasskeyPrompt
+        open={signinOpen}
+        mode="signin"
+        onSuccess={() => {
+          refresh();
+          setSigninOpen(false);
+        }}
+        onClose={() => setSigninOpen(false)}
+      />
     </div>
   );
 }

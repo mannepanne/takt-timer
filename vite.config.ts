@@ -63,6 +63,16 @@ export default defineConfig({
               cacheableResponse: { statuses: [0, 200] },
             },
           },
+          {
+            urlPattern: /\/api\/(presets|sessions)/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'takt-api-data',
+              networkTimeoutSeconds: 5,
+              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
         ],
       },
     }),
