@@ -71,6 +71,26 @@ describe('SessionProvider / useSession', () => {
     expect(getMe).toHaveBeenCalledTimes(1); // no extra network call
   });
 
+  it('login() cancels an in-flight refresh so stale null response does not overwrite authenticated state', async () => {
+    let resolveGetMe!: (v: null) => void;
+    vi.mocked(getMe).mockReturnValueOnce(
+      new Promise<null>((res) => {
+        resolveGetMe = res;
+      }),
+    );
+
+    const { result } = renderHook(() => useSession(), { wrapper });
+    expect(result.current.session.status).toBe('loading');
+
+    // login() fires while the initial refresh getMe() is still in flight
+    act(() => result.current.login({ userHandle: 'gggg', isAdmin: false }));
+    expect(result.current.session.status).toBe('authenticated');
+
+    // Now the stale refresh response arrives with null — must NOT override login
+    await act(async () => resolveGetMe(null));
+    expect(result.current.session.status).toBe('authenticated');
+  });
+
   it('throws when used outside SessionProvider', () => {
     expect(() => renderHook(() => useSession())).toThrow(
       'useSession must be used inside SessionProvider',
