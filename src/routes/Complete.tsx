@@ -100,11 +100,23 @@ export function Complete() {
           Run it again
         </button>
         {isAuthenticated ? (
-          <button type="button" className="btn btn-ghost" onClick={() => setSaveSheetOpen(true)}>
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={() => {
+              if (interactable) setSaveSheetOpen(true);
+            }}
+          >
             Save as preset
           </button>
         ) : (
-          <button type="button" className="btn btn-ghost" onClick={() => setSigninOpen(true)}>
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={() => {
+              if (interactable) setSigninOpen(true);
+            }}
+          >
             Sign in to save
           </button>
         )}

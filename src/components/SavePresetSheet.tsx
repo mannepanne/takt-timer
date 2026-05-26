@@ -1,7 +1,7 @@
 // ABOUT: Bottom sheet for saving the current session as a named preset.
 // ABOUT: Type-only mode in Phase 4; voice save is Phase 5.
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { createPreset } from '@/lib/presets';
 import type { Session } from '@/lib/timer/types';
@@ -17,6 +17,16 @@ export function SavePresetSheet({ open, session, onClose, onSaved }: Props) {
   const [name, setName] = useState(session.name ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Focus after the drawer finishes sliding in (300ms transition), not on mount.
+  // autoFocus on a hidden element causes Android Chrome to show/dismiss the keyboard,
+  // which generates a spurious tap at the bottom of the visible screen.
+  useEffect(() => {
+    if (!open) return;
+    const t = setTimeout(() => inputRef.current?.focus(), 350);
+    return () => clearTimeout(t);
+  }, [open]);
 
   async function handleSave() {
     const trimmed = name.trim();
@@ -58,6 +68,7 @@ export function SavePresetSheet({ open, session, onClose, onSaved }: Props) {
             Name
           </label>
           <input
+            ref={inputRef}
             id="preset-name"
             className="save-preset-input"
             type="text"
@@ -65,7 +76,6 @@ export function SavePresetSheet({ open, session, onClose, onSaved }: Props) {
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Leg day"
             maxLength={80}
-            autoFocus
           />
           {error && <p className="save-preset-error">{error}</p>}
           <div className="save-preset-actions">
