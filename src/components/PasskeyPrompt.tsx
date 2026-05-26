@@ -1,7 +1,7 @@
 // ABOUT: Bottom-sheet prompt for passkey registration and sign-in.
 // ABOUT: discover mode tries sign-in first and falls back to registration if no passkey is found.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { register, signIn, type AuthUser } from '@/lib/auth/client';
 
@@ -18,11 +18,16 @@ export function PasskeyPrompt({ open, mode, onSuccess, onClose }: Props) {
   const [effectiveMode, setEffectiveMode] = useState<'register' | 'signin'>(
     mode === 'discover' ? 'signin' : mode,
   );
+  // Each time the drawer opens, bump the generation so any in-flight Promise
+  // result that resolves after the user closed/re-opened is silently discarded.
+  const genRef = useRef(0);
 
   useEffect(() => {
     if (open) {
       setEffectiveMode(mode === 'discover' ? 'signin' : mode);
       setError(null);
+      setLoading(false);
+      genRef.current++;
     }
   }, [open, mode]);
 
@@ -31,12 +36,15 @@ export function PasskeyPrompt({ open, mode, onSuccess, onClose }: Props) {
 
   async function handleAction() {
     if (loading) return;
+    const gen = ++genRef.current;
     setError(null);
     setLoading(true);
     try {
       const user = isRegister ? await register() : await signIn();
+      if (gen !== genRef.current) return;
       onSuccess(user);
     } catch (err) {
+      if (gen !== genRef.current) return;
       if (isDiscovering) {
         // No passkey found on this device — offer registration instead
         setEffectiveMode('register');
@@ -44,7 +52,7 @@ export function PasskeyPrompt({ open, mode, onSuccess, onClose }: Props) {
         setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
       }
     } finally {
-      setLoading(false);
+      if (gen === genRef.current) setLoading(false);
     }
   }
 
@@ -75,7 +83,7 @@ export function PasskeyPrompt({ open, mode, onSuccess, onClose }: Props) {
     <>
       <div
         className={`drawer-backdrop${open ? ' open' : ''}`}
-        onClick={loading ? undefined : onClose}
+        onClick={onClose}
         aria-hidden="true"
       />
       <div className={`drawer${open ? ' open' : ''}`} role="dialog" aria-modal="true">
@@ -95,12 +103,7 @@ export function PasskeyPrompt({ open, mode, onSuccess, onClose }: Props) {
               // In discover fallback the safe path (cancel + go get the other device) is
               // styled as primary to reduce the risk of accidentally creating a duplicate account.
               <>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={onClose}
-                  disabled={loading}
-                >
+                <button type="button" className="btn btn-primary" onClick={onClose}>
                   Cancel
                 </button>
                 <button
@@ -128,12 +131,7 @@ export function PasskeyPrompt({ open, mode, onSuccess, onClose }: Props) {
                         ? 'Create account with passkey'
                         : 'Sign in with passkey'}
                 </button>
-                <button
-                  type="button"
-                  className="btn btn-ghost"
-                  onClick={onClose}
-                  disabled={loading}
-                >
+                <button type="button" className="btn btn-ghost" onClick={onClose}>
                   Cancel
                 </button>
               </>
