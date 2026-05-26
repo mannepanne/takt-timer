@@ -12,6 +12,7 @@ import { PresetsDrawer } from '@/components/PresetsDrawer';
 import { Sparkline } from '@/components/Sparkline';
 import { TopBar } from '@/components/TopBar';
 import { type AuthUser } from '@/lib/auth/client';
+import { hasRegisteredBefore } from '@/lib/auth/local-hint';
 import { useSession } from '@/lib/auth/session';
 import { apiFetch } from '@/lib/apiFetch';
 import { readHistory } from '@/lib/history';
@@ -167,7 +168,7 @@ export function Home() {
       )}
       <PasskeyPrompt
         open={authPromptOpen}
-        mode="discover"
+        mode={hasRegisteredBefore() ? 'signin' : 'register'}
         onSuccess={handleAuthSuccess}
         onClose={() => setAuthPromptOpen(false)}
       />

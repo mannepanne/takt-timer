@@ -12,6 +12,10 @@ vi.mock('@/lib/auth/session', () => ({
 }));
 vi.mock('@/lib/apiFetch', () => ({ apiFetch: vi.fn() }));
 vi.mock('@/lib/history-sync', () => ({ importLocalHistory: vi.fn().mockResolvedValue(0) }));
+vi.mock('@/lib/auth/local-hint', () => ({
+  hasRegisteredBefore: vi.fn(() => false),
+  markRegistered: vi.fn(),
+}));
 vi.mock('@/components/PasskeyPrompt', () => ({
   PasskeyPrompt: ({
     open,
@@ -36,6 +40,7 @@ vi.mock('@/components/PresetsDrawer', () => ({
 import { useSession } from '@/lib/auth/session';
 import { apiFetch } from '@/lib/apiFetch';
 import { importLocalHistory } from '@/lib/history-sync';
+import { hasRegisteredBefore } from '@/lib/auth/local-hint';
 import { Home } from './Home';
 
 function LocProbe() {
@@ -161,10 +166,18 @@ describe('Home', () => {
     expect(screen.getByRole('button', { name: /sign in or create account/i })).toBeInTheDocument();
   });
 
-  it('auth button opens PasskeyPrompt in discover mode', async () => {
+  it('auth button opens PasskeyPrompt in register mode for first-time users', async () => {
+    vi.mocked(hasRegisteredBefore).mockReturnValue(false);
     renderHome();
     await userEvent.click(screen.getByRole('button', { name: /sign in or create account/i }));
-    expect(screen.getByTestId('passkey-prompt')).toHaveAttribute('data-mode', 'discover');
+    expect(screen.getByTestId('passkey-prompt')).toHaveAttribute('data-mode', 'register');
+  });
+
+  it('auth button opens PasskeyPrompt in signin mode for returning users', async () => {
+    vi.mocked(hasRegisteredBefore).mockReturnValue(true);
+    renderHome();
+    await userEvent.click(screen.getByRole('button', { name: /sign in or create account/i }));
+    expect(screen.getByTestId('passkey-prompt')).toHaveAttribute('data-mode', 'signin');
   });
 
   it('on register success calls login immediately then imports history in background', async () => {
