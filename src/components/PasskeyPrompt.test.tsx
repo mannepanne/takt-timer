@@ -65,6 +65,62 @@ describe('PasskeyPrompt', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
+  it('Cancel is enabled even while the action is in-flight', async () => {
+    // signIn never resolves — simulates Android "Waiting…" hang
+    vi.mocked(signIn).mockReturnValueOnce(new Promise(() => {}));
+    const { onClose } = renderPrompt('signin');
+    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
+    // Button text flips to "Waiting…" while in-flight
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /waiting/i })).toBeInTheDocument(),
+    );
+    const cancel = screen.getByRole('button', { name: /cancel/i });
+    expect(cancel).not.toBeDisabled();
+    fireEvent.click(cancel);
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('stale in-flight result is ignored after re-open', async () => {
+    let resolveSignIn!: (u: typeof USER) => void;
+    vi.mocked(signIn).mockReturnValueOnce(
+      new Promise((res) => {
+        resolveSignIn = res;
+      }),
+    );
+    const onSuccess = vi.fn();
+    const onClose = vi.fn();
+    const { rerender } = render(
+      <PasskeyPrompt open={true} mode="signin" onSuccess={onSuccess} onClose={onClose} />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /waiting/i })).toBeInTheDocument(),
+    );
+    // Close then re-open (bumps generation)
+    rerender(<PasskeyPrompt open={false} mode="signin" onSuccess={onSuccess} onClose={onClose} />);
+    rerender(<PasskeyPrompt open={true} mode="signin" onSuccess={onSuccess} onClose={onClose} />);
+    // Stale Promise resolves — should be discarded
+    resolveSignIn(USER);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(onSuccess).not.toHaveBeenCalled();
+  });
+
+  it('re-opening while loading resets the Waiting… button', async () => {
+    vi.mocked(signIn).mockReturnValueOnce(new Promise(() => {}));
+    const onSuccess = vi.fn();
+    const onClose = vi.fn();
+    const { rerender } = render(
+      <PasskeyPrompt open={true} mode="signin" onSuccess={onSuccess} onClose={onClose} />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /waiting/i })).toBeInTheDocument(),
+    );
+    rerender(<PasskeyPrompt open={false} mode="signin" onSuccess={onSuccess} onClose={onClose} />);
+    rerender(<PasskeyPrompt open={true} mode="signin" onSuccess={onSuccess} onClose={onClose} />);
+    expect(screen.getByRole('button', { name: /sign in with passkey/i })).not.toBeDisabled();
+  });
+
   describe('discover mode', () => {
     it('shows "Continue with passkey" heading initially', () => {
       renderPrompt('discover');
