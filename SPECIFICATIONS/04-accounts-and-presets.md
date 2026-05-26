@@ -17,7 +17,7 @@ Introduce pseudonymous accounts via passkeys, enable saving and managing presets
 ### In scope
 
 - [ ] Passkey registration flow (WebAuthn) using `@simplewebauthn/server` on the Worker and `@simplewebauthn/browser` in the SPA.
-- [ ] Passkey sign-in flow.
+- [ ] Passkey sign-in flow. Home shows a single "Sign in or create an account" entry that tries passkey discovery first (via `startAuthentication` without `allowCredentials`) and falls back to registration if no passkey is found on the device.
 - [ ] D1 schema: `users`, `presets`, `sessions` tables (see below).
 - [ ] Session management: signed, HTTP-only, `SameSite=Lax` cookie containing a server-issued session ID. Server stores `sessionId → userHandle` in KV with a rolling 30-day TTL.
 - [ ] Registration offers the one-shot local-history import: _"Bring your N sessions with you?"_. Accept sends all N rows to the server in one batch; the server inserts them in a transaction and responds with `{imported: N}`; the client clears localStorage only after confirming the count matches. On network failure or count mismatch the batch is retried — session IDs are stable UUIDs so re-submission is idempotent. Decline leaves local history untouched on-device.
