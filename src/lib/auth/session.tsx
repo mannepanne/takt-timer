@@ -12,6 +12,7 @@ import {
 } from 'react';
 
 import { getMe, type AuthUser } from './client';
+import { markRegistered } from './local-hint';
 
 export type SessionState =
   | { status: 'loading' }
@@ -51,6 +52,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback((user: AuthUser) => {
     refreshGenRef.current++; // invalidate any in-flight refresh response
+    markRegistered();
     setSession({ status: 'authenticated', user });
   }, []);
 

@@ -137,6 +137,15 @@ export function PasskeyPrompt({ open, mode, onSuccess, onClose }: Props) {
               </>
             )}
           </div>
+          {mode === 'register' && effectiveMode === 'register' && (
+            <button
+              type="button"
+              className="passkey-prompt-switch"
+              onClick={() => setEffectiveMode('signin')}
+            >
+              Already have an account? Sign in instead
+            </button>
+          )}
         </div>
       </div>
     </>

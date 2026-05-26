@@ -7,6 +7,7 @@ import { Icon } from '@/components/icons';
 import { PasskeyPrompt } from '@/components/PasskeyPrompt';
 import { SavePresetSheet } from '@/components/SavePresetSheet';
 import { TopBar } from '@/components/TopBar';
+import { hasRegisteredBefore } from '@/lib/auth/local-hint';
 import { useSession } from '@/lib/auth/session';
 import { fmtTime } from '@/lib/format';
 import { lastSession } from '@/lib/history';
@@ -137,7 +138,7 @@ export function Complete() {
 
       <PasskeyPrompt
         open={signinOpen}
-        mode="discover"
+        mode={hasRegisteredBefore() ? 'signin' : 'register'}
         onSuccess={(user) => {
           login(user);
           setSigninOpen(false);

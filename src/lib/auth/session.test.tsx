@@ -6,7 +6,9 @@ import type { ReactNode } from 'react';
 import { SessionProvider, useSession } from './session';
 
 vi.mock('./client', () => ({ getMe: vi.fn() }));
+vi.mock('./local-hint', () => ({ markRegistered: vi.fn() }));
 import { getMe } from './client';
+import { markRegistered } from './local-hint';
 
 function wrapper({ children }: { children: ReactNode }) {
   return <SessionProvider>{children}</SessionProvider>;
@@ -55,6 +57,14 @@ describe('SessionProvider / useSession', () => {
 
     act(() => result.current.refresh());
     await waitFor(() => expect(result.current.session.status).toBe('authenticated'));
+  });
+
+  it('login() calls markRegistered so returning users are routed to sign-in next time', async () => {
+    vi.mocked(getMe).mockResolvedValue(null);
+    const { result } = renderHook(() => useSession(), { wrapper });
+    await waitFor(() => expect(result.current.session.status).toBe('unauthenticated'));
+    act(() => result.current.login({ userHandle: 'eeff', isAdmin: false }));
+    expect(markRegistered).toHaveBeenCalledTimes(1);
   });
 
   it('login() sets session to authenticated immediately without a network call', async () => {
