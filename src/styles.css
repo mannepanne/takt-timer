@@ -1424,6 +1424,14 @@ input {
   background: rgba(196, 66, 59, 0.08);
   color: var(--danger);
 }
+.icon-btn-danger-confirm {
+  background: var(--danger);
+  color: #fff;
+}
+.icon-btn-danger-confirm:hover {
+  background: color-mix(in srgb, var(--danger) 85%, #000);
+  color: #fff;
+}
 
 /* PasskeyPrompt */
 .passkey-prompt-body {

@@ -330,4 +330,19 @@ export const Icon = {
       <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
     </svg>
   ),
+  Question: ({ size = 22, color = 'currentColor' }: IconProps) => (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-1.5 2-2.5 3v1" />
+      <circle cx="12" cy="17" r="0.5" fill={color} stroke="none" />
+    </svg>
+  ),
 };
