@@ -1559,8 +1559,9 @@ input {
   margin: 24px 0;
 }
 .preset-card {
-  flex-direction: column;
-  gap: 4px;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
   padding: 14px 12px;
   cursor: default;
 }
@@ -1572,13 +1573,17 @@ input {
   cursor: pointer;
   font-family: inherit;
   min-width: 0;
-  width: 100%;
+  flex: 1;
+}
+.preset-card-rename {
+  flex: 1;
+  min-width: 0;
 }
 .preset-card-actions {
   display: flex;
   align-items: center;
   gap: 2px;
-  margin-top: 4px;
+  flex-shrink: 0;
 }
 
 /* Account */
