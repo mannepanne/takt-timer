@@ -1192,20 +1192,19 @@ input {
 }
 .run-sound-toggle {
   position: absolute;
-  top: 14px;
-  right: 18px;
-  width: 36px;
-  height: 36px;
+  top: 10px;
+  right: 14px;
+  width: 44px;
+  height: 44px;
   border-radius: 999px;
   color: var(--ink-3);
   display: grid;
   place-items: center;
   background: transparent;
+  transition: color 160ms var(--ease);
 }
 .run-sound-toggle.off {
-  opacity: 0.5;
-  text-decoration: line-through;
-  text-decoration-thickness: 1.6px;
+  color: var(--danger);
 }
 
 /* ───────── Phase 2: pause toast ───────── */
