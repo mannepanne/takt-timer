@@ -20,7 +20,7 @@ Before making an architectural decision that outlasts today's PR, consult [../RE
 
 Full product vision: [ORIGINAL_IDEA/project-outline.md](./ORIGINAL_IDEA/project-outline.md).
 
-**Current phase:** Phase 3 — Voice. Spike (PR #6), B1 plumbing (PR #7), B2 React/UI (PR #8), B3a cleanup (PR #15), B3b full rate limiter + ADR (PR #16), and B3c safety harness (PR #17) merged. The remaining B3 exit-criteria are the next chunk — start at `03-voice.md` "Phase 3 progress".
+**Current phase:** Phase 5 — i18n, Settings & Onboarding. See [05-i18n-settings-onboarding.md](./05-i18n-settings-onboarding.md).
 
 **Live deployment:** https://takt.hultberg.org — Phase 2 core timer live since 2026-04-19.
 
@@ -32,11 +32,11 @@ Full product vision: [ORIGINAL_IDEA/project-outline.md](./ORIGINAL_IDEA/project-
 2. ~~**[02-core-timer.md](./ARCHIVE/02-core-timer.md)**~~ — ✅ complete
    Shipped the usable tap-only timer — state machine, count-in, work/rest phases, pause/resume, skip, repeat-set, beeps, haptics (Android), Wake Lock, PWA with offline running, localStorage history, sparkline, last-session quick-start, demo mic button. Archived.
 
-3. **[03-voice.md](./03-voice.md)** — 4–6 days
-   Mic capture, Voice overlay, Whisper-turbo + Llama pipeline on Workers AI, anonymous rate limiting (3/day/IP), calm failure states. English only.
+3. ~~**[03-voice.md](./ARCHIVE/03-voice.md)**~~ — ✅ complete
+   Mic capture, Voice overlay, Whisper-turbo + Llama pipeline on Workers AI, anonymous rate limiting (3/day/IP), calm failure states. English only. Archived.
 
-4. **[04-accounts-and-presets.md](./04-accounts-and-presets.md)** — 7–10 days
-   Passkey auth, D1 schema for users/presets/sessions, presets drawer, save preset sheet, voice "save as preset", history sync with one-shot import-on-register, authenticated rate-limit tier.
+4. ~~**[04-accounts-and-presets.md](./ARCHIVE/04-accounts-and-presets.md)**~~ — ✅ complete
+   Passkey auth, D1 schema for users/presets/sessions, presets drawer, save preset sheet, voice "save as preset", history sync with one-shot import-on-register, authenticated rate-limit tier. Archived.
 
 5. **[05-i18n-settings-onboarding.md](./05-i18n-settings-onboarding.md)** — 4–6 days
    English and Swedish translations, full Settings screen (language, accent, sound, account), Onboarding flow, real Privacy policy content in both languages.

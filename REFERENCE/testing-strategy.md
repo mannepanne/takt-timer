@@ -3,6 +3,7 @@
 **When to read this:** Writing tests, setting up coverage, deciding what to mock, or adding a new category of test.
 
 **Related documents:**
+
 - [CLAUDE.md](../CLAUDE.md) — project navigation.
 - [.claude/CLAUDE.md](../.claude/CLAUDE.md) — collaboration principles, testing section.
 - [pr-review-workflow.md](./pr-review-workflow.md) — review process.
@@ -16,7 +17,7 @@ Tests in Takt serve two purposes:
 1. **Validation** — verify the code does what it should.
 2. **Directional context** — act as executable specifications that guide future changes, including AI-driven ones.
 
-This matters because Takt is built with AI assistance at every step. Tests are the most durable way to communicate intent across sessions. A passing test says *"this behaviour is meant to be here"*. A failing test after a change says *"you just drifted from intent — reconsider before you fix the test"*.
+This matters because Takt is built with AI assistance at every step. Tests are the most durable way to communicate intent across sessions. A passing test says _"this behaviour is meant to be here"_. A failing test after a change says _"you just drifted from intent — reconsider before you fix the test"_.
 
 ---
 
@@ -24,7 +25,7 @@ This matters because Takt is built with AI assistance at every step. Tests are t
 
 1. **Tests define expected behaviour.** Write them before the code when the shape of the API is clear; right after the code when exploring. Either way, every non-trivial branch has a test.
 2. **Coverage targets:** ≥95% lines / functions / statements, ≥90% branches. Targets are for the whole project; individual files may dip lower if justified in PR.
-3. **Fail loudly, helpfully.** A failing assertion should name the expected and actual values, and the test's `describe`/`it` names should read like a sentence (*"parses 'three sets of one minute' into 3 × 60"*).
+3. **Fail loudly, helpfully.** A failing assertion should name the expected and actual values, and the test's `describe`/`it` names should read like a sentence (_"parses 'three sets of one minute' into 3 × 60"_).
 4. **Tests are self-contained.** Each test sets up its own fixtures and cleans up after itself. No cross-test dependencies; tests pass in isolation and in any order.
 5. **Mirror code structure.** `src/lib/timer/machine.ts` → `src/lib/timer/machine.test.ts`. Integration tests live alongside the thing they integrate (e.g. `worker/api/voice/parse.test.ts`).
 
@@ -33,24 +34,22 @@ This matters because Takt is built with AI assistance at every step. Tests are t
 ## Framework
 
 **Runner:** [Vitest](https://vitest.dev/).
+
 - Fast, TypeScript-first, ES modules native.
-- Works with Vite and with `@cloudflare/vitest-pool-workers` for Worker-runtime tests.
 
 **Coverage:** Vitest with `@vitest/coverage-v8`.
 
 **UI-level tests:** `@testing-library/react` for React components.
 
-**Worker tests:** `@cloudflare/vitest-pool-workers` where a real Workers runtime matters (Workers AI calls, D1 queries against a local `miniflare` DB). Plain Vitest for anything else.
+**Worker tests:** Plain Vitest with hand-rolled binding mocks (Map-based KV, in-memory D1 stubs). Workers AI is always mocked — never called from tests.
 
 ### Install (Phase 1)
 
 ```bash
 pnpm add -D vitest @vitest/coverage-v8 @testing-library/react @testing-library/user-event jsdom
-# Worker-runtime pool (phase 3+ when API routes land)
-pnpm add -D @cloudflare/vitest-pool-workers
 ```
 
-Configuration in `vitest.config.ts` (SPA tests) and `vitest.workers.config.ts` (Worker tests).
+Configuration in `vitest.config.ts`.
 
 ---
 
@@ -61,6 +60,7 @@ Configuration in `vitest.config.ts` (SPA tests) and `vitest.workers.config.ts` (
 Pure functions, state reducers, small helpers. No I/O, no external deps.
 
 **Takt examples:**
+
 - `src/lib/timer/machine.ts` — the timer state machine (phase transitions, pause/resume, skip, repeat, completion).
 - `src/lib/history.ts` — `localStorage` history: append, cap, read, corrupted-JSON recovery.
 - `src/i18n/detect.ts` — locale detection.
@@ -85,6 +85,7 @@ describe('timer machine', () => {
 React components rendered with Testing Library. Assert what the user sees and can do, not implementation details.
 
 **Takt examples:**
+
 - `Wordmark`, `TopBar`, `SetDots`, `StepperSheet`, `VoiceOverlay`, `PresetsDrawer`.
 
 ```typescript
@@ -101,9 +102,10 @@ it('marks the active set', () => {
 
 ### 3. Worker / integration tests
 
-API routes tested against a real Workers runtime with `@cloudflare/vitest-pool-workers`. D1 queries run against miniflare's in-memory DB; Workers AI and external services are mocked.
+API routes tested with plain Vitest. Bindings (KV, D1) are replaced with lightweight in-memory mocks; Workers AI is always stubbed. Tests run in jsdom and cover the happy path, error paths, rate-limit enforcement, and auth boundaries.
 
 **Takt examples:**
+
 - `worker/api/voice/parse.test.ts` — happy path, rate-limit enforcement, Llama-retry behaviour, mic-permission-denied shape.
 - `worker/api/auth/registration.test.ts` — WebAuthn registration + signature counter.
 - `worker/api/presets/*.test.ts` — CRUD + authorisation.
@@ -113,6 +115,7 @@ API routes tested against a real Workers runtime with `@cloudflare/vitest-pool-w
 A thin set, not a pyramid inversion. Used at phase boundaries to catch regressions across the integrated system. Can be added with Playwright from Phase 3 onwards if needed, but not required up front.
 
 **Candidate flows:**
+
 - Configure → Run → Complete, in both English and Swedish (Phase 5+).
 - Register → sign out → sign in on a simulated second device (Phase 4+).
 
@@ -142,16 +145,15 @@ Reusable mocks in `src/test-utils/` and `worker/test-utils/`:
 
 ```typescript
 // worker/test-utils/ai-mock.ts
-export function mockWorkersAI(overrides?: {
-  whisper?: string;
-  llama?: unknown;
-}) {
+export function mockWorkersAI(overrides?: { whisper?: string; llama?: unknown }) {
   return {
     run: vi.fn(async (model: string) => {
       if (model.includes('whisper')) {
         return { text: overrides?.whisper ?? 'three sets of one minute, thirty seconds rest' };
       }
-      return { response: JSON.stringify(overrides?.llama ?? { sets: 3, workSec: 60, restSec: 30 }) };
+      return {
+        response: JSON.stringify(overrides?.llama ?? { sets: 3, workSec: 60, restSec: 30 }),
+      };
     }),
   };
 }
@@ -161,12 +163,12 @@ export function mockWorkersAI(overrides?: {
 
 ## Coverage expectations per area
 
-| Area | Lines / functions / statements | Branches | Notes |
-|---|---|---|---|
-| Pure logic (`src/lib/`, `worker/lib/`) | 98%+ | 95%+ | Tight budget; small surface. |
-| React components | 90%+ | 85%+ | Focus on interactions users can take. |
-| API routes | 95%+ | 90%+ | Include rate-limit, auth, and error paths. |
-| Service worker | 85%+ | 80%+ | Hard to fully exercise; compensate with manual checks. |
+| Area                                   | Lines / functions / statements | Branches | Notes                                                  |
+| -------------------------------------- | ------------------------------ | -------- | ------------------------------------------------------ |
+| Pure logic (`src/lib/`, `worker/lib/`) | 98%+                           | 95%+     | Tight budget; small surface.                           |
+| React components                       | 90%+                           | 85%+     | Focus on interactions users can take.                  |
+| API routes                             | 95%+                           | 90%+     | Include rate-limit, auth, and error paths.             |
+| Service worker                         | 85%+                           | 80%+     | Hard to fully exercise; compensate with manual checks. |
 
 Whole-project floors: ≥95% lines/functions/statements, ≥90% branches. Phase specs may set phase-specific overrides.
 
@@ -210,7 +212,8 @@ Pre-commit hook runs `pnpm test` and `pnpm typecheck`. PR CI additionally checks
 
 ## What tests don't cover
 
-Tests validate *correctness*. They do not guarantee:
+Tests validate _correctness_. They do not guarantee:
+
 - **UX quality** — manual testing on real phones during each phase.
 - **Audio and haptic fidelity** — verify on device.
 - **Performance at scale** — monitor in production, profile on demand.
@@ -224,6 +227,7 @@ Tests validate *correctness*. They do not guarantee:
 Read as sentences.
 
 **Good:**
+
 ```typescript
 it('parses "three sets of one minute" into 3 × 60s work, 0s rest');
 it('rejects a voice call after three successful calls from the same IP in 24 hours');
@@ -231,6 +235,7 @@ it('clears local history after the user accepts the import-on-register prompt');
 ```
 
 **Bad:**
+
 ```typescript
 it('works');
 it('test voice');
