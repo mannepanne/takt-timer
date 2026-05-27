@@ -18,3 +18,11 @@ export function hasRegisteredBefore(): boolean {
     return false;
   }
 }
+
+export function markUnregistered(): void {
+  try {
+    localStorage.removeItem(KEY);
+  } catch {
+    // ignore
+  }
+}
