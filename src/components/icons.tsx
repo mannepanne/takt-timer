@@ -244,6 +244,21 @@ export const Icon = {
       <path d="M17 8a5 5 0 0 1 0 8" />
     </svg>
   ),
+  VolumeOff: ({ size = 20, color = 'currentColor' }: IconProps) => (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M4 9v6h4l5 4V5L8 9H4z" />
+      <path d="M17 9l6 6M23 9l-6 6" />
+    </svg>
+  ),
   Vibrate: ({ size = 20, color = 'currentColor' }: IconProps) => (
     <svg
       width={size}

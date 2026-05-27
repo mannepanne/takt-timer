@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 
 import { Icon } from '@/components/icons';
-import { SetDots } from '@/components/SetDots';
 import { setMuted } from '@/lib/audio';
 import { fmtTime } from '@/lib/format';
 import { useTimerMachine } from '@/lib/timer/useTimerMachine';
@@ -112,11 +111,6 @@ function RunInner({ session, onComplete }: RunInnerProps) {
         >
           <Icon.Close />
         </button>
-        <SetDots
-          total={session.sets}
-          currentIdx={currentIdx}
-          phase={phaseForUi === 'rest' ? 'rest' : 'work'}
-        />
         <button
           className={`run-sound-toggle ${soundOn ? '' : 'off'}`}
           onClick={() => setSoundOn((s) => !s)}
@@ -124,7 +118,7 @@ function RunInner({ session, onComplete }: RunInnerProps) {
           aria-pressed={!soundOn}
           type="button"
         >
-          <Icon.Volume size={20} />
+          {soundOn ? <Icon.Volume size={26} /> : <Icon.VolumeOff size={26} />}
         </button>
       </div>
 
