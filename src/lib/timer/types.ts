@@ -96,13 +96,13 @@ export function phaseTotalSec(state: ActiveState | PausedState): number {
   }
 }
 
-export function secondsLeft(state: ActiveState, now: number): number {
+export function secondsLeft(state: ActiveState | PausedState, now: number): number {
   const totalMs = phaseTotalSec(state) * 1000;
   const elapsedMs = now - state.phaseStartMs - state.pausedAccumulatedMs;
   return Math.max(0, Math.ceil((totalMs - elapsedMs) / 1000));
 }
 
-export function progress(state: ActiveState, now: number): number {
+export function progress(state: ActiveState | PausedState, now: number): number {
   const totalMs = phaseTotalSec(state) * 1000;
   if (totalMs === 0) return 1;
   const elapsedMs = now - state.phaseStartMs - state.pausedAccumulatedMs;
