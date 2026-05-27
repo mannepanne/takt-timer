@@ -17,7 +17,7 @@ describe('MicButton', () => {
 
   it('renders the mic hint copy', () => {
     render(<MicButton />, { wrapper });
-    expect(screen.getByText(/tap the mic/i)).toBeInTheDocument();
+    expect(screen.getByText(/tap to start/i)).toBeInTheDocument();
   });
 
   it('renders an actionable mic button (no longer aria-disabled)', () => {

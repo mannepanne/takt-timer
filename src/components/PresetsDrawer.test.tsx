@@ -1,4 +1,4 @@
-// ABOUT: Tests for PresetsDrawer — list, pin, duplicate, delete, run.
+// ABOUT: Tests for PresetsDrawer — list, pin, rename, duplicate, delete, run.
 
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
@@ -40,16 +40,9 @@ vi.mock('@/lib/presets', () => ({
   updatePreset: vi.fn(),
   deletePreset: vi.fn(),
   createPreset: vi.fn(),
-  reorderPresets: vi.fn(),
 }));
 
-import {
-  listPresets,
-  updatePreset,
-  deletePreset,
-  createPreset,
-  reorderPresets,
-} from '@/lib/presets';
+import { listPresets, updatePreset, deletePreset, createPreset } from '@/lib/presets';
 import { PresetsDrawer } from './PresetsDrawer';
 
 const PRESET = {
@@ -133,42 +126,10 @@ describe('PresetsDrawer', () => {
     expect(listPresets).not.toHaveBeenCalled();
   });
 
-  it('drag-and-drop reorders presets and calls reorderPresets', async () => {
-    const p2 = { ...PRESET, id: 'p2', name: 'Arms', order_index: 1 };
-    vi.mocked(listPresets).mockResolvedValueOnce([PRESET, p2]);
-    vi.mocked(reorderPresets).mockResolvedValueOnce();
-    renderDrawer();
-    await waitFor(() => screen.getByText('Legs'));
-    const cards = document.querySelectorAll('.preset-card');
-    expect(cards).toHaveLength(2);
-    fireEvent.dragStart(cards[0]);
-    fireEvent.dragEnter(cards[1]);
-    fireEvent.dragEnd(cards[0]);
-    await waitFor(() => expect(reorderPresets).toHaveBeenCalledWith(['p2', 'p1']));
-  });
-
   it('shows fetch error when listPresets fails', async () => {
     vi.mocked(listPresets).mockRejectedValueOnce(new Error('network'));
     renderDrawer();
     await waitFor(() => expect(screen.getByText(/could not load presets/i)).toBeTruthy());
-  });
-
-  it('reverts optimistic reorder on failure and shows error', async () => {
-    const p2 = { ...PRESET, id: 'p2', name: 'Arms', order_index: 1 };
-    vi.mocked(listPresets).mockResolvedValueOnce([PRESET, p2]);
-    vi.mocked(reorderPresets).mockRejectedValueOnce(new Error('network'));
-    renderDrawer();
-    await waitFor(() => screen.getByText('Legs'));
-    const cards = document.querySelectorAll('.preset-card');
-    fireEvent.dragStart(cards[0]);
-    fireEvent.dragEnter(cards[1]);
-    fireEvent.dragEnd(cards[0]);
-    await waitFor(() => expect(screen.getByText(/couldn't reorder/i)).toBeTruthy());
-    // Original order restored: Legs is first again
-    const names = Array.from(document.querySelectorAll('.preset-card .title')).map(
-      (el) => el.textContent,
-    );
-    expect(names[0]).toBe('Legs');
   });
 
   it('rename button shows inline input, save commits the rename', async () => {
@@ -182,28 +143,6 @@ describe('PresetsDrawer', () => {
     fireEvent.click(screen.getByRole('button', { name: /save rename/i }));
     await waitFor(() => expect(updatePreset).toHaveBeenCalledWith('p1', { name: 'Quads' }));
     expect(screen.getByText('Quads')).toBeTruthy();
-  });
-
-  it('move up button swaps preset with the one above and calls reorderPresets', async () => {
-    const p2 = { ...PRESET, id: 'p2', name: 'Arms', order_index: 1 };
-    vi.mocked(listPresets).mockResolvedValueOnce([PRESET, p2]);
-    vi.mocked(reorderPresets).mockResolvedValueOnce();
-    renderDrawer();
-    await waitFor(() => screen.getByText('Legs'));
-    // Move Arms (index 1) up — should place it before Legs
-    fireEvent.click(screen.getByRole('button', { name: /move arms up/i }));
-    await waitFor(() => expect(reorderPresets).toHaveBeenCalledWith(['p2', 'p1']));
-  });
-
-  it('move down button swaps preset with the one below and calls reorderPresets', async () => {
-    const p2 = { ...PRESET, id: 'p2', name: 'Arms', order_index: 1 };
-    vi.mocked(listPresets).mockResolvedValueOnce([PRESET, p2]);
-    vi.mocked(reorderPresets).mockResolvedValueOnce();
-    renderDrawer();
-    await waitFor(() => screen.getByText('Legs'));
-    // Move Legs (index 0) down — should place it after Arms
-    fireEvent.click(screen.getByRole('button', { name: /move legs down/i }));
-    await waitFor(() => expect(reorderPresets).toHaveBeenCalledWith(['p2', 'p1']));
   });
 
   it('clicking a preset card navigates to /run with session state', async () => {

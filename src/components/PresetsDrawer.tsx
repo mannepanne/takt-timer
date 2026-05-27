@@ -1,18 +1,11 @@
-// ABOUT: Bottom-sheet drawer that lists, pins, renames, reorders, duplicates, and runs presets.
+// ABOUT: Bottom-sheet drawer that lists, pins, renames, duplicates, and runs presets.
 // ABOUT: Ported from the prototype's presets-settings.jsx design.
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Icon } from '@/components/icons';
-import {
-  listPresets,
-  updatePreset,
-  deletePreset,
-  createPreset,
-  reorderPresets,
-  type Preset,
-} from '@/lib/presets';
+import { listPresets, updatePreset, deletePreset, createPreset, type Preset } from '@/lib/presets';
 
 type Props = {
   open: boolean;
@@ -27,9 +20,6 @@ export function PresetsDrawer({ open, onClose }: Props) {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [renameId, setRenameId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
-  const [mutateError, setMutateError] = useState<string | null>(null);
-  const dragItem = useRef<number | null>(null);
-  const dragOver = useRef<number | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -92,52 +82,6 @@ export function PresetsDrawer({ open, onClose }: Props) {
     setRenameId(null);
   }
 
-  async function applyReorder(reordered: Preset[]) {
-    const previous = presets;
-    setPresets(reordered);
-    setMutateError(null);
-    try {
-      await reorderPresets(reordered.map((p) => p.id));
-    } catch {
-      setPresets(previous);
-      setMutateError("Couldn't reorder. Try again.");
-    }
-  }
-
-  function onDragStart(index: number) {
-    dragItem.current = index;
-  }
-
-  function onDragEnter(index: number) {
-    dragOver.current = index;
-  }
-
-  async function onDragEnd() {
-    const from = dragItem.current;
-    const to = dragOver.current;
-    dragItem.current = null;
-    dragOver.current = null;
-    if (from === null || to === null || from === to) return;
-    const reordered = [...presets];
-    const [moved] = reordered.splice(from, 1);
-    reordered.splice(to, 0, moved);
-    await applyReorder(reordered);
-  }
-
-  async function moveUp(index: number) {
-    if (index <= 0) return;
-    const reordered = [...presets];
-    [reordered[index - 1], reordered[index]] = [reordered[index], reordered[index - 1]];
-    await applyReorder(reordered);
-  }
-
-  async function moveDown(index: number) {
-    if (index >= presets.length - 1) return;
-    const reordered = [...presets];
-    [reordered[index], reordered[index + 1]] = [reordered[index + 1], reordered[index]];
-    await applyReorder(reordered);
-  }
-
   return (
     <>
       <div
@@ -154,8 +98,6 @@ export function PresetsDrawer({ open, onClose }: Props) {
           </button>
         </div>
 
-        {mutateError && <p className="presets-drawer-error">{mutateError}</p>}
-
         <div className="presets-drawer-list scroll">
           {loading && <p className="presets-drawer-empty">Loading…</p>}
           {!loading && fetchError && (
@@ -164,19 +106,8 @@ export function PresetsDrawer({ open, onClose }: Props) {
           {!loading && !fetchError && presets.length === 0 && (
             <p className="presets-drawer-empty">No presets yet. Save a session to create one.</p>
           )}
-          {presets.map((preset, index) => (
-            <div
-              key={preset.id}
-              className={`preset-card${preset.pinned ? ' pinned' : ''}`}
-              draggable
-              onDragStart={() => onDragStart(index)}
-              onDragEnter={() => onDragEnter(index)}
-              onDragEnd={onDragEnd}
-              onDragOver={(e) => e.preventDefault()}
-            >
-              <div className="preset-card-grip">
-                <Icon.Grip size={16} color="var(--ink-muted)" />
-              </div>
+          {presets.map((preset) => (
+            <div key={preset.id} className={`preset-card${preset.pinned ? ' pinned' : ''}`}>
               {renameId === preset.id ? (
                 <div className="preset-card-rename">
                   <input
@@ -221,24 +152,6 @@ export function PresetsDrawer({ open, onClose }: Props) {
                 </button>
               )}
               <div className="preset-card-actions">
-                <button
-                  type="button"
-                  className="icon-btn"
-                  aria-label={`Move ${preset.name} up`}
-                  onClick={() => moveUp(index)}
-                  disabled={index === 0}
-                >
-                  <Icon.ChevronUp size={16} />
-                </button>
-                <button
-                  type="button"
-                  className="icon-btn"
-                  aria-label={`Move ${preset.name} down`}
-                  onClick={() => moveDown(index)}
-                  disabled={index === presets.length - 1}
-                >
-                  <Icon.ChevronDown size={16} />
-                </button>
                 <button
                   type="button"
                   className={`star-btn${preset.pinned ? ' on' : ''}`}
