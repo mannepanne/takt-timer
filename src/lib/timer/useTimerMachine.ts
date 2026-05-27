@@ -130,7 +130,12 @@ export function useTimerMachine(session: Session): TimerApi {
   const derived =
     state.phase === 'countIn' || state.phase === 'work' || state.phase === 'rest'
       ? { secondsLeft: secondsLeft(state, now), progress: progress(state, now) }
-      : { secondsLeft: 0, progress: 0 };
+      : state.phase === 'paused'
+        ? {
+            secondsLeft: secondsLeft(state, state.pausedAtMs),
+            progress: progress(state, state.pausedAtMs),
+          }
+        : { secondsLeft: 0, progress: 0 };
 
   return {
     state,

@@ -93,6 +93,16 @@ describe('useTimerMachine', () => {
     expect(typeof result.current.progress).toBe('number');
   });
 
+  it('paused state exposes frozen secondsLeft (non-zero, not reset to 0)', () => {
+    const { result } = renderHook(() => useTimerMachine(session));
+    act(() => result.current.start());
+    act(() => result.current.pause());
+    expect(result.current.state.phase).toBe('paused');
+    // With 60s work phase and negligible elapsed time, display must show
+    // the frozen count rather than collapsing to zero.
+    expect(result.current.secondsLeft).toBeGreaterThan(0);
+  });
+
   it('integrates cleanly inside a React component', () => {
     function Harness() {
       const api = useTimerMachine(session);
