@@ -1,7 +1,7 @@
 // ABOUT: Unit tests for the localStorage registration hint helpers.
 
 import { describe, expect, it, beforeEach } from 'vitest';
-import { markRegistered, hasRegisteredBefore } from './local-hint';
+import { markRegistered, hasRegisteredBefore, markUnregistered } from './local-hint';
 
 beforeEach(() => localStorage.clear());
 
@@ -19,5 +19,11 @@ describe('local-hint', () => {
     markRegistered();
     markRegistered();
     expect(hasRegisteredBefore()).toBe(true);
+  });
+
+  it('markUnregistered clears the hint so hasRegisteredBefore returns false', () => {
+    markRegistered();
+    markUnregistered();
+    expect(hasRegisteredBefore()).toBe(false);
   });
 });

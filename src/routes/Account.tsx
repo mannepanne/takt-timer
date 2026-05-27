@@ -9,6 +9,8 @@ import { TopBar } from '@/components/TopBar';
 import { signOut } from '@/lib/auth/client';
 import { apiFetch } from '@/lib/apiFetch';
 import { useSession } from '@/lib/auth/session';
+import { clearHistory } from '@/lib/history';
+import { markUnregistered } from '@/lib/auth/local-hint';
 
 export function Account() {
   const navigate = useNavigate();
@@ -33,6 +35,8 @@ export function Account() {
     try {
       const res = await apiFetch('/api/auth/delete', { method: 'DELETE' });
       if (!res.ok) throw new Error('Delete failed');
+      clearHistory();
+      markUnregistered();
       refresh();
       navigate('/');
     } catch {
