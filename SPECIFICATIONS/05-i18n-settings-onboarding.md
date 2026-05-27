@@ -27,11 +27,24 @@ Ship the full non-admin user experience. Translate every UI string into Swedish,
   - Sign-in state: shows "Signed in" with an option to sign out and delete account, or "Sign in / create account" for anon.
   - Link to Privacy policy.
   - Small version / build indicator for debugging.
-- [ ] Onboarding screen, shown on first visit (flagged by a localStorage key), with 3–4 friendly slides:
-  - What Takt is.
-  - How voice works ("phone face-up, screen on, tap the mic, speak naturally").
-  - The passkey trade-off ("No email, no phone — but if you lose your passkey, your account goes with it").
-  - A tap-through to the Home screen.
+- [ ] Onboarding screen, shown on first visit (flagged by a localStorage key), with 4 slides (confirmed copy below):
+
+  **Slide 1 — What's this? / Vad?**
+  EN: _Takt — keep it going._ / Simplest possible interval timer. Voice configured, tap to go. No account required.
+  SV: _Takt — håller takten._ / Enklast möjliga intervall timer. Röst-styrd, tuta och kör. Konto valfritt.
+
+  **Slide 2 — Voice configured / Styr med rösten**
+  EN: Tap the mic and speak naturally. / _"Three sets of one minute, thirty seconds rest"_ / _"Five sets, thirty seconds each, no rest"_ / That's all the setup you need.
+  SV: Klicka micken och prata som vanligt. / _"Tre rundor om en minut, tretti sekunders vila"_ / _"Fem set, tretti sekunder vardera, inga pauser"_ / Det är allt som behövs.
+
+  **Slide 3 — No personal details / Inga personliga detaljer**
+  EN: Want presets and settings? Sign in with a passkey — no email, no password, no personal details. / Fair warning: if you lose your passkey, your account goes with it.
+  SV: Vill du spara dina rundor? Logga in med en passkey — ingen email, inget lösenord, inga detaljer. / Varning: om du blir av med din passkey kan du inte återställa ditt konto.
+
+  **Slide 4 — Off you go / Kör så det ryker**
+  EN: That's it. Get started. + [Get started button]
+  SV: Det var allt. Sätt igång. + [Get started button]
+
 - [ ] Privacy policy content in both languages. Covers:
   - The claim: no email, no phone, no personal details.
   - What we store (pseudonymous user handle, public key, preset names, session summaries, ephemeral rate-limit counters).
