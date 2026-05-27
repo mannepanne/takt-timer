@@ -16,7 +16,7 @@ Ship the full non-admin user experience. Translate every UI string into Swedish,
 
 ### In scope
 
-- [ ] Strings extracted from every component into a flat key-value file per language: `/src/i18n/en.ts`, `/src/i18n/sv.ts`. Small `t(key)` helper — no i18n library needed.
+- [ ] Strings extracted from every component into a single `/src/i18n/strings.ts` file where each key maps to both languages inline (`{ en: '…', sv: '…' }`). Small `t(key)` helper — no i18n library needed. Both translations are co-located so gaps are visible at a glance and key parity is enforced at compile time by TypeScript.
 - [ ] Language detection on first load from `navigator.language` (maps `sv-*` → Swedish, everything else → English).
 - [ ] Language toggle in Settings. For authenticated users, persisted on the user row in D1. For anonymous users, persisted in `localStorage`.
 - [ ] Whisper language hint (`/api/voice/parse`) reads the active UI language per request.
@@ -50,7 +50,7 @@ Ship the full non-admin user experience. Translate every UI string into Swedish,
 
 ### Acceptance criteria
 
-- [ ] A Swedish-speaking visitor opens the app on a Swedish phone; UI is Swedish; they say *"Tre set om en minut, trettio sekunders vila mellan varje"* and land on a correctly parsed Interpretation screen.
+- [ ] A Swedish-speaking visitor opens the app on a Swedish phone; UI is Swedish; they say _"Tre set om en minut, trettio sekunders vila mellan varje"_ and land on a correctly parsed Interpretation screen.
 - [ ] Switching language in Settings flips every visible string and updates the Whisper hint on the next voice call.
 - [ ] First-time visitor sees Onboarding once and never again on that device.
 - [ ] Privacy policy page renders both languages and is linked from Settings, Onboarding, and the Home footer.
@@ -65,14 +65,17 @@ Ship the full non-admin user experience. Translate every UI string into Swedish,
 ### Architecture decisions
 
 **No i18n library**
-- Choice: flat object per language, a tiny `t(key, params?)` helper. Language stored in React context.
-- Rationale: two languages, a few hundred strings. A library would be overkill, add bundle weight, and constrain how we render. Revisit if we add a third language.
+
+- Choice: single `strings.ts` file where each key maps to both languages inline — `{ en: '…', sv: '…' }`. A tiny `t(key, params?)` helper reads from the active language in React context.
+- Rationale: two languages, a few hundred strings. A library would be overkill, add bundle weight, and constrain how we render. The single-file layout keeps both translations side-by-side for easy review, and TypeScript enforces key parity at compile time — no CI script needed. Revisit if we add a third language.
 
 **Settings backed by D1 for authenticated users, localStorage for anon**
+
 - Choice: `users` table gains `language`, `accent_colour`, `sound_on` columns. A small `/api/me/settings` endpoint reads/writes them. Anon mirrors the same keys in localStorage.
 - Rationale: single shape, one code path in the client, trivial migration from anon to authenticated (pushed at registration import).
 
 **Accent theming via CSS custom properties**
+
 - Choice: swap `--accent`, `--accent-deep`, `--accent-soft` at runtime on `:root`. All prototype styles already reference these.
 - Rationale: zero-cost theming, no re-render.
 
@@ -85,8 +88,7 @@ No new runtime dependencies. If we want visual diffs between locales in CI, `pla
 ```
 src/
 ├── i18n/
-│   ├── en.ts
-│   ├── sv.ts
+│   ├── strings.ts              # all keys with { en, sv } values inline
 │   ├── context.tsx             # provider + t() helper
 │   ├── detect.ts
 │   └── index.test.ts
@@ -119,8 +121,8 @@ ALTER TABLE users ADD COLUMN sound_on INTEGER NOT NULL DEFAULT 1;
 
 ### Unit tests
 
-- `i18n/detect.test.ts` — correctly maps locale strings; sv-SE → Swedish, en-* and everything else → English.
-- `i18n/context.test.tsx` — provider switches language, `t()` falls back to English for missing keys (and logs a warning in dev).
+- `i18n/detect.test.ts` — correctly maps locale strings; sv-SE → Swedish, en-\* and everything else → English.
+- `i18n/context.test.tsx` — provider switches language; TypeScript enforces complete key coverage at compile time so no runtime fallback is needed.
 - `AccentPicker.test.tsx` — clicking a swatch updates CSS variables.
 - `worker/api/me/settings.test.ts` — GET/PUT happy paths, authorisation.
 
@@ -163,7 +165,7 @@ Use `/review-pr` — this phase is mostly UX polish. Use `/review-pr-team` only 
 
 ### Known risks
 
-- **Translation drift.** Easy to add an English string and forget Swedish. Mitigation: the `t()` helper logs a warning in dev for missing keys; a simple CI check (script) compares key sets between `en.ts` and `sv.ts` and fails on mismatch.
+- **Translation drift.** Easy to add an English string and forget Swedish. Mitigation: the single `strings.ts` file co-locates both translations on the same line; TypeScript will refuse to compile if any key is missing a language value.
 - **Swedish voice parsing quality.** Llama models vary across languages. Mitigation: expand the Llama prompt bake-off (from phase 3) to cover Swedish phrases; document the accepted accuracy.
 
 ### Performance considerations
@@ -184,7 +186,7 @@ Use `/review-pr` — this phase is mostly UX polish. Use `/review-pr-team` only 
 
 ## Technical debt introduced
 
-- **TD-006: Missing-key warning is log-only, not a build-time check.** Acceptable for two languages; revisit if a third lands. Risk: Low.
+- **TD-006: Single `strings.ts` is easy to manage for two languages but unwieldy at three or more.** If a third language lands, consider splitting into per-language files or adopting a library. Risk: Low — not expected soon.
 
 ---
 
