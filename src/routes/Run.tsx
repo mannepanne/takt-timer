@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 
 import { Icon } from '@/components/icons';
+import { useI18n } from '@/i18n/context';
 import { setMuted } from '@/lib/audio';
 import { fmtTime } from '@/lib/format';
 import { useTimerMachine } from '@/lib/timer/useTimerMachine';
@@ -49,6 +50,7 @@ type RunInnerProps = {
 };
 
 function RunInner({ session, onComplete }: RunInnerProps) {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const api = useTimerMachine(session);
   const { state } = api;
@@ -93,6 +95,12 @@ function RunInner({ session, onComplete }: RunInnerProps) {
 
   const showPip = api.secondsLeft > 0 && api.secondsLeft <= 3 && !countingIn && soundOn;
 
+  const phaseLabel = countingIn
+    ? t('run.getReady')
+    : phaseForUi === 'rest'
+      ? t('run.phase.rest', { idx: currentIdx + 1, total: session.sets })
+      : t('run.phase.work', { idx: currentIdx + 1, total: session.sets });
+
   return (
     <div className={`screen run-screen ${phaseForUi === 'rest' ? 'rest' : 'work'}`}>
       <div className={`run-bar ${phaseForUi === 'rest' ? 'rest' : ''}`}>
@@ -106,7 +114,7 @@ function RunInner({ session, onComplete }: RunInnerProps) {
             api.stop();
             navigate('/');
           }}
-          aria-label="Stop session"
+          aria-label={t('run.stop')}
           type="button"
         >
           <Icon.Close />
@@ -114,7 +122,7 @@ function RunInner({ session, onComplete }: RunInnerProps) {
         <button
           className={`run-sound-toggle ${soundOn ? '' : 'off'}`}
           onClick={() => setSoundOn((s) => !s)}
-          aria-label={soundOn ? 'Mute sounds' : 'Unmute sounds'}
+          aria-label={soundOn ? t('run.mute') : t('run.unmute')}
           aria-pressed={!soundOn}
           type="button"
         >
@@ -127,11 +135,7 @@ function RunInner({ session, onComplete }: RunInnerProps) {
           className={`eyebrow run-phase-label ${phaseForUi === 'rest' ? 'rest' : ''}`}
           aria-live="polite"
         >
-          <span>
-            {countingIn
-              ? 'Get ready'
-              : `${phaseForUi === 'rest' ? 'Rest' : 'Work'} · Set ${currentIdx + 1} / ${session.sets}`}
-          </span>
+          <span>{phaseLabel}</span>
           {showPip && (
             <span className="run-pip-chip">
               <Icon.Volume size={10} color="var(--accent-deep)" /> {api.secondsLeft}
@@ -151,8 +155,8 @@ function RunInner({ session, onComplete }: RunInnerProps) {
           className="run-ctrl-secondary"
           onClick={api.repeatSet}
           disabled={api.progress < 0.05 || countingIn}
-          aria-label="Repeat set"
-          title="Repeat this set"
+          aria-label={t('run.repeatSet')}
+          title={t('run.repeatSet')}
           type="button"
         >
           <Icon.SkipBack size={20} />
@@ -160,7 +164,7 @@ function RunInner({ session, onComplete }: RunInnerProps) {
         <button
           className="run-ctrl-primary"
           onClick={paused ? api.resume : api.pause}
-          aria-label={paused ? 'Resume' : 'Pause'}
+          aria-label={paused ? t('run.resume') : t('run.pause')}
           type="button"
         >
           {paused ? (
@@ -172,8 +176,8 @@ function RunInner({ session, onComplete }: RunInnerProps) {
         <button
           className="run-ctrl-secondary"
           onClick={api.skip}
-          aria-label="Skip phase"
-          title="Skip this phase"
+          aria-label={t('run.skipPhase')}
+          title={t('run.skipPhase')}
           type="button"
         >
           <Icon.Skip size={20} />
@@ -183,14 +187,11 @@ function RunInner({ session, onComplete }: RunInnerProps) {
       {paused && state.phase === 'paused' && state.wasVisibilityPause && (
         <div className="pause-toast-dialog" role="alertdialog" aria-labelledby="pause-toast-title">
           <div className="pause-toast-card">
-            <h2 id="pause-toast-title">Session paused</h2>
-            <p>
-              Your phone was locked or the tab went to the background. Ready to pick up where you
-              left off?
-            </p>
+            <h2 id="pause-toast-title">{t('run.paused')}</h2>
+            <p>{t('run.pauseBody')}</p>
             <button type="button" className="btn btn-primary" onClick={api.resume} autoFocus>
               <Icon.Play size={18} color="var(--paper)" />
-              Resume
+              {t('run.resume')}
             </button>
           </div>
         </div>

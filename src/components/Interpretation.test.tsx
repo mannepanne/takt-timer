@@ -3,12 +3,19 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import { Interpretation } from './Interpretation';
+import { I18nProvider } from '@/i18n/context';
 
 const session = { sets: 3, workSec: 60, restSec: 30 };
 
+function wrapper({ children }: { children: React.ReactNode }) {
+  return <I18nProvider>{children}</I18nProvider>;
+}
+
 describe('Interpretation', () => {
   it('renders three chips showing sets, work, and rest', () => {
-    const { container } = render(<Interpretation value={session} onChange={() => {}} />);
+    const { container } = render(<Interpretation value={session} onChange={() => {}} />, {
+      wrapper,
+    });
     const chips = container.querySelectorAll('.interpretation-chips .chip');
     expect(chips).toHaveLength(3);
     expect(chips[0]).toHaveTextContent('3');
@@ -21,7 +28,7 @@ describe('Interpretation', () => {
 
   it('tapping the sets chip opens the stepper sheet and editing commits through onChange', async () => {
     const onChange = vi.fn();
-    render(<Interpretation value={session} onChange={onChange} />);
+    render(<Interpretation value={session} onChange={onChange} />, { wrapper });
 
     await userEvent.click(screen.getByRole('button', { name: /3 sets/i }));
     // The sheet is now open with Sets label — pick preset 5.
@@ -31,7 +38,7 @@ describe('Interpretation', () => {
   });
 
   it('tapping the rest chip opens the stepper sheet with Rest-specific presets', async () => {
-    render(<Interpretation value={session} onChange={() => {}} />);
+    render(<Interpretation value={session} onChange={() => {}} />, { wrapper });
     await userEvent.click(screen.getByRole('button', { name: /0:30 rest/i }));
     // Rest presets include 0:00.
     expect(screen.getByRole('button', { name: '0:00' })).toBeInTheDocument();

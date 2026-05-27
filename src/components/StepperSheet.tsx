@@ -3,6 +3,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
+import { useI18n } from '@/i18n/context';
 import { fmtTime } from '@/lib/format';
 
 export type StepperMode = 'int' | 'duration';
@@ -22,9 +23,11 @@ function clamp(n: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, n));
 }
 
-function quickPresets(mode: StepperMode, label: string): number[] {
+// Uses min === 0 as the signal for the rest-duration preset list (rest allows 0s,
+// work has min=5). This avoids comparing the localised label string.
+function quickPresets(mode: StepperMode, min: number): number[] {
   if (mode === 'int') return [1, 2, 3, 4, 5, 8, 10, 15];
-  if (label.toLowerCase() === 'rest') return [0, 15, 30, 45, 60, 90];
+  if (min === 0) return [0, 15, 30, 45, 60, 90];
   return [15, 30, 45, 60, 90, 120];
 }
 
@@ -38,6 +41,7 @@ export function StepperSheet({
   min = 0,
   max = 9999,
 }: Props) {
+  const { t } = useI18n();
   const [draft, setDraft] = useState(value);
   const holdTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -76,7 +80,7 @@ export function StepperSheet({
   };
 
   const display = mode === 'duration' ? fmtTime(draft) : String(draft);
-  const presets = quickPresets(mode, label);
+  const presets = quickPresets(mode, min);
 
   return (
     <>
@@ -90,7 +94,7 @@ export function StepperSheet({
         className={`drawer stepper-sheet ${open ? 'open' : ''}`}
         role="dialog"
         aria-modal={open}
-        aria-label={`Edit ${label}`}
+        aria-label={t('stepper.edit', { label })}
       >
         <div className="drawer-handle" />
         <div className="stepper-sheet-body">
@@ -104,14 +108,16 @@ export function StepperSheet({
               onPointerUp={endHold}
               onPointerLeave={endHold}
               onPointerCancel={endHold}
-              aria-label={`Decrease ${label}`}
+              aria-label={t('stepper.decrease', { label })}
               disabled={draft <= min}
             >
               <span className="stepper-btn-glyph">−</span>
             </button>
             <div className="stepper-sheet-display" aria-live="polite">
               <div className="mono stepper-sheet-value">{display}</div>
-              {mode === 'duration' && <div className="stepper-sheet-unit">min : sec</div>}
+              {mode === 'duration' && (
+                <div className="stepper-sheet-unit">{t('stepper.minSec')}</div>
+              )}
             </div>
             <button
               type="button"
@@ -120,7 +126,7 @@ export function StepperSheet({
               onPointerUp={endHold}
               onPointerLeave={endHold}
               onPointerCancel={endHold}
-              aria-label={`Increase ${label}`}
+              aria-label={t('stepper.increase', { label })}
               disabled={draft >= max}
             >
               <span className="stepper-btn-glyph">+</span>
@@ -142,10 +148,10 @@ export function StepperSheet({
 
           <div className="stepper-sheet-actions">
             <button type="button" className="btn btn-ghost" onClick={onClose}>
-              Cancel
+              {t('stepper.cancel')}
             </button>
             <button type="button" className="btn btn-primary" onClick={commit}>
-              Done
+              {t('stepper.done')}
             </button>
           </div>
         </div>

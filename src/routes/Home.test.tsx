@@ -42,6 +42,7 @@ import { apiFetch } from '@/lib/apiFetch';
 import { importLocalHistory } from '@/lib/history-sync';
 import { hasRegisteredBefore } from '@/lib/auth/local-hint';
 import { Home } from './Home';
+import { I18nProvider } from '@/i18n/context';
 
 function LocProbe() {
   const loc = useLocation();
@@ -55,13 +56,15 @@ function LocProbe() {
 
 function renderHome() {
   return render(
-    <MemoryRouter initialEntries={['/']}>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/configure" element={<div data-testid="config">configure</div>} />
-        <Route path="/run" element={<LocProbe />} />
-      </Routes>
-    </MemoryRouter>,
+    <I18nProvider>
+      <MemoryRouter initialEntries={['/']}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/configure" element={<div data-testid="config">configure</div>} />
+          <Route path="/run" element={<LocProbe />} />
+        </Routes>
+      </MemoryRouter>
+    </I18nProvider>,
   );
 }
 

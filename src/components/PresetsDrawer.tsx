@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Icon } from '@/components/icons';
+import { useI18n } from '@/i18n/context';
 import { listPresets, updatePreset, deletePreset, createPreset, type Preset } from '@/lib/presets';
 
 type Props = {
@@ -13,6 +14,7 @@ type Props = {
 };
 
 export function PresetsDrawer({ open, onClose }: Props) {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [presets, setPresets] = useState<Preset[]>([]);
   const [loading, setLoading] = useState(false);
@@ -92,19 +94,24 @@ export function PresetsDrawer({ open, onClose }: Props) {
       <div className={`drawer${open ? ' open' : ''}`} role="dialog" aria-modal="true">
         <div className="drawer-handle" />
         <div className="presets-drawer-header">
-          <h2 className="presets-drawer-title">Presets</h2>
-          <button className="icon-btn" aria-label="Close presets" onClick={onClose} type="button">
+          <h2 className="presets-drawer-title">{t('presets.title')}</h2>
+          <button
+            className="icon-btn"
+            aria-label={t('presets.close')}
+            onClick={onClose}
+            type="button"
+          >
             <Icon.Close size={20} />
           </button>
         </div>
 
         <div className="presets-drawer-list scroll">
-          {loading && <p className="presets-drawer-empty">Loading…</p>}
+          {loading && <p className="presets-drawer-empty">{t('presets.loading')}</p>}
           {!loading && fetchError && (
-            <p className="presets-drawer-error">Could not load presets. Check your connection.</p>
+            <p className="presets-drawer-error">{t('presets.loadError')}</p>
           )}
           {!loading && !fetchError && presets.length === 0 && (
-            <p className="presets-drawer-empty">No presets yet. Save a session to create one.</p>
+            <p className="presets-drawer-empty">{t('presets.empty')}</p>
           )}
           {presets.map((preset) => (
             <div key={preset.id} className={`preset-card${preset.pinned ? ' pinned' : ''}`}>
@@ -118,13 +125,13 @@ export function PresetsDrawer({ open, onClose }: Props) {
                       if (e.key === 'Enter') void commitRename();
                       if (e.key === 'Escape') setRenameId(null);
                     }}
-                    aria-label="Rename preset"
+                    aria-label={t('presets.rename.label')}
                     autoFocus
                   />
                   <button
                     type="button"
                     className="icon-btn"
-                    aria-label="Save rename"
+                    aria-label={t('presets.rename.save')}
                     onClick={commitRename}
                   >
                     <Icon.Check size={16} />
@@ -132,7 +139,7 @@ export function PresetsDrawer({ open, onClose }: Props) {
                   <button
                     type="button"
                     className="icon-btn"
-                    aria-label="Cancel rename"
+                    aria-label={t('presets.rename.cancel')}
                     onClick={() => setRenameId(null)}
                   >
                     <Icon.Close size={16} />
@@ -143,7 +150,7 @@ export function PresetsDrawer({ open, onClose }: Props) {
                   type="button"
                   className="preset-card-main"
                   onClick={() => runPreset(preset)}
-                  aria-label={`Run ${preset.name}`}
+                  aria-label={t('presets.run', { name: preset.name })}
                 >
                   <div className="title">{preset.name}</div>
                   <div className="meta">
@@ -155,7 +162,11 @@ export function PresetsDrawer({ open, onClose }: Props) {
                 <button
                   type="button"
                   className={`star-btn${preset.pinned ? ' on' : ''}`}
-                  aria-label={preset.pinned ? 'Unpin preset' : 'Pin preset'}
+                  aria-label={
+                    preset.pinned
+                      ? t('presets.unpin', { name: preset.name })
+                      : t('presets.pin', { name: preset.name })
+                  }
                   onClick={() => togglePin(preset)}
                 >
                   <Icon.Star size={16} filled={!!preset.pinned} />
@@ -163,7 +174,7 @@ export function PresetsDrawer({ open, onClose }: Props) {
                 <button
                   type="button"
                   className="icon-btn"
-                  aria-label={`Rename ${preset.name}`}
+                  aria-label={t('presets.rename.aria', { name: preset.name })}
                   onClick={() => startRename(preset)}
                 >
                   <Icon.Edit size={16} />
@@ -171,7 +182,7 @@ export function PresetsDrawer({ open, onClose }: Props) {
                 <button
                   type="button"
                   className="icon-btn"
-                  aria-label={`Duplicate ${preset.name}`}
+                  aria-label={t('presets.duplicate', { name: preset.name })}
                   onClick={() => duplicate(preset)}
                 >
                   <Icon.Copy size={16} />
@@ -180,7 +191,7 @@ export function PresetsDrawer({ open, onClose }: Props) {
                   <button
                     type="button"
                     className="icon-btn icon-btn-danger-confirm"
-                    aria-label="Confirm delete"
+                    aria-label={t('presets.delete.confirm')}
                     onClick={() => remove(preset.id)}
                   >
                     <Icon.Question size={16} />
@@ -189,7 +200,7 @@ export function PresetsDrawer({ open, onClose }: Props) {
                   <button
                     type="button"
                     className="icon-btn"
-                    aria-label={`Delete ${preset.name}`}
+                    aria-label={t('presets.delete.aria', { name: preset.name })}
                     onClick={() => setDeleteId(preset.id)}
                   >
                     <Icon.Trash size={16} />

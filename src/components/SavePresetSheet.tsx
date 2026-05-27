@@ -3,6 +3,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
+import { useI18n } from '@/i18n/context';
 import { createPreset } from '@/lib/presets';
 import type { Session } from '@/lib/timer/types';
 
@@ -14,6 +15,7 @@ type Props = {
 };
 
 export function SavePresetSheet({ open, session, onClose, onSaved }: Props) {
+  const { t } = useI18n();
   const [name, setName] = useState(session.name ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +33,11 @@ export function SavePresetSheet({ open, session, onClose, onSaved }: Props) {
   async function handleSave() {
     const trimmed = name.trim();
     if (!trimmed) {
-      setError('Please enter a name for this preset.');
+      setError(t('savePreset.nameRequired'));
+      return;
+    }
+    if (trimmed.length > 50) {
+      setError(t('savePreset.nameTooLong'));
       return;
     }
     setSaving(true);
@@ -45,7 +51,7 @@ export function SavePresetSheet({ open, session, onClose, onSaved }: Props) {
       });
       onSaved();
     } catch {
-      setError('Could not save preset. Please try again.');
+      setError(t('savePreset.saveError'));
       setSaving(false);
     }
   }
@@ -60,12 +66,12 @@ export function SavePresetSheet({ open, session, onClose, onSaved }: Props) {
       <div className={`drawer${open ? ' open' : ''}`} role="dialog" aria-modal="true">
         <div className="drawer-handle" />
         <div className="save-preset-body">
-          <h2 className="save-preset-title">Save as preset</h2>
+          <h2 className="save-preset-title">{t('savePreset.title')}</h2>
           <p className="save-preset-meta">
             {session.sets} sets · {session.workSec}s work · {session.restSec}s rest
           </p>
           <label className="save-preset-label" htmlFor="preset-name">
-            Name
+            {t('savePreset.nameLabel')}
           </label>
           <input
             ref={inputRef}
@@ -74,7 +80,7 @@ export function SavePresetSheet({ open, session, onClose, onSaved }: Props) {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Leg day"
+            placeholder={t('savePreset.namePlaceholder')}
             maxLength={80}
           />
           {error && <p className="save-preset-error">{error}</p>}
@@ -85,10 +91,10 @@ export function SavePresetSheet({ open, session, onClose, onSaved }: Props) {
               onClick={handleSave}
               disabled={saving}
             >
-              {saving ? 'Saving…' : 'Save'}
+              {saving ? t('savePreset.saving') : t('savePreset.save')}
             </button>
             <button type="button" className="btn btn-ghost" onClick={onClose} disabled={saving}>
-              Cancel
+              {t('savePreset.cancel')}
             </button>
           </div>
         </div>

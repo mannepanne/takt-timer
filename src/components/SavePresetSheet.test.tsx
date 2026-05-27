@@ -3,6 +3,11 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { SavePresetSheet } from './SavePresetSheet';
+import { I18nProvider } from '@/i18n/context';
+
+function wrapper({ children }: { children: React.ReactNode }) {
+  return <I18nProvider>{children}</I18nProvider>;
+}
 
 vi.mock('@/lib/presets', () => ({ createPreset: vi.fn() }));
 import { createPreset } from '@/lib/presets';
@@ -14,7 +19,9 @@ beforeEach(() => vi.clearAllMocks());
 function renderSheet(open = true) {
   const onClose = vi.fn();
   const onSaved = vi.fn();
-  render(<SavePresetSheet open={open} session={SESSION} onClose={onClose} onSaved={onSaved} />);
+  render(<SavePresetSheet open={open} session={SESSION} onClose={onClose} onSaved={onSaved} />, {
+    wrapper,
+  });
   return { onClose, onSaved };
 }
 

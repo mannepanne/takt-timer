@@ -5,15 +5,18 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { VoiceOverlay } from './VoiceOverlay';
 import type { VoiceState } from '@/lib/voice/types';
+import { I18nProvider } from '@/i18n/context';
 
 function renderOverlay(state: VoiceState) {
   const onUserStop = vi.fn();
   const onCancel = vi.fn();
   const onRetry = vi.fn();
   const utils = render(
-    <MemoryRouter>
-      <VoiceOverlay state={state} onUserStop={onUserStop} onCancel={onCancel} onRetry={onRetry} />
-    </MemoryRouter>,
+    <I18nProvider>
+      <MemoryRouter>
+        <VoiceOverlay state={state} onUserStop={onUserStop} onCancel={onCancel} onRetry={onRetry} />
+      </MemoryRouter>
+    </I18nProvider>,
   );
   return { ...utils, onUserStop, onCancel, onRetry };
 }
@@ -165,38 +168,44 @@ describe('VoiceOverlay', () => {
     const { rerender } = renderOverlay({ phase: 'uploading', blob: new Blob() });
     expect(screen.getByText(/sending/i)).toBeInTheDocument();
     rerender(
-      <MemoryRouter>
-        <VoiceOverlay
-          state={{ phase: 'transcribing' }}
-          onUserStop={vi.fn()}
-          onCancel={vi.fn()}
-          onRetry={vi.fn()}
-        />
-      </MemoryRouter>,
+      <I18nProvider>
+        <MemoryRouter>
+          <VoiceOverlay
+            state={{ phase: 'transcribing' }}
+            onUserStop={vi.fn()}
+            onCancel={vi.fn()}
+            onRetry={vi.fn()}
+          />
+        </MemoryRouter>
+      </I18nProvider>,
     );
     expect(screen.getByText(/transcribing/i)).toBeInTheDocument();
   });
 
   it('focuses the Cancel button when an error state arrives', async () => {
     const { rerender } = render(
-      <MemoryRouter>
-        <VoiceOverlay
-          state={{ phase: 'listening', startedAtMs: 0 }}
-          onUserStop={vi.fn()}
-          onCancel={vi.fn()}
-          onRetry={vi.fn()}
-        />
-      </MemoryRouter>,
+      <I18nProvider>
+        <MemoryRouter>
+          <VoiceOverlay
+            state={{ phase: 'listening', startedAtMs: 0 }}
+            onUserStop={vi.fn()}
+            onCancel={vi.fn()}
+            onRetry={vi.fn()}
+          />
+        </MemoryRouter>
+      </I18nProvider>,
     );
     rerender(
-      <MemoryRouter>
-        <VoiceOverlay
-          state={{ phase: 'parse-error', reason: 'not-a-session' }}
-          onUserStop={vi.fn()}
-          onCancel={vi.fn()}
-          onRetry={vi.fn()}
-        />
-      </MemoryRouter>,
+      <I18nProvider>
+        <MemoryRouter>
+          <VoiceOverlay
+            state={{ phase: 'parse-error', reason: 'not-a-session' }}
+            onUserStop={vi.fn()}
+            onCancel={vi.fn()}
+            onRetry={vi.fn()}
+          />
+        </MemoryRouter>
+      </I18nProvider>,
     );
     const cancelBtn = screen.getByRole('button', { name: /^cancel$/i });
     expect(document.activeElement).toBe(cancelBtn);

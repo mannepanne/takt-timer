@@ -4,6 +4,11 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 
 import { Configure } from './Configure';
+import { I18nProvider } from '@/i18n/context';
+
+function wrapper({ children }: { children: React.ReactNode }) {
+  return <I18nProvider>{children}</I18nProvider>;
+}
 
 function RunStateProbe() {
   const loc = useLocation();
@@ -18,6 +23,7 @@ describe('Configure route', () => {
           <Route path="/configure" element={<Configure />} />
         </Routes>
       </MemoryRouter>,
+      { wrapper },
     );
     expect(screen.getByRole('heading', { name: /build a session/i })).toBeInTheDocument();
     expect(screen.getByText('Sets')).toBeInTheDocument();
@@ -33,6 +39,7 @@ describe('Configure route', () => {
           <Route path="/run" element={<RunStateProbe />} />
         </Routes>
       </MemoryRouter>,
+      { wrapper },
     );
     await userEvent.click(screen.getByRole('button', { name: /^start$/i }));
     const state = JSON.parse(screen.getByTestId('nav-state').textContent ?? '{}');
@@ -46,6 +53,7 @@ describe('Configure route', () => {
           <Route path="/configure" element={<Configure />} />
         </Routes>
       </MemoryRouter>,
+      { wrapper },
     );
     expect(screen.getByRole('link', { name: 'Back to Home' })).toHaveAttribute('href', '/');
   });
@@ -65,6 +73,7 @@ describe('Configure route', () => {
           <Route path="/run" element={<RunStateProbe />} />
         </Routes>
       </MemoryRouter>,
+      { wrapper },
     );
     await userEvent.click(screen.getByRole('button', { name: /^start$/i }));
     const state = JSON.parse(screen.getByTestId('nav-state').textContent ?? '{}');
@@ -86,6 +95,7 @@ describe('Configure route', () => {
           <Route path="/run" element={<RunStateProbe />} />
         </Routes>
       </MemoryRouter>,
+      { wrapper },
     );
     await userEvent.click(screen.getByRole('button', { name: /^start$/i }));
     const state = JSON.parse(screen.getByTestId('nav-state').textContent ?? '{}');
@@ -108,6 +118,7 @@ describe('Configure route', () => {
           <Route path="/run" element={<RunStateProbe />} />
         </Routes>
       </MemoryRouter>,
+      { wrapper },
     );
     await userEvent.click(screen.getByRole('button', { name: /^start$/i }));
     const state = JSON.parse(screen.getByTestId('nav-state').textContent ?? '{}');
@@ -129,6 +140,7 @@ describe('Configure route', () => {
           <Route path="/run" element={<RunStateProbe />} />
         </Routes>
       </MemoryRouter>,
+      { wrapper },
     );
     await userEvent.click(screen.getByRole('button', { name: /^start$/i }));
     const state = JSON.parse(screen.getByTestId('nav-state').textContent ?? '{}');
