@@ -179,11 +179,11 @@ export function PresetsDrawer({ open, onClose }: Props) {
                 {deleteId === preset.id ? (
                   <button
                     type="button"
-                    className="icon-btn icon-btn-danger"
+                    className="icon-btn icon-btn-danger-confirm"
                     aria-label="Confirm delete"
                     onClick={() => remove(preset.id)}
                   >
-                    <Icon.Check size={16} color="var(--error)" />
+                    <Icon.Question size={16} />
                   </button>
                 ) : (
                   <button
