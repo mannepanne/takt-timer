@@ -3,7 +3,7 @@
 
 import type { Env } from '../index';
 import { requireAdminAuth, requireAdminAuthWithCsrf } from './auth';
-import { adminLayout, escHtml } from './views/layout.html';
+import { adminLayout, escHtml } from './views/layout';
 import { pruneInactiveUsers, insertPurgeRun, insertAdminLog } from '../db/queries';
 import { RETENTION_DAYS } from '../cron/purge';
 
