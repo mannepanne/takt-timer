@@ -47,8 +47,8 @@ const strings = {
   'run.skipPhase': { en: 'Skip phase', sv: 'Hoppa över fas' },
   'run.paused': { en: 'Session paused', sv: 'Pass pausat' },
   'run.pauseBody': {
-    en: "You paused the session. Tap resume when you're ready.",
-    sv: 'Du pausade passet. Tryck på fortsätt när du är redo.',
+    en: 'Your phone was locked or the tab went to the background. Ready to pick up where you left off?',
+    sv: 'Din telefon låstes eller fliken gick till bakgrunden. Redo att fortsätta där du var?',
   },
 
   // ── Complete ─────────────────────────────────────────────────────────
@@ -99,7 +99,10 @@ const strings = {
 
   // ── Voice overlay — progress states ──────────────────────────────────
   'voice.requesting': { en: 'Requesting microphone…', sv: 'Begär åtkomst till mikrofon…' },
-  'voice.listening': { en: 'Listening…', sv: 'Lyssnar…' },
+  'voice.listening': {
+    en: 'Tap to stop when you’re done',
+    sv: 'Tryck för att stoppa när du är klar',
+  },
   'voice.uploading': { en: 'Sending…', sv: 'Skickar…' },
   'voice.transcribing': { en: 'Transcribing…', sv: 'Transkriberar…' },
   'voice.parsing': { en: 'Building session…', sv: 'Bygger pass…' },
@@ -182,8 +185,8 @@ const strings = {
   // ── Passkey prompt ───────────────────────────────────────────────────
   'passkey.discover.title': { en: 'Continue with passkey', sv: 'Fortsätt med passkey' },
   'passkey.discover.description': {
-    en: 'Use a passkey to sync your presets and history across devices. No email or password needed.',
-    sv: 'Använd en passkey för att synka dina förinställningar och historik. Ingen email eller lösenord behövs.',
+    en: 'If you have a passkey for Takt on this device, your phone will offer it. Otherwise you can create a new account.',
+    sv: 'Om du har en passkey för Takt på den här enheten erbjuder din telefon den. Annars kan du skapa ett nytt konto.',
   },
   'passkey.discoverFallback.title': { en: 'Create an account', sv: 'Skapa ett konto' },
   'passkey.discoverFallback.description': {
@@ -192,8 +195,8 @@ const strings = {
   },
   'passkey.register.title': { en: 'Create an account', sv: 'Skapa ett konto' },
   'passkey.register.description': {
-    en: 'Create a passkey to sync your presets and history across devices.',
-    sv: 'Skapa en passkey för att synka dina förinställningar och historik.',
+    en: 'Your phone will ask you to use Face ID, Touch ID, or your device PIN. No password needed.',
+    sv: 'Din telefon ber dig använda Face ID, Touch ID eller enhetens PIN-kod. Inget lösenord behövs.',
   },
   'passkey.signin.title': { en: 'Sign in', sv: 'Logga in' },
   'passkey.signin.description': {
