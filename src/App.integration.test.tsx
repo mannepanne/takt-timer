@@ -13,6 +13,8 @@ import { __resetAudioForTest } from '@/lib/audio';
 describe('Integration — Configure → Run → Complete', () => {
   beforeEach(() => {
     localStorage.clear();
+    // Mark onboarding seen so integration tests exercise the Home screen, not Onboarding.
+    localStorage.setItem('takt.onboarding.v1', '1');
     __resetAudioForTest();
   });
 

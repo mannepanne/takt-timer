@@ -1,8 +1,8 @@
-// ABOUT: Settings route — language, accent colour, sound effects.
+// ABOUT: Settings route — language, accent colour, sound effects, account, and about.
 // ABOUT: Available to all users; changes persist to D1 for authenticated users.
 
 import { useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { AccentPicker } from '@/components/AccentPicker';
 import { Icon } from '@/components/icons';
@@ -10,15 +10,19 @@ import { LanguageToggle } from '@/components/LanguageToggle';
 import { TopBar } from '@/components/TopBar';
 import { useI18n } from '@/i18n/context';
 import type { Lang } from '@/i18n/strings';
+import { useSession } from '@/lib/auth/session';
 import { useSettings } from '@/lib/settings/context';
 import type { AccentId } from '@/lib/settings/accents';
 
 export function Settings() {
   const { t, setLang } = useI18n();
   const { accentId, soundOn, setAccent, setSoundOn, putAllSettings } = useSettings();
+  const { session } = useSession();
   const navigate = useNavigate();
   const [savedVisible, setSavedVisible] = useState(false);
   const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const isAuthenticated = session.status === 'authenticated';
 
   function triggerSaved() {
     if (savedTimer.current) clearTimeout(savedTimer.current);
@@ -93,6 +97,40 @@ export function Settings() {
             >
               <span className="settings-toggle-thumb" />
             </button>
+          </div>
+        </section>
+
+        <div className="hairline" />
+
+        <section className="settings-section">
+          <div className="settings-row">
+            <span className="settings-label">{t('settings.account')}</span>
+            <span className="settings-value">
+              {isAuthenticated ? t('settings.signedIn') : t('settings.notSignedIn')}
+            </span>
+          </div>
+          <div className="settings-row" style={{ marginTop: 8 }}>
+            <Link to="/account" className="settings-link">
+              {isAuthenticated ? t('settings.manageAccount') : t('settings.signInCta')}
+            </Link>
+          </div>
+        </section>
+
+        <div className="hairline" />
+
+        <section className="settings-section">
+          <div className="settings-row">
+            <span className="settings-label">{t('settings.about')}</span>
+          </div>
+          <div className="settings-row" style={{ marginTop: 8 }}>
+            <Link to="/privacy" className="settings-link">
+              {t('settings.privacyPolicy')}
+            </Link>
+          </div>
+          <div className="settings-row" style={{ marginTop: 8 }}>
+            <span className="settings-value">
+              {t('settings.version')} {__APP_VERSION__}
+            </span>
           </div>
         </section>
       </div>

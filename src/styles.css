@@ -544,6 +544,21 @@ input {
   border-color: var(--accent);
 }
 
+/* Settings link and value text */
+.settings-link {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--accent);
+  text-decoration: none;
+}
+.settings-link:hover {
+  text-decoration: underline;
+}
+.settings-value {
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
 /* Onboarding pager dots */
 .pager {
   display: flex;
@@ -1751,6 +1766,82 @@ input {
 }
 .settings-toggle.on .settings-toggle-thumb {
   transform: translateX(22px);
+}
+
+/* ───────── Onboarding ───────── */
+.onboarding {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  padding: 0 24px 32px;
+}
+.onboarding-skip {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-3);
+  padding: 6px 10px;
+}
+.onboarding-slide {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+}
+.onboarding-slide-content {
+  width: 100%;
+  max-width: 320px;
+}
+.onboarding-tagline {
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin: 0 0 16px;
+  text-wrap: balance;
+}
+.onboarding-eyebrow {
+  margin-bottom: 16px;
+}
+.onboarding-body {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  margin: 0 0 12px;
+}
+.onboarding-example {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink-3);
+  margin: 0 0 8px;
+}
+.onboarding-warning {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-3);
+  margin: 12px 0;
+}
+.onboarding-privacy-link {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--accent);
+  text-decoration: none;
+}
+.onboarding-privacy-link:hover {
+  text-decoration: underline;
+}
+.onboarding-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+.onboarding-cta {
+  width: 100%;
+  max-width: 280px;
 }
 
 /* ───────── Reduced motion ───────── */

@@ -1,4 +1,4 @@
-// ABOUT: Integration tests for the Settings route — language, accent, sound.
+// ABOUT: Integration tests for the Settings route — language, accent, sound, account, about.
 
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -92,10 +92,32 @@ describe('Settings route', () => {
   it('language toggle click calls setLang', async () => {
     renderSettings();
     await userEvent.click(screen.getByRole('button', { name: /svenska/i }));
-    // After switching to sv the Swedish button should be pressed
     expect(screen.getByRole('button', { name: /svenska/i })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
+  });
+
+  it('shows Not signed in when unauthenticated', () => {
+    renderSettings();
+    expect(screen.getByText(/not signed in/i)).toBeInTheDocument();
+  });
+
+  it('shows sign in CTA link when unauthenticated', () => {
+    renderSettings();
+    expect(screen.getByRole('link', { name: /sign in or create account/i })).toBeInTheDocument();
+  });
+
+  it('shows privacy policy link in about section', () => {
+    renderSettings();
+    expect(screen.getByRole('link', { name: /privacy policy/i })).toHaveAttribute(
+      'href',
+      '/privacy',
+    );
+  });
+
+  it('shows version indicator', () => {
+    renderSettings();
+    expect(screen.getByText(/version/i)).toBeInTheDocument();
   });
 });

@@ -89,6 +89,9 @@ export default defineConfig({
       '/api': 'http://localhost:8787',
     },
   },
+  define: {
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version ?? '0.0.0'),
+  },
   build: {
     outDir: 'dist',
     sourcemap: true,
