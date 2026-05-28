@@ -46,7 +46,8 @@ export default defineConfig({
         navigateFallback: '/index.html',
         // Any path the Worker owns server-side must be listed here;
         // otherwise the SW shadows it with index.html.
-        navigateFallbackDenylist: [/^\/api/, /^\/admin/],
+        // /cdn-cgi/ is Cloudflare's own edge path (Access auth callback etc.)
+        navigateFallbackDenylist: [/^\/api/, /^\/admin/, /^\/cdn-cgi\//],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
