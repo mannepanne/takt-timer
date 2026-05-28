@@ -3,7 +3,7 @@
 
 import type { Env } from '../index';
 import { requireAdminAuthWithCsrf } from './auth';
-import { adminLayout, escHtml } from './views/layout.html';
+import { adminLayout, escHtml } from './views/layout';
 import { getUserByHandleAdmin, insertAdminLog, deleteUserCascade } from '../db/queries';
 import { deleteUserSessions } from '../lib/sessionStore';
 

@@ -2,7 +2,7 @@
 
 import type { Env } from '../index';
 import { requireAdminAuth } from './auth';
-import { adminLayout, escHtml } from './views/layout.html';
+import { adminLayout, escHtml } from './views/layout';
 import { getUserByHandleAdmin } from '../db/queries';
 import type { AdminUserRow } from '../db/schema';
 

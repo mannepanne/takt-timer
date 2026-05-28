@@ -2,7 +2,7 @@
 
 import type { Env } from '../index';
 import { requireAdminAuth } from './auth';
-import { adminLayout } from './views/layout.html';
+import { adminLayout } from './views/layout';
 
 export interface DashboardMetrics {
   totalUsers: number;
