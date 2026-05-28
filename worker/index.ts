@@ -19,6 +19,7 @@ import { parseVoice } from './api/voice/parse';
 import { applySecurityHeaders } from './lib/securityHeaders';
 import { isAllowedOrigin } from './lib/isAllowedOrigin';
 import { handleAdmin } from './admin/router';
+import { runPurge } from './cron/purge';
 
 export interface Env {
   ASSETS: Fetcher;
@@ -42,7 +43,7 @@ function methodNotAllowed(): Response {
 }
 
 export default {
-  async fetch(request: Request, env: Env, _ctx: ExecutionContext): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname;
     const method = request.method;
@@ -54,7 +55,7 @@ export default {
 
     // ── Voice ────────────────────────────────────────────────────────────────
     if (path === '/api/voice/parse') {
-      return applySecurityHeaders(await parseVoice(request, env));
+      return applySecurityHeaders(await parseVoice(request, env, ctx));
     }
 
     // ── Auth ─────────────────────────────────────────────────────────────────
@@ -132,5 +133,12 @@ export default {
     // ── SPA fallback ──────────────────────────────────────────────────────────
     const assetResponse = await env.ASSETS.fetch(request);
     return applySecurityHeaders(assetResponse);
+  },
+  async scheduled(
+    _controller: ScheduledController,
+    env: Env,
+    ctx: ExecutionContext,
+  ): Promise<void> {
+    ctx.waitUntil(runPurge(env.DB));
   },
 } satisfies ExportedHandler<Env>;

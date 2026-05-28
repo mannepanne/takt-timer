@@ -36,7 +36,9 @@ export function requireAdminAuthWithCsrf(
   const actor = getAdminActor(request, env);
   if (!actor)
     return new Response('Forbidden', { status: 403, headers: { 'Cache-Control': 'no-store' } });
-  if (!isAllowedOrigin(request))
+  // State-mutating routes require an explicit Origin header. Browsers always include Origin on
+  // form POSTs; an absent Origin indicates a non-browser client bypassing the CSRF guard.
+  if (!request.headers.get('origin') || !isAllowedOrigin(request))
     return new Response('Forbidden', { status: 403, headers: { 'Cache-Control': 'no-store' } });
   return { actor };
 }

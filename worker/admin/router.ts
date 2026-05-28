@@ -4,6 +4,7 @@ import type { Env } from '../index';
 import { handleDashboard } from './dashboard';
 import { handleUserLookup } from './user-lookup';
 import { handleDeleteUserConfirmPage, handleDeleteUserExecute } from './delete-user';
+import { handlePurgeDryRun, handlePurgeRun } from './purge';
 
 export async function handleAdmin(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
@@ -21,6 +22,12 @@ export async function handleAdmin(request: Request, env: Env): Promise<Response>
   }
   if (path === '/admin/user-delete/confirm' && method === 'POST') {
     return handleDeleteUserExecute(request, env);
+  }
+  if (path === '/admin/purge' && method === 'GET') {
+    return handlePurgeDryRun(request, env);
+  }
+  if (path === '/admin/purge/run' && method === 'POST') {
+    return handlePurgeRun(request, env);
   }
 
   return new Response('Not Found', { status: 404, headers: { 'Cache-Control': 'no-store' } });

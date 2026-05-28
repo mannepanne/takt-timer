@@ -52,5 +52,9 @@ binding = "AI"
 # the 3/day cap. `.dev.vars` is loaded only by `wrangler dev`, never deployed —
 # see https://developers.cloudflare.com/workers/configuration/secrets/#local-development-with-secrets.
 
+# Daily retention purge — runs at 03:00 UTC every day.
+[triggers]
+crons = ["0 3 * * *"]
+
 # Custom domain is configured in the Cloudflare dashboard under
 # Workers & Pages → takt → Settings → Domains & Routes. No entry needed here.

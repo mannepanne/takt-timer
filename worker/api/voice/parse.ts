@@ -9,6 +9,7 @@ import type { Env } from '../../index';
 import { isAllowedOrigin } from '../../lib/isAllowedOrigin';
 import { toSafeErrorMessage } from '../../lib/toSafeErrorMessage';
 import { getSession } from '../../lib/sessionStore';
+import { insertVoiceCall } from '../../db/queries';
 
 import { SUPPORTED_LANGUAGES } from './languages';
 import { parseWithLlama } from './llama';
@@ -90,7 +91,11 @@ function errorResponse(event: ErrorEvent, status: number): Response {
   return ndjsonResponse(stream, status);
 }
 
-export async function parseVoice(request: Request, env: Env): Promise<Response> {
+export async function parseVoice(
+  request: Request,
+  env: Env,
+  ctx?: Pick<ExecutionContext, 'waitUntil'>,
+): Promise<Response> {
   if (request.method !== 'POST') {
     return errorResponse({ kind: 'error', reason: 'method-not-allowed' }, 405);
   }
@@ -120,7 +125,7 @@ export async function parseVoice(request: Request, env: Env): Promise<Response> 
   const session = await getSession(env, request.headers.get('Cookie'));
   const userId = session?.userHandle;
 
-  const bypass = isRateLimitBypassEnabled(env.ALLOW_RATE_LIMIT_BYPASS);
+  const bypass = isRateLimitBypassEnabled(env.ALLOW_RATE_LIMIT_BYPASS) || session?.isAdmin === true;
   const rateCheck = await checkAndIncrementRateLimit(env.RATE_LIMITS, request, {
     bypass,
     userId,
@@ -206,6 +211,7 @@ export async function parseVoice(request: Request, env: Env): Promise<Response> 
           totalMs,
         }),
       );
+      ctx?.waitUntil(insertVoiceCall(env.DB, userId ?? null, Date.now()));
     } catch (err) {
       // Final safety net — shouldn't happen, but we never want to leave the stream hanging.
       toSafeErrorMessage(err, 'llama-error', { stage: 'unhandled' });

@@ -111,10 +111,13 @@ describe('requireAdminAuthWithCsrf', () => {
     expect(result).toEqual({ actor: 'magnus@example.com' });
   });
 
-  it('returns actor when authenticated and no Origin header (same-origin navigation)', () => {
+  it('returns 403 when Origin header is absent (CSRF guard — no-origin path)', () => {
+    // State-mutating routes require an explicit Origin. Absent Origin is rejected so that
+    // non-browser clients cannot bypass the CSRF guard by simply omitting the header.
     const req = makeRequest({ accessEmail: 'magnus@example.com' });
     const result = requireAdminAuthWithCsrf(req, PROD_ENV);
-    expect(result).toEqual({ actor: 'magnus@example.com' });
+    expect(result).toBeInstanceOf(Response);
+    expect((result as Response).status).toBe(403);
   });
 
   it('returns actor in bypass mode with localhost dev origin', () => {

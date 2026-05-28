@@ -54,15 +54,21 @@ The `strings.ts` schema, key naming conventions, `satisfies` pattern, `takt.lang
 
 ### [voice-api-contract.md](./voice-api-contract.md)
 
-**When to read:** Implementing or debugging the voice pipeline client; understanding HTTP status codes vs NDJSON error events; cold-start behaviour; rate-limit bypass.
+**When to read:** Implementing or debugging the voice pipeline client; understanding HTTP status codes vs NDJSON error events; cold-start behaviour; rate-limit bypass; voice_calls D1 side effect.
 
-HTTP contract for `/api/voice/parse` — status codes, NDJSON event shapes (whisper / parsed / error), cold-start AbortController behaviour, and the dev-only rate-limit bypass.
+HTTP contract for `/api/voice/parse` — status codes, NDJSON event shapes (whisper / parsed / error), cold-start AbortController behaviour, rate-limit bypass (dev flag + admin session), and the `voice_calls` D1 insert on successful parse.
 
 ### [admin-api.md](./admin-api.md)
 
 **When to read:** Working on the admin backend, debugging admin auth or delete flows, or checking the exact HTTP contract for `/admin/*` routes.
 
-HTTP contract for the admin backend — auth guard, dashboard metrics, user-lookup, two-step delete with audit log, error responses, local dev bypass.
+HTTP contract for the admin backend — auth guard, dashboard metrics, user-lookup, two-step delete with audit log, retention purge endpoints, error responses, local dev bypass.
+
+### [cron.md](./cron.md)
+
+**When to read:** Understanding the scheduled retention purge, testing it locally, or checking the cron schedule and what it deletes.
+
+Daily cron trigger (03:00 UTC), retention criteria (90 days inactive + no sessions + no presets), what gets deleted, the `purge_runs` audit table, and how to monitor and dry-run via the admin UI.
 
 ### [decisions/](./decisions/)
 

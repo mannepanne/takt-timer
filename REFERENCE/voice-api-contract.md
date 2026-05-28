@@ -116,9 +116,25 @@ X-Takt-Lang: sv
 
 ---
 
-## Rate-limit bypass (dev only)
+## Rate-limit bypass
 
-When the Worker runs under `wrangler dev` with `ALLOW_RATE_LIMIT_BYPASS=1` in `.dev.vars`, the
-rate-limit check is skipped. `remaining` is returned as `Number.POSITIVE_INFINITY` internally;
-this value is never serialised to the client (JSON.stringify(Infinity) === 'null'). The bypass
-flag is not set in production.
+Two paths skip the rate-limit check:
+
+**Dev bypass** — when the Worker runs under `wrangler dev` with `ALLOW_RATE_LIMIT_BYPASS=1` in `.dev.vars`. The bypass flag is not set in production.
+
+**Admin bypass** — when the request arrives with a valid session cookie whose `isAdmin` flag is `true`. This flag is sourced from D1 at sign-in and stored server-side in KV; it cannot be forged by the client. Admin callers are exempt from the daily cap so that testing and monitoring do not consume voice quota.
+
+---
+
+## Side effects on a successful parse
+
+After the `parsed` event is written to the NDJSON stream, a `voice_calls` row is inserted into D1 via `ctx.waitUntil` (fire-and-forget, not on the response critical path):
+
+| Column        | Value                                                             |
+| ------------- | ----------------------------------------------------------------- |
+| `user_handle` | The authenticated user's handle, or `null` for anonymous callers. |
+| `called_at`   | Unix epoch-ms timestamp.                                          |
+
+This insert does not fire on error paths (`whisper-error`, `language-unsupported`, `schema-failed`, etc.) — `voice_calls` tracks successful intent parses only.
+
+Rows are retained for up to 90 days (deleted when the user is purged or deleted; anonymous rows cleaned up by the daily cron). The privacy policy discloses this tracking.
