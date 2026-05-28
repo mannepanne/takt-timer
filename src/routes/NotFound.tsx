@@ -4,13 +4,16 @@ import { Link } from 'react-router-dom';
 
 import { Icon } from '@/components/icons';
 import { TopBar } from '@/components/TopBar';
+import { useI18n } from '@/i18n/context';
 
 export function NotFound() {
+  const { t } = useI18n();
+
   return (
     <div className="screen">
       <TopBar
         left={
-          <Link to="/" className="icon-btn" aria-label="Back to Home">
+          <Link to="/" className="icon-btn" aria-label={t('nav.backToHome')}>
             <Icon.ChevronLeft />
           </Link>
         }
@@ -21,7 +24,7 @@ export function NotFound() {
 
         <div style={{ padding: '0 28px', textAlign: 'center' }}>
           <div className="eyebrow" style={{ marginBottom: 14, color: 'var(--ink-3)' }}>
-            404
+            {t('notFound.title')}
           </div>
           <h1
             style={{
@@ -33,7 +36,7 @@ export function NotFound() {
               textWrap: 'balance',
             }}
           >
-            Nothing here.
+            {t('notFound.heading')}
           </h1>
           <p
             style={{
@@ -44,7 +47,7 @@ export function NotFound() {
               textWrap: 'balance',
             }}
           >
-            That page doesn't exist — or hasn't been built yet.
+            {t('notFound.description')}
           </p>
         </div>
 
@@ -61,7 +64,7 @@ export function NotFound() {
             letterSpacing: 0.2,
           }}
         >
-          Back to Home
+          {t('nav.backToHome')}
         </Link>
       </div>
     </div>

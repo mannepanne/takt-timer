@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Run } from './Run';
 import { __resetAudioForTest } from '@/lib/audio';
+import { I18nProvider } from '@/i18n/context';
 
 function LocationProbe() {
   const loc = useLocation();
@@ -24,14 +25,16 @@ const session = { sets: 2, workSec: 10, restSec: 5 };
 
 function renderRoute(initialEntries: Parameters<typeof MemoryRouter>[0]['initialEntries']) {
   return render(
-    <MemoryRouter initialEntries={initialEntries}>
-      <Routes>
-        <Route path="/" element={<HomeMarker />} />
-        <Route path="/run" element={<Run />} />
-        <Route path="/complete" element={<CompleteMarker />} />
-      </Routes>
-      <LocationProbe />
-    </MemoryRouter>,
+    <I18nProvider>
+      <MemoryRouter initialEntries={initialEntries}>
+        <Routes>
+          <Route path="/" element={<HomeMarker />} />
+          <Route path="/run" element={<Run />} />
+          <Route path="/complete" element={<CompleteMarker />} />
+        </Routes>
+        <LocationProbe />
+      </MemoryRouter>
+    </I18nProvider>,
   );
 }
 

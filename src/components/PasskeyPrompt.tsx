@@ -3,6 +3,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
+import { useI18n } from '@/i18n/context';
 import { register, signIn, type AuthUser } from '@/lib/auth/client';
 
 type Props = {
@@ -13,6 +14,7 @@ type Props = {
 };
 
 export function PasskeyPrompt({ open, mode, onSuccess, onClose }: Props) {
+  const { t } = useI18n();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [effectiveMode, setEffectiveMode] = useState<'register' | 'signin'>(
@@ -49,7 +51,7 @@ export function PasskeyPrompt({ open, mode, onSuccess, onClose }: Props) {
         // No passkey found on this device — offer registration instead
         setEffectiveMode('register');
       } else {
-        setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+        setError(err instanceof Error ? err.message : t('voice.error.generic'));
       }
     } finally {
       if (gen === genRef.current) setLoading(false);
@@ -60,24 +62,28 @@ export function PasskeyPrompt({ open, mode, onSuccess, onClose }: Props) {
   let description: string;
 
   if (isDiscovering) {
-    title = 'Continue with passkey';
-    description =
-      'If you have a passkey for Takt on this device, your phone will offer it. Otherwise you can create a new account.';
+    title = t('passkey.discover.title');
+    description = t('passkey.discover.description');
   } else if (isRegister && mode === 'discover') {
-    title = 'Create an account';
-    description =
-      'No passkey found on this device. You can create a new account, or cancel and sign in on a device where your passkey is saved.';
+    title = t('passkey.discoverFallback.title');
+    description = t('passkey.discoverFallback.description');
   } else if (isRegister) {
-    title = 'Create an account';
-    description =
-      'Your phone will ask you to use Face ID, Touch ID, or your device PIN. No password needed.';
+    title = t('passkey.register.title');
+    description = t('passkey.register.description');
   } else {
-    title = 'Sign in';
-    description =
-      'Use the passkey you created when you registered. Your phone will verify your identity.';
+    title = t('passkey.signin.title');
+    description = t('passkey.signin.description');
   }
 
   const showNote = isRegister && mode !== 'discover';
+
+  const actionButtonLabel = loading
+    ? t('passkey.waiting')
+    : isDiscovering
+      ? t('passkey.button.discover')
+      : isRegister
+        ? t('passkey.button.register')
+        : t('passkey.button.signin');
 
   return (
     <>
@@ -91,12 +97,7 @@ export function PasskeyPrompt({ open, mode, onSuccess, onClose }: Props) {
         <div className="passkey-prompt-body">
           <h2 className="passkey-prompt-title">{title}</h2>
           <p className="passkey-prompt-description">{description}</p>
-          {showNote && (
-            <p className="passkey-prompt-note">
-              If you use different platforms (e.g. Android phone + MacBook), you may need to add
-              each device separately.
-            </p>
-          )}
+          {showNote && <p className="passkey-prompt-note">{t('passkey.multiplatformNote')}</p>}
           {error && <p className="passkey-prompt-error">{error}</p>}
           <div className="passkey-prompt-actions">
             {isRegister && mode === 'discover' ? (
@@ -104,7 +105,7 @@ export function PasskeyPrompt({ open, mode, onSuccess, onClose }: Props) {
               // styled as primary to reduce the risk of accidentally creating a duplicate account.
               <>
                 <button type="button" className="btn btn-primary" onClick={onClose}>
-                  Cancel
+                  {t('passkey.cancel')}
                 </button>
                 <button
                   type="button"
@@ -112,7 +113,7 @@ export function PasskeyPrompt({ open, mode, onSuccess, onClose }: Props) {
                   onClick={handleAction}
                   disabled={loading}
                 >
-                  {loading ? 'Waiting…' : 'Create account with passkey'}
+                  {loading ? t('passkey.waiting') : t('passkey.button.discoverFallback')}
                 </button>
               </>
             ) : (
@@ -123,16 +124,10 @@ export function PasskeyPrompt({ open, mode, onSuccess, onClose }: Props) {
                   onClick={handleAction}
                   disabled={loading}
                 >
-                  {loading
-                    ? 'Waiting…'
-                    : isDiscovering
-                      ? 'Continue with passkey'
-                      : isRegister
-                        ? 'Create account with passkey'
-                        : 'Sign in with passkey'}
+                  {actionButtonLabel}
                 </button>
                 <button type="button" className="btn btn-ghost" onClick={onClose}>
-                  Cancel
+                  {t('passkey.cancel')}
                 </button>
               </>
             )}
@@ -143,7 +138,7 @@ export function PasskeyPrompt({ open, mode, onSuccess, onClose }: Props) {
               className="passkey-prompt-switch"
               onClick={() => setEffectiveMode('signin')}
             >
-              Already have an account? Sign in instead
+              {t('passkey.switchToSignIn')}
             </button>
           )}
         </div>

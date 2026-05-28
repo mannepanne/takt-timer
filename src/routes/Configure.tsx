@@ -8,6 +8,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Icon } from '@/components/icons';
 import { Interpretation } from '@/components/Interpretation';
 import { TopBar } from '@/components/TopBar';
+import { useI18n } from '@/i18n/context';
 import { prepareAudio } from '@/lib/audio';
 import type { Session } from '@/lib/timer/types';
 
@@ -38,6 +39,7 @@ function asSession(value: unknown): Session | null {
 }
 
 export function Configure() {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const location = useLocation();
   // Voice handoff lands a parsed session in location.state. Clamp happens inside
@@ -56,7 +58,7 @@ export function Configure() {
     <div className="screen">
       <TopBar
         left={
-          <Link to="/" className="icon-btn" aria-label="Back to Home">
+          <Link to="/" className="icon-btn" aria-label={t('nav.backToHome')}>
             <Icon.ChevronLeft />
           </Link>
         }
@@ -64,9 +66,9 @@ export function Configure() {
 
       <main className="configure-screen-body">
         <div className="configure-intro">
-          <div className="eyebrow configure-intro-eyebrow">Configure</div>
-          <h1 className="configure-intro-title">Build a session</h1>
-          <p className="configure-intro-hint">Tap any chip to edit it.</p>
+          <div className="eyebrow configure-intro-eyebrow">{t('configure.title')}</div>
+          <h1 className="configure-intro-title">{t('configure.heading')}</h1>
+          <p className="configure-intro-hint">{t('configure.hint')}</p>
         </div>
 
         <Interpretation value={session} onChange={setSession} />
@@ -75,7 +77,7 @@ export function Configure() {
       <div className="configure-actions">
         <button type="button" className="btn btn-primary" onClick={start}>
           <Icon.Play size={18} color="var(--paper)" />
-          Start
+          {t('configure.start')}
         </button>
       </div>
     </div>

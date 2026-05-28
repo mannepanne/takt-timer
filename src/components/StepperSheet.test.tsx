@@ -3,6 +3,11 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import { StepperSheet } from './StepperSheet';
+import { I18nProvider } from '@/i18n/context';
+
+function wrapper({ children }: { children: React.ReactNode }) {
+  return <I18nProvider>{children}</I18nProvider>;
+}
 
 describe('StepperSheet', () => {
   it('renders the label and the formatted value', () => {
@@ -15,6 +20,7 @@ describe('StepperSheet', () => {
         onChange={() => {}}
         onClose={() => {}}
       />,
+      { wrapper },
     );
     expect(screen.getByText('Sets')).toBeInTheDocument();
     expect(container.querySelector('.stepper-sheet-value')).toHaveTextContent('3');
@@ -30,6 +36,7 @@ describe('StepperSheet', () => {
         onChange={() => {}}
         onClose={() => {}}
       />,
+      { wrapper },
     );
     expect(container.querySelector('.stepper-sheet-value')).toHaveTextContent('1:05');
   });
@@ -45,6 +52,7 @@ describe('StepperSheet', () => {
         onChange={onChange}
         onClose={() => {}}
       />,
+      { wrapper },
     );
     await userEvent.click(screen.getByRole('button', { name: '5' }));
     await userEvent.click(screen.getByRole('button', { name: 'Done' }));
@@ -56,6 +64,7 @@ describe('StepperSheet', () => {
     const onClose = vi.fn();
     render(
       <StepperSheet open mode="int" label="Sets" value={3} onChange={onChange} onClose={onClose} />,
+      { wrapper },
     );
     await userEvent.click(screen.getByRole('button', { name: /cancel/i }));
     expect(onChange).not.toHaveBeenCalled();
@@ -66,6 +75,7 @@ describe('StepperSheet', () => {
     const onClose = vi.fn();
     render(
       <StepperSheet open mode="int" label="Sets" value={3} onChange={() => {}} onClose={onClose} />,
+      { wrapper },
     );
     await userEvent.click(screen.getByTestId('stepper-backdrop'));
     expect(onClose).toHaveBeenCalled();
@@ -82,6 +92,7 @@ describe('StepperSheet', () => {
         onClose={() => {}}
         min={1}
       />,
+      { wrapper },
     );
     expect(screen.getByRole('button', { name: /decrease sets/i })).toBeDisabled();
   });
@@ -96,6 +107,7 @@ describe('StepperSheet', () => {
         onChange={() => {}}
         onClose={() => {}}
       />,
+      { wrapper },
     );
     expect(screen.getByRole('button', { name: '0:00' })).toBeInTheDocument();
   });
@@ -110,6 +122,7 @@ describe('StepperSheet', () => {
         onChange={() => {}}
         onClose={() => {}}
       />,
+      { wrapper },
     );
     const inc = screen.getByRole('button', { name: /increase sets/i });
     // pointerdown → draft increments by 1 immediately.
@@ -131,6 +144,7 @@ describe('StepperSheet', () => {
         onClose={() => {}}
         min={1}
       />,
+      { wrapper },
     );
     const dec = screen.getByRole('button', { name: /decrease sets/i });
     dec.dispatchEvent(new Event('pointerdown', { bubbles: true }));

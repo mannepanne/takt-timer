@@ -7,6 +7,7 @@ import { Icon } from '@/components/icons';
 import { PasskeyPrompt } from '@/components/PasskeyPrompt';
 import { SavePresetSheet } from '@/components/SavePresetSheet';
 import { TopBar } from '@/components/TopBar';
+import { useI18n } from '@/i18n/context';
 import { hasRegisteredBefore } from '@/lib/auth/local-hint';
 import { useSession } from '@/lib/auth/session';
 import { fmtTime } from '@/lib/format';
@@ -21,6 +22,7 @@ type CompleteState = {
 };
 
 export function Complete() {
+  const { t } = useI18n();
   const location = useLocation();
   const navigate = useNavigate();
   const { session: authSession, login } = useSession();
@@ -34,8 +36,8 @@ export function Complete() {
   const isAuthenticated = authSession.status === 'authenticated';
 
   useEffect(() => {
-    const t = setTimeout(() => setInteractable(true), 400);
-    return () => clearTimeout(t);
+    const timerId = setTimeout(() => setInteractable(true), 400);
+    return () => clearTimeout(timerId);
   }, []);
 
   useEffect(() => {
@@ -57,12 +59,21 @@ export function Complete() {
   const done = () => navigate('/');
 
   const workTotal = session.sets * session.workSec;
+  const subtitle =
+    session.sets === 1
+      ? t('complete.subtitle.one', { workTime: fmtTime(session.workSec) })
+      : t('complete.subtitle.many', { sets: session.sets, workTime: fmtTime(session.workSec) });
 
   return (
     <div className="screen">
       <TopBar
         left={
-          <button className="icon-btn" aria-label="Back to Home" onClick={done} type="button">
+          <button
+            className="icon-btn"
+            aria-label={t('nav.backToHome')}
+            onClick={done}
+            type="button"
+          >
             <Icon.Close />
           </button>
         }
@@ -71,22 +82,20 @@ export function Complete() {
       <main className="complete-screen-body">
         <div className="complete-eyebrow-row">
           <Icon.Check size={20} color="var(--accent)" />
-          <span className="eyebrow complete-eyebrow-label">Complete</span>
+          <span className="eyebrow complete-eyebrow-label">{t('complete.title')}</span>
         </div>
-        <h1 className="complete-title">Nicely done.</h1>
-        <p className="complete-subtitle">
-          {session.sets} sets · {fmtTime(session.workSec)} work each
-        </p>
+        <h1 className="complete-title">{t('complete.heading')}</h1>
+        <p className="complete-subtitle">{subtitle}</p>
 
         <div className="complete-divider" />
 
         <div className="complete-totals">
           <div>
-            <div className="eyebrow complete-totals-label">Total time</div>
+            <div className="eyebrow complete-totals-label">{t('complete.totalTime')}</div>
             <div className="mono complete-totals-value">{fmtTime(totalSec)}</div>
           </div>
           <div>
-            <div className="eyebrow complete-totals-label">Work time</div>
+            <div className="eyebrow complete-totals-label">{t('complete.workTime')}</div>
             <div className="mono complete-totals-value">{fmtTime(workTotal)}</div>
           </div>
         </div>
@@ -98,7 +107,7 @@ export function Complete() {
       >
         <button type="button" className="btn btn-primary" onClick={runAgain}>
           <Icon.Play size={18} color="var(--paper)" />
-          Run it again
+          {t('complete.runAgain')}
         </button>
         {isAuthenticated ? (
           <button
@@ -108,7 +117,7 @@ export function Complete() {
               if (interactable) setSaveSheetOpen(true);
             }}
           >
-            Save as preset
+            {t('complete.savePreset')}
           </button>
         ) : (
           <button
@@ -118,11 +127,11 @@ export function Complete() {
               if (interactable) setSigninOpen(true);
             }}
           >
-            Sign in to save
+            {t('complete.signInToSave')}
           </button>
         )}
         <button type="button" className="btn btn-ghost" onClick={done}>
-          Done
+          {t('complete.done')}
         </button>
       </div>
 

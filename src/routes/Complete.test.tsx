@@ -33,6 +33,7 @@ import { lastSession } from '@/lib/history';
 import { pushSession } from '@/lib/history-sync';
 import { hasRegisteredBefore } from '@/lib/auth/local-hint';
 import { Complete } from './Complete';
+import { I18nProvider } from '@/i18n/context';
 
 beforeEach(() => vi.clearAllMocks());
 
@@ -53,13 +54,15 @@ const state = {
 
 function renderComplete(initialState: unknown) {
   return render(
-    <MemoryRouter initialEntries={[{ pathname: '/complete', state: initialState }]}>
-      <Routes>
-        <Route path="/" element={<HomeMarker />} />
-        <Route path="/complete" element={<Complete />} />
-        <Route path="/run" element={<RunProbe />} />
-      </Routes>
-    </MemoryRouter>,
+    <I18nProvider>
+      <MemoryRouter initialEntries={[{ pathname: '/complete', state: initialState }]}>
+        <Routes>
+          <Route path="/" element={<HomeMarker />} />
+          <Route path="/complete" element={<Complete />} />
+          <Route path="/run" element={<RunProbe />} />
+        </Routes>
+      </MemoryRouter>
+    </I18nProvider>,
   );
 }
 

@@ -5,6 +5,7 @@ import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 
 import { Icon } from '@/components/icons';
+import { useI18n, type TFunc } from '@/i18n/context';
 import type { ErrorReason, VoiceState } from '@/lib/voice/types';
 
 type Props = {
@@ -16,57 +17,35 @@ type Props = {
 
 const OVERLAY_BODY_ID = 'voice-overlay-body';
 
-const REQUESTING_COPY = 'Requesting microphone\u2026';
-const LISTENING_COPY = 'Tap to stop when you\u2019re done';
-const UPLOADING_COPY = 'Sending\u2026';
-const TRANSCRIBING_COPY = 'Transcribing\u2026';
-const PARSING_COPY = 'Building session\u2026';
-const LANGUAGE_COPY =
-  'Takt currently understands English and Swedish. Tap Configure to build a session manually.';
-const PERMISSION_DENIED_COPY =
-  'Microphone access is blocked for Takt. Tap Configure to build a session manually.';
-const OFFLINE_COPY = 'You\u2019re offline. Tap Configure to build a session manually.';
-const UNSUPPORTED_COPY =
-  'This browser doesn\u2019t support voice input. Tap Configure to build a session manually.';
-const PARSE_ERROR_COPY =
-  'Couldn\u2019t build a session from that. Tap Configure to build one manually.';
-const NOT_A_SESSION_COPY =
-  'Couldn\u2019t make a session from that. Have another go, or tap Configure to build one manually.';
-const COLD_START_TIMEOUT_COPY =
-  'Voice took longer than expected. Try again, or tap Configure to build a session manually.';
-const RATE_LIMIT_COPY_PREFIX = 'You\u2019ve used today\u2019s voice allowance';
-const RATE_LIMIT_COPY_SUFFIX = 'Tap Configure to build a session manually.';
-
-function formatRetryAfter(retryAfterSec: number): string {
+function formatRetryAfter(retryAfterSec: number, t: TFunc): string {
   if (!Number.isFinite(retryAfterSec) || retryAfterSec <= 0) {
-    return `${RATE_LIMIT_COPY_PREFIX}. ${RATE_LIMIT_COPY_SUFFIX}`;
+    return t('voice.rateLimit.noTime');
   }
   // Under 2h shows in minutes so 61–119min doesn't get over-promised as "2 hours".
   // Math.floor would under-promise (61min → "1 hour" → retry rejected); Math.ceil
   // on minutes keeps direction-honesty without inflating the wait.
   const totalMinutes = Math.ceil(retryAfterSec / 60);
   if (totalMinutes < 120) {
-    const unit = totalMinutes === 1 ? 'minute' : 'minutes';
-    return `${RATE_LIMIT_COPY_PREFIX}. Try again in ${totalMinutes} ${unit}. ${RATE_LIMIT_COPY_SUFFIX}`;
+    if (totalMinutes === 1) return t('voice.rateLimit.oneMinute');
+    return t('voice.rateLimit.minutes', { count: totalMinutes });
   }
   const hours = Math.ceil(retryAfterSec / 3600);
   // The singular branch is structurally unreachable: this arm only runs when
   // totalMinutes ≥ 120, which forces hours ≥ 2. The ternary stays as defensive
   // code in case the 120-minute threshold ever changes.
   /* v8 ignore next */
-  const unit = hours === 1 ? 'hour' : 'hours';
-  return `${RATE_LIMIT_COPY_PREFIX}. Try again in ${hours} ${unit}. ${RATE_LIMIT_COPY_SUFFIX}`;
+  return t('voice.rateLimit.hours', { count: hours });
 }
 
 // Exhaustive over ErrorReason so the compiler flags any new reason that lands
 // in `parse-error` without a conscious decision about overlay copy. The default
 // arm is unreachable at runtime — `_exhaustive: never` is the type-level guard.
-function parseErrorCopy(reason: ErrorReason): string {
+function parseErrorCopy(reason: ErrorReason, t: TFunc): string {
   switch (reason) {
     case 'not-a-session':
-      return NOT_A_SESSION_COPY;
+      return t('voice.error.notASession');
     case 'cold-start-timeout':
-      return COLD_START_TIMEOUT_COPY;
+      return t('voice.error.coldStartTimeout');
     case 'upload-empty':
     case 'upload-too-large':
     case 'origin-not-allowed':
@@ -79,7 +58,7 @@ function parseErrorCopy(reason: ErrorReason): string {
     case 'rate-limited':
     case 'network-error':
     case 'malformed-stream':
-      return PARSE_ERROR_COPY;
+      return t('voice.error.genericBody');
     /* v8 ignore next 4 — unreachable; the `never`-typed default is a compile-time guard, not a runtime branch. */
     default: {
       const _exhaustive: never = reason;
@@ -89,6 +68,7 @@ function parseErrorCopy(reason: ErrorReason): string {
 }
 
 export function VoiceOverlay({ state, onUserStop, onCancel, onRetry }: Props): React.ReactNode {
+  const { t } = useI18n();
   const cancelBtnRef = useRef<HTMLButtonElement | null>(null);
 
   // Focus the Cancel button when an error state arrives — matches the Phase 2
@@ -113,7 +93,7 @@ export function VoiceOverlay({ state, onUserStop, onCancel, onRetry }: Props): R
       aria-describedby={isErrorState(state.phase) ? OVERLAY_BODY_ID : undefined}
     >
       <div className="voice-overlay-sheet">
-        {renderContent(state, titleId, onUserStop, onRetry)}
+        {renderContent(state, titleId, onUserStop, onRetry, t)}
 
         <button
           type="button"
@@ -121,7 +101,7 @@ export function VoiceOverlay({ state, onUserStop, onCancel, onRetry }: Props): R
           onClick={onCancel}
           ref={cancelBtnRef}
         >
-          Cancel
+          {t('voice.cancel')}
         </button>
       </div>
     </div>
@@ -133,15 +113,16 @@ function renderContent(
   titleId: string,
   onUserStop: () => void,
   onRetry: () => void,
+  t: TFunc,
 ): React.ReactNode {
   switch (state.phase) {
     case 'requesting-permission':
-      return progressSheet(titleId, REQUESTING_COPY, 'pulse');
+      return progressSheet(titleId, t('voice.requesting'), 'pulse');
     case 'listening':
       return (
         <>
           <h2 id={titleId} className="voice-overlay-title">
-            {LISTENING_COPY}
+            {t('voice.listening')}
           </h2>
           <button
             type="button"
@@ -154,14 +135,14 @@ function renderContent(
         </>
       );
     case 'uploading':
-      return progressSheet(titleId, UPLOADING_COPY, 'spinner');
+      return progressSheet(titleId, t('voice.uploading'), 'spinner');
     case 'transcribing':
-      return progressSheet(titleId, TRANSCRIBING_COPY, 'spinner');
+      return progressSheet(titleId, t('voice.transcribing'), 'spinner');
     case 'parsing':
       return (
         <>
           <h2 id={titleId} className="voice-overlay-title">
-            {PARSING_COPY}
+            {t('voice.parsing')}
           </h2>
           <p className="voice-overlay-transcript" aria-live="polite">
             &ldquo;{state.transcript}&rdquo;
@@ -172,32 +153,53 @@ function renderContent(
     case 'rate-limited':
       return errorSheet(
         titleId,
-        'Daily voice limit reached',
-        formatRetryAfter(state.retryAfterSec),
+        t('voice.error.rateLimitHeading'),
+        formatRetryAfter(state.retryAfterSec, t),
         onRetry,
+        t,
       );
     case 'language-mismatch':
       return errorSheet(
         titleId,
-        'Language not supported',
-        LANGUAGE_COPY,
+        t('voice.error.languageMismatchHeading'),
+        t('voice.error.languageMismatch'),
         onRetry,
+        t,
         state.transcript,
       );
     case 'parse-error':
       return errorSheet(
         titleId,
-        'Let\u2019s try that again',
-        parseErrorCopy(state.reason),
+        t('voice.error.tryAgainHeading'),
+        parseErrorCopy(state.reason, t),
         onRetry,
+        t,
         state.transcript,
       );
     case 'permission-denied':
-      return errorSheet(titleId, 'Microphone blocked', PERMISSION_DENIED_COPY, onRetry);
+      return errorSheet(
+        titleId,
+        t('voice.error.permissionDeniedHeading'),
+        t('voice.error.permissionDeniedBody'),
+        onRetry,
+        t,
+      );
     case 'offline':
-      return errorSheet(titleId, 'Offline', OFFLINE_COPY, onRetry);
+      return errorSheet(
+        titleId,
+        t('voice.error.offlineHeading'),
+        t('voice.error.offlineBody'),
+        onRetry,
+        t,
+      );
     case 'browser-unsupported':
-      return errorSheet(titleId, 'Not supported', UNSUPPORTED_COPY, onRetry);
+      return errorSheet(
+        titleId,
+        t('voice.error.unsupportedHeading'),
+        t('voice.error.unsupportedBody'),
+        onRetry,
+        t,
+      );
   }
 }
 
@@ -227,6 +229,7 @@ function errorSheet(
   heading: string,
   body: string,
   onRetry: () => void,
+  t: TFunc,
   transcript?: string,
 ): React.ReactNode {
   return (
@@ -244,10 +247,10 @@ function errorSheet(
       </p>
       <div className="voice-overlay-actions">
         <Link to="/configure" className="btn btn-primary">
-          Configure manually
+          {t('voice.configureCta')}
         </Link>
         <button type="button" className="btn btn-ghost" onClick={onRetry}>
-          Try again
+          {t('voice.tryAgain')}
         </button>
       </div>
     </>

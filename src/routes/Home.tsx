@@ -11,6 +11,7 @@ import { PasskeyPrompt } from '@/components/PasskeyPrompt';
 import { PresetsDrawer } from '@/components/PresetsDrawer';
 import { Sparkline } from '@/components/Sparkline';
 import { TopBar } from '@/components/TopBar';
+import { useI18n } from '@/i18n/context';
 import { type AuthUser } from '@/lib/auth/client';
 import { hasRegisteredBefore } from '@/lib/auth/local-hint';
 import { useSession } from '@/lib/auth/session';
@@ -38,6 +39,7 @@ function rowToSession(row: SessionRow): CompletedSession {
 }
 
 export function Home() {
+  const { t } = useI18n();
   const [history, setHistory] = useState<CompletedSession[]>([]);
   const [serverLast, setServerLast] = useState<CompletedSession | null>(null);
   const [presetsOpen, setPresetsOpen] = useState(false);
@@ -86,6 +88,9 @@ export function Home() {
     });
   };
 
+  const sessionCountLabel =
+    sessionCount === 1 ? t('home.sessions.one') : t('home.sessions.many', { count: sessionCount });
+
   return (
     <div className="screen">
       <TopBar
@@ -93,7 +98,7 @@ export function Home() {
           isAuthenticated ? (
             <button
               className="icon-btn"
-              aria-label="Open presets"
+              aria-label={t('home.openPresets')}
               type="button"
               onClick={() => setPresetsOpen(true)}
             >
@@ -103,13 +108,13 @@ export function Home() {
         }
         right={
           isAuthenticated ? (
-            <Link to="/account" className="icon-btn" aria-label="Account">
+            <Link to="/account" className="icon-btn" aria-label={t('home.account')}>
               <Icon.User size={20} />
             </Link>
           ) : (
             <button
               className="icon-btn"
-              aria-label="Sign in or create account"
+              aria-label={t('home.signIn')}
               type="button"
               onClick={() => setAuthPromptOpen(true)}
             >
@@ -123,9 +128,7 @@ export function Home() {
         <div className="home-history-chip-row">
           <div className="history-chip">
             <Sparkline entries={history} />
-            <span>
-              {sessionCount} {sessionCount === 1 ? 'session' : 'sessions'} so far
-            </span>
+            <span>{sessionCountLabel}</span>
           </div>
         </div>
       )}
@@ -134,10 +137,10 @@ export function Home() {
 
       <main className="home-hero">
         <div className="home-prompt-block">
-          <div className="eyebrow home-prompt-eyebrow">Ready</div>
-          <h1 className="home-prompt-title">What cadence do you need?</h1>
+          <div className="eyebrow home-prompt-eyebrow">{t('home.ready')}</div>
+          <h1 className="home-prompt-title">{t('home.prompt')}</h1>
           <p className="home-prompt-example">
-            <em>&ldquo;3 sets of 1 minute, 30 seconds rest between each&rdquo;</em>
+            <em>{t('home.example')}</em>
           </p>
         </div>
 
@@ -149,7 +152,7 @@ export function Home() {
       <div className="home-cta-row">
         <Link to="/configure" className="btn btn-primary">
           <Icon.Play size={18} color="var(--paper)" />
-          Configure a session
+          {t('home.configure')}
         </Link>
       </div>
 
@@ -160,7 +163,7 @@ export function Home() {
       )}
 
       <div className="home-footer">
-        <Link to="/privacy">Privacy</Link>
+        <Link to="/privacy">{t('home.privacy')}</Link>
       </div>
 
       {isAuthenticated && (

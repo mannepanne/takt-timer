@@ -3,6 +3,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { PasskeyPrompt } from './PasskeyPrompt';
+import { I18nProvider } from '@/i18n/context';
 
 vi.mock('@/lib/auth/client', () => ({
   register: vi.fn(),
@@ -15,10 +16,16 @@ const USER = { userHandle: 'aabb', isAdmin: false };
 
 beforeEach(() => vi.clearAllMocks());
 
+const i18nWrapper = ({ children }: { children: React.ReactNode }) => (
+  <I18nProvider>{children}</I18nProvider>
+);
+
 function renderPrompt(mode: 'register' | 'signin' | 'discover', open = true) {
   const onSuccess = vi.fn();
   const onClose = vi.fn();
-  render(<PasskeyPrompt open={open} mode={mode} onSuccess={onSuccess} onClose={onClose} />);
+  render(<PasskeyPrompt open={open} mode={mode} onSuccess={onSuccess} onClose={onClose} />, {
+    wrapper: i18nWrapper,
+  });
   return { onSuccess, onClose };
 }
 
@@ -91,6 +98,7 @@ describe('PasskeyPrompt', () => {
     const onClose = vi.fn();
     const { rerender } = render(
       <PasskeyPrompt open={true} mode="signin" onSuccess={onSuccess} onClose={onClose} />,
+      { wrapper: i18nWrapper },
     );
     fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
     await waitFor(() =>
@@ -131,6 +139,7 @@ describe('PasskeyPrompt', () => {
     const onClose = vi.fn();
     const { rerender } = render(
       <PasskeyPrompt open={true} mode="signin" onSuccess={onSuccess} onClose={onClose} />,
+      { wrapper: i18nWrapper },
     );
     fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
     await waitFor(() =>
@@ -211,6 +220,7 @@ describe('PasskeyPrompt', () => {
       const onClose = vi.fn();
       const { rerender } = render(
         <PasskeyPrompt open={true} mode="discover" onSuccess={onSuccess} onClose={onClose} />,
+        { wrapper: i18nWrapper },
       );
       fireEvent.click(screen.getByRole('button', { name: /continue with passkey/i }));
       await waitFor(() =>

@@ -3,6 +3,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { I18nProvider } from '@/i18n/context';
 
 vi.mock('@/lib/auth/client', () => ({ signOut: vi.fn() }));
 vi.mock('@/lib/apiFetch', () => ({ apiFetch: vi.fn() }));
@@ -31,9 +32,11 @@ beforeEach(() => vi.clearAllMocks());
 
 function renderAccount() {
   return render(
-    <MemoryRouter>
-      <Account />
-    </MemoryRouter>,
+    <I18nProvider>
+      <MemoryRouter>
+        <Account />
+      </MemoryRouter>
+    </I18nProvider>,
   );
 }
 

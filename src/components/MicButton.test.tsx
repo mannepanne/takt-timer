@@ -4,9 +4,14 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { MicButton } from './MicButton';
+import { I18nProvider } from '@/i18n/context';
 
 function wrapper({ children }: { children: React.ReactNode }) {
-  return <MemoryRouter>{children}</MemoryRouter>;
+  return (
+    <I18nProvider>
+      <MemoryRouter>{children}</MemoryRouter>
+    </I18nProvider>
+  );
 }
 
 describe('MicButton', () => {

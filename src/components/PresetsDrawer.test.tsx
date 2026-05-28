@@ -3,6 +3,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { I18nProvider } from '@/i18n/context';
 
 function LocProbe() {
   const loc = useLocation();
@@ -17,20 +18,22 @@ function LocProbe() {
 function renderDrawerWithRoutes(open = true) {
   const onClose = vi.fn();
   render(
-    <MemoryRouter initialEntries={['/']}>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <>
-              <PresetsDrawer open={open} onClose={onClose} />
-              <LocProbe />
-            </>
-          }
-        />
-        <Route path="/run" element={<LocProbe />} />
-      </Routes>
-    </MemoryRouter>,
+    <I18nProvider>
+      <MemoryRouter initialEntries={['/']}>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <>
+                <PresetsDrawer open={open} onClose={onClose} />
+                <LocProbe />
+              </>
+            }
+          />
+          <Route path="/run" element={<LocProbe />} />
+        </Routes>
+      </MemoryRouter>
+    </I18nProvider>,
   );
   return { onClose };
 }
@@ -62,9 +65,11 @@ beforeEach(() => vi.clearAllMocks());
 function renderDrawer(open = true) {
   const onClose = vi.fn();
   render(
-    <MemoryRouter>
-      <PresetsDrawer open={open} onClose={onClose} />
-    </MemoryRouter>,
+    <I18nProvider>
+      <MemoryRouter>
+        <PresetsDrawer open={open} onClose={onClose} />
+      </MemoryRouter>
+    </I18nProvider>,
   );
   return { onClose };
 }
