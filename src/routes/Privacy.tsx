@@ -101,16 +101,16 @@ export function Privacy() {
           {lang === 'sv' ? (
             <p className="privacy-body">
               Frågor eller funderingar? Skicka e-post till{' '}
-              <a href="mailto:privacy@takt.hultberg.org" className="privacy-link">
-                privacy@takt.hultberg.org
+              <a href="mailto:takt@hultberg.org" className="privacy-link">
+                takt@hultberg.org
               </a>
               .
             </p>
           ) : (
             <p className="privacy-body">
               Questions or concerns? Email{' '}
-              <a href="mailto:privacy@takt.hultberg.org" className="privacy-link">
-                privacy@takt.hultberg.org
+              <a href="mailto:takt@hultberg.org" className="privacy-link">
+                takt@hultberg.org
               </a>
               .
             </p>

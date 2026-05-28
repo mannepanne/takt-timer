@@ -40,9 +40,9 @@ describe('Privacy page', () => {
 
   it('renders the contact email link', () => {
     renderPrivacy();
-    expect(screen.getByRole('link', { name: /privacy@takt\.hultberg\.org/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /takt@hultberg\.org/i })).toHaveAttribute(
       'href',
-      'mailto:privacy@takt.hultberg.org',
+      'mailto:takt@hultberg.org',
     );
   });
 });
