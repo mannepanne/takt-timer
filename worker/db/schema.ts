@@ -6,6 +6,15 @@ export interface UserRow {
   counter: number;
   is_admin: number; // 0 | 1
   created_at: number; // unix ms
+  language: string; // ISO 639-1 ('en' | 'sv')
+  accent_colour: string; // palette ID e.g. 'lichen'
+  sound_on: number; // 0 | 1
+}
+
+export interface UserSettings {
+  language: string;
+  accent_colour: string;
+  sound_on: number;
 }
 
 export interface PresetRow {

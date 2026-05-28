@@ -95,16 +95,21 @@ export function Home() {
     <div className="screen">
       <TopBar
         left={
-          isAuthenticated ? (
-            <button
-              className="icon-btn"
-              aria-label={t('home.openPresets')}
-              type="button"
-              onClick={() => setPresetsOpen(true)}
-            >
-              <Icon.List size={20} />
-            </button>
-          ) : undefined
+          <div style={{ display: 'flex', gap: 4 }}>
+            {isAuthenticated && (
+              <button
+                className="icon-btn"
+                aria-label={t('home.openPresets')}
+                type="button"
+                onClick={() => setPresetsOpen(true)}
+              >
+                <Icon.List size={20} />
+              </button>
+            )}
+            <Link to="/settings" className="icon-btn" aria-label={t('home.settings')}>
+              <Icon.Settings size={20} />
+            </Link>
+          </div>
         }
         right={
           isAuthenticated ? (

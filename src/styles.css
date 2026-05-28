@@ -1627,6 +1627,121 @@ input {
   margin: 0;
 }
 
+/* ───────── Settings ───────── */
+.settings-body {
+  flex: 1;
+  padding: 24px 24px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow-y: auto;
+}
+.settings-title {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin: 0 0 24px;
+}
+.settings-section {
+  padding: 4px 0;
+}
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  gap: 16px;
+}
+.settings-row--stack {
+  flex-direction: column;
+  align-items: flex-start;
+}
+.settings-label {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+/* Language toggle — segmented control */
+.lang-toggle {
+  display: flex;
+  border-radius: 999px;
+  border: 1px solid var(--rule-strong);
+  overflow: hidden;
+  background: var(--paper-2);
+}
+.lang-toggle-btn {
+  padding: 7px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 999px;
+  transition:
+    background 140ms var(--ease),
+    color 140ms var(--ease);
+  color: var(--ink-3);
+}
+.lang-toggle-btn.active {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* Accent colour picker */
+.accent-picker {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 10px;
+}
+.accent-swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--swatch-color);
+  border: 2px solid transparent;
+  outline: none;
+  cursor: pointer;
+  transition:
+    transform 120ms var(--ease),
+    border-color 120ms var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+.accent-swatch.selected {
+  border-color: var(--ink);
+  transform: scale(1.1);
+}
+.accent-swatch:active {
+  transform: scale(0.95);
+}
+
+/* Settings toggle switch */
+.settings-toggle {
+  position: relative;
+  width: 50px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--rule-strong);
+  transition: background 200ms var(--ease);
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.settings-toggle.on {
+  background: var(--accent);
+}
+.settings-toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 200ms var(--ease);
+}
+.settings-toggle.on .settings-toggle-thumb {
+  transform: translateX(22px);
+}
+
 /* ───────── Reduced motion ───────── */
 @media (prefers-reduced-motion: reduce) {
   .mic-pulse-ring,

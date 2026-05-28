@@ -8,21 +8,9 @@ import { Icon } from '@/components/icons';
 import { useI18n } from '@/i18n/context';
 import { setMuted } from '@/lib/audio';
 import { fmtTime } from '@/lib/format';
+import { useSettings } from '@/lib/settings/context';
 import { useTimerMachine } from '@/lib/timer/useTimerMachine';
 import type { Session } from '@/lib/timer/types';
-
-const SOUND_KEY = 'takt.sound.v1';
-
-function readInitialSound(): boolean {
-  if (typeof localStorage === 'undefined') return true;
-  try {
-    const raw = localStorage.getItem(SOUND_KEY);
-    if (raw === null) return true;
-    return raw !== '0';
-  } catch {
-    return true;
-  }
-}
 
 type LocationState = { session?: Session } | null;
 
@@ -54,19 +42,10 @@ function RunInner({ session, onComplete }: RunInnerProps) {
   const navigate = useNavigate();
   const api = useTimerMachine(session);
   const { state } = api;
-
-  const [soundOn, setSoundOn] = useState<boolean>(readInitialSound);
+  const { soundOn, setSoundOn } = useSettings();
 
   useEffect(() => {
     setMuted(!soundOn);
-  }, [soundOn]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(SOUND_KEY, soundOn ? '1' : '0');
-    } catch {
-      // Best-effort.
-    }
   }, [soundOn]);
 
   // Auto-start on mount.
@@ -121,7 +100,7 @@ function RunInner({ session, onComplete }: RunInnerProps) {
         </button>
         <button
           className={`run-sound-toggle ${soundOn ? '' : 'off'}`}
-          onClick={() => setSoundOn((s) => !s)}
+          onClick={() => setSoundOn(!soundOn)}
           aria-label={soundOn ? t('run.mute') : t('run.unmute')}
           aria-pressed={!soundOn}
           type="button"

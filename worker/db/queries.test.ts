@@ -5,6 +5,8 @@ import {
   getUserByHandle,
   insertUser,
   updateUserCounter,
+  getUserSettings,
+  updateUserSettings,
   deleteUserCascade,
   listPresets,
   getPreset,
@@ -47,6 +49,9 @@ const USER = {
   counter: 0,
   is_admin: 0,
   created_at: 1000,
+  language: 'en',
+  accent_colour: 'lichen',
+  sound_on: 1,
 };
 
 const PRESET = {
@@ -92,6 +97,9 @@ describe('insertUser', () => {
       USER.counter,
       USER.is_admin,
       USER.created_at,
+      USER.language,
+      USER.accent_colour,
+      USER.sound_on,
     );
   });
 
@@ -101,6 +109,25 @@ describe('insertUser', () => {
     await insertUser(db, withoutAdmin);
     const bindArgs = (stmt.bind as ReturnType<typeof vi.fn>).mock.calls[0];
     expect(bindArgs[3]).toBe(0);
+  });
+});
+
+describe('getUserSettings', () => {
+  it('prepares SELECT query and binds userHandle', async () => {
+    const { db, stmt } = makeD1({ language: 'en', accent_colour: 'lichen', sound_on: 1 });
+    await getUserSettings(db, 'u1');
+    expect(db.prepare).toHaveBeenCalledWith(expect.stringContaining('SELECT language'));
+    expect(stmt.bind).toHaveBeenCalledWith('u1');
+  });
+});
+
+describe('updateUserSettings', () => {
+  it('prepares UPDATE query and binds all settings fields', async () => {
+    const { db, stmt } = makeD1();
+    const settings = { language: 'sv', accent_colour: 'coral', sound_on: 0 };
+    await updateUserSettings(db, 'u1', settings);
+    expect(db.prepare).toHaveBeenCalledWith(expect.stringContaining('UPDATE users SET language'));
+    expect(stmt.bind).toHaveBeenCalledWith('sv', 'coral', 0, 'u1');
   });
 });
 

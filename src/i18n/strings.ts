@@ -261,6 +261,21 @@ const strings = {
   'savePreset.saving': { en: 'Saving…', sv: 'Sparar…' },
   'savePreset.cancel': { en: 'Cancel', sv: 'Avbryt' },
 
+  // ── Settings ─────────────────────────────────────────────────────────────
+  'settings.title': { en: 'Settings', sv: 'Inställningar' },
+  'settings.language': { en: 'Language', sv: 'Språk' },
+  'settings.language.en': { en: 'English', sv: 'Engelska' },
+  'settings.language.sv': { en: 'Swedish', sv: 'Svenska' },
+  'settings.sound': { en: 'Sound effects', sv: 'Ljudeffekter' },
+  'settings.accent': { en: 'Accent colour', sv: 'Accentfärg' },
+  'settings.accent.lichen': { en: 'Lichen', sv: 'Lav' },
+  'settings.accent.coral': { en: 'Coral', sv: 'Korall' },
+  'settings.accent.ocean': { en: 'Ocean', sv: 'Hav' },
+  'settings.accent.amber': { en: 'Amber', sv: 'Bärnsten' },
+  'settings.accent.iris': { en: 'Iris', sv: 'Iris' },
+  'settings.accent.slate': { en: 'Slate', sv: 'Skiffer' },
+  'home.settings': { en: 'Settings', sv: 'Inställningar' },
+
   // ── Stepper sheet ─────────────────────────────────────────────────────
   'stepper.edit': { en: 'Edit {label}', sv: 'Redigera {label}' },
   'stepper.decrease': { en: 'Decrease {label}', sv: 'Minska {label}' },

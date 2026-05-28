@@ -7,6 +7,7 @@ import { signinOptions, signinVerify } from './api/auth/signin';
 import { signout } from './api/auth/signout';
 import { me } from './api/auth/me';
 import { deleteAccount } from './api/auth/delete-account';
+import { getSettings, putSettings } from './api/me/settings';
 import { presetsList } from './api/presets/list';
 import { presetsCreate } from './api/presets/create';
 import { presetsUpdate } from './api/presets/update';
@@ -81,6 +82,14 @@ export default {
     if (path === '/api/auth/delete' && method === 'DELETE') {
       if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
       return applySecurityHeaders(await deleteAccount(request, env));
+    }
+
+    // ── User settings ─────────────────────────────────────────────────────────
+    if (path === '/api/me/settings') {
+      if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
+      if (method === 'GET') return applySecurityHeaders(await getSettings(request, env));
+      if (method === 'PUT') return applySecurityHeaders(await putSettings(request, env));
+      return methodNotAllowed();
     }
 
     // ── Presets ───────────────────────────────────────────────────────────────

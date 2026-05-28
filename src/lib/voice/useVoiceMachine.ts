@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { useI18n } from '@/i18n/context';
 import { initial, step } from './machine';
 import {
   isMediaRecorderAvailable,
@@ -47,6 +48,7 @@ export function useVoiceMachine(): VoiceApi {
   const stateRef = useRef<VoiceState>(state);
   stateRef.current = state;
 
+  const { lang } = useI18n();
   const navigate = useNavigate();
 
   const recorderRef = useRef<RecorderHandle | null>(null);
@@ -154,6 +156,7 @@ export function useVoiceMachine(): VoiceApi {
           postAbortRef.current = new AbortController();
           void postVoice(effect.blob, (e) => sendRef.current(e), {
             signal: postAbortRef.current.signal,
+            lang,
           });
           return;
 
