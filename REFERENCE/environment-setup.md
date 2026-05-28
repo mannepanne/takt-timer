@@ -77,15 +77,15 @@ These are provisioned once per environment. Document the actual names and IDs in
 
 Most rows are commented out in `wrangler.toml` until the phase that needs them lands — the _Status_ column reflects reality.
 
-| Resource                           | Purpose                                     | Binding       | Status                                                                  |
-| ---------------------------------- | ------------------------------------------- | ------------- | ----------------------------------------------------------------------- |
-| Worker                             | Serves SPA + API                            | —             | Live. Custom domain `takt.hultberg.org`.                                |
-| Web Analytics token                | Analytics beacon in `index.html`            | —             | Live. Token is public by design.                                        |
-| Access application                 | Admin gate at `/admin`                      | —             | Activated in Phase 6. Configured in the Cloudflare dashboard, not code. |
-| KV namespace — rate-limit counters | Anonymous + authenticated voice-call quotas | `RATE_LIMITS` | Activated in Phase 3.                                                   |
-| KV namespace — session tokens      | Signed cookie → userHandle lookup           | `SESSIONS`    | Activated in Phase 4.                                                   |
-| D1 database                        | Users, presets, session history             | `DB`          | Activated in Phase 4. Migrations in `/migrations`.                      |
-| Workers AI                         | Whisper + Llama inference                   | `AI`          | Activated in Phase 3.                                                   |
+| Resource                           | Purpose                                                      | Binding       | Status                                                                  |
+| ---------------------------------- | ------------------------------------------------------------ | ------------- | ----------------------------------------------------------------------- |
+| Worker                             | Serves SPA + API                                             | —             | Live. Custom domain `takt.hultberg.org`.                                |
+| Web Analytics token                | Analytics beacon in `index.html`                             | —             | Live. Token is public by design.                                        |
+| Access application                 | Admin gate at `/admin`                                       | —             | Activated in Phase 6. Configured in the Cloudflare dashboard, not code. |
+| KV namespace — rate-limit counters | Anonymous + authenticated voice-call quotas                  | `RATE_LIMITS` | Activated in Phase 3.                                                   |
+| KV namespace — session tokens      | Signed cookie → userHandle lookup                            | `SESSIONS`    | Activated in Phase 4.                                                   |
+| D1 database                        | Users, presets, sessions, voice_calls, admin_log, purge_runs | `DB`          | Activated in Phase 4. Migrations in `worker/db/migrations/`.            |
+| Workers AI                         | Whisper + Llama inference                                    | `AI`          | Activated in Phase 3.                                                   |
 
 Exact resource IDs are kept out of this document — they live in `wrangler.toml` (committed) and Cloudflare's dashboard (not committed).
 
@@ -104,7 +104,7 @@ Takt is deliberately secret-light. The Cloudflare account credentials are held b
 | `WEBAUTHN_ORIGIN`       | Allowed origin for WebAuthn                       | `https://takt.hultberg.org` (production) / `http://localhost:8787` (local Worker port) | `.dev.vars` locally; Worker secret in production     |
 | `ALLOW_ADMIN_BYPASS`    | Bypass Cloudflare Access on `/admin` in local dev | Set to `"1"`                                                                           | `.dev.vars` only — never set in production           |
 
-WebAuthn bindings are inert until Phase 4 ships account registration. `WEBAUTHN_ORIGIN` points at the _Worker_ dev port (8787) — not Vite's 5173 — because WebAuthn requests go through the Worker.
+`WEBAUTHN_ORIGIN` points at the _Worker_ dev port (8787) — not Vite's 5173 — because WebAuthn requests go through the Worker.
 
 `.dev.vars` template (created in Phase 1):
 
@@ -242,13 +242,13 @@ Before promoting a build:
 - [ ] Web Analytics token in `index.html` matches the production site tag.
 - [ ] Cloudflare Access policy on `/admin` verified with a known-allowed and known-denied account.
 - [ ] `takt.hultberg.org/api/health` returns `200 OK`.
-- [ ] Cron Trigger for the retention purge is configured (from Phase 6 onwards).
+- [ ] Cron Trigger for the retention purge is configured (schedule: `0 3 * * *` — daily at 03:00 UTC).
 
 ---
 
 ## Security notes
 
-- All responses include a baseline security header set (CSP, HSTS, Referrer-Policy, Permissions-Policy). Tightened in Phase 6.
+- All responses include a full security header set (CSP, HSTS, Referrer-Policy, Permissions-Policy). Verified A+ on securityheaders.com.
 - Session cookies: `HttpOnly`, `Secure`, `SameSite=Lax`.
 - No user-identifying fields in any D1 table beyond what is necessary. Admin authentication reads the Access email header for authorisation; it is persisted to `admin_log.actor` only when an admin action is taken.
 - Workers AI calls are rate-limited before inference; anonymous users by IP, authenticated users by `userHandle`, admin exempt.

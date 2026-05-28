@@ -6,7 +6,7 @@ Auto-loaded when working with files in this directory. Forward-looking plans for
 
 ## How this folder works
 
-- **Numbered phase files** (`01-…md` through `06-…md`) are living specs. They describe what's being built _now_ or _next_. Each phase is sequential and self-contained: scope, acceptance criteria, technical approach, testing, PR workflow, risks.
+- **Numbered phase files** (`01-…md` through `06-…md`) are completed specs, archived in [ARCHIVE/](./ARCHIVE/). All six phases shipped. Each phase is sequential and self-contained: scope, acceptance criteria, technical approach, testing, PR workflow, risks.
 - **[ORIGINAL_IDEA/project-outline.md](./ORIGINAL_IDEA/project-outline.md)** is the source of truth for _what_ Takt is and _why_. Phase specs reference it but don't duplicate it.
 - **[prototype-design-files/](./prototype-design-files/)** holds the Claude Design prototype — the visual and interaction reference for v1.
 - **[ARCHIVE/](./ARCHIVE/)** receives phase files after they ship. Move them here once the PR is merged and the features are verified in production.
@@ -69,5 +69,5 @@ Full product vision: [ORIGINAL_IDEA/project-outline.md](./ORIGINAL_IDEA/project-
 1. PR merged to `main`, features verified in production.
 2. Move the phase file to `ARCHIVE/`.
 3. Update how-it-works docs in `REFERENCE/` if implementation reveals anything worth documenting for future work.
-4. Update "Current phase" here and in [root CLAUDE.md](../CLAUDE.md) to point at the next phase.
+4. Update "Current phase" here and in [root CLAUDE.md](../CLAUDE.md) to reflect the new status.
 5. Resolve any deferred items promised in the phase spec, or track them as GitHub issues with the `technical-debt` label if they're now active.
