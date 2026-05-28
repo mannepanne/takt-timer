@@ -20,8 +20,20 @@ vi.mock('@/lib/auth/session', () => ({
   })),
 }));
 vi.mock('@/components/PasskeyPrompt', () => ({
-  PasskeyPrompt: ({ open }: { open: boolean }) =>
-    open ? <div data-testid="passkey-prompt" /> : null,
+  PasskeyPrompt: ({
+    open,
+    onSuccess,
+  }: {
+    open: boolean;
+    onSuccess: (user: { userHandle: string; isAdmin: boolean }) => void;
+  }) =>
+    open ? (
+      <div data-testid="passkey-prompt">
+        <button onClick={() => onSuccess({ userHandle: 'u2', isAdmin: false })}>
+          mock-auth-success
+        </button>
+      </div>
+    ) : null,
 }));
 
 import { signOut } from '@/lib/auth/client';
@@ -136,5 +148,19 @@ describe('Account — unauthenticated', () => {
     expect(screen.queryByTestId('passkey-prompt')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: /continue with passkey/i }));
     expect(screen.getByTestId('passkey-prompt')).toBeInTheDocument();
+  });
+
+  it('closes the prompt and refreshes session on successful auth', () => {
+    const refresh = vi.fn();
+    vi.mocked(useSession).mockReturnValue({
+      session: { status: 'unauthenticated' },
+      refresh,
+      login: vi.fn(),
+    });
+    renderAccount();
+    fireEvent.click(screen.getByRole('button', { name: /continue with passkey/i }));
+    fireEvent.click(screen.getByRole('button', { name: /mock-auth-success/i }));
+    expect(refresh).toHaveBeenCalled();
+    expect(screen.queryByTestId('passkey-prompt')).toBeNull();
   });
 });
