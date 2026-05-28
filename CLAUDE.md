@@ -58,11 +58,11 @@ Development is organised into six sequential phases. Each phase has its own spec
 
 **Current phase:** All phases complete. Takt is live.
 
-**Live at:** https://takt.hultberg.org — Phases 1–5 deployed and live.
+**Live at:** https://takt.hultberg.org — beta version launched.
 
 ### SPECIFICATIONS/
 
-- [01–06 phase files](./SPECIFICATIONS/) — active work-in-progress specs.
+- [01–06 phase files](./SPECIFICATIONS/ARCHIVE/) — completed phase specs (historical record).
 - [ORIGINAL_IDEA/project-outline.md](./SPECIFICATIONS/ORIGINAL_IDEA/project-outline.md) — master product spec.
 - [prototype-design-files/](./SPECIFICATIONS/prototype-design-files/) — the Claude Design prototype; the visual reference for v1.
 - [ARCHIVE/](./SPECIFICATIONS/ARCHIVE/) — completed phase specs.
@@ -77,6 +77,8 @@ How-it-works documentation and operational reference:
 - [pr-review-workflow.md](./REFERENCE/pr-review-workflow.md) — how to use `/review-spec`, `/review-pr`, `/review-pr-team`.
 - [auth-and-presets-api.md](./REFERENCE/auth-and-presets-api.md) — HTTP contract for auth, presets, sessions, and `/api/me/settings`.
 - [voice-api-contract.md](./REFERENCE/voice-api-contract.md) — HTTP contract for `/api/voice/parse`, NDJSON events, `X-Takt-Lang` hint.
+- [admin-api.md](./REFERENCE/admin-api.md) — HTTP contract for `/admin/*` routes, auth guard, user delete, retention purge endpoints.
+- [cron.md](./REFERENCE/cron.md) — daily retention purge cron, criteria, `purge_runs` audit table, dry-run.
 - [i18n.md](./REFERENCE/i18n.md) — `strings.ts` schema, key naming, `t()` API, testing patterns.
 - [safety-harness.md](./REFERENCE/safety-harness.md) — pre-tool-use hook: blocked patterns, bypass, extending.
 - [scratch-write-hook.md](./REFERENCE/scratch-write-hook.md) — Write auto-approval for `SCRATCH/`.
