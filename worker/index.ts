@@ -18,6 +18,7 @@ import { sessionsList } from './api/sessions/list';
 import { parseVoice } from './api/voice/parse';
 import { applySecurityHeaders } from './lib/securityHeaders';
 import { isAllowedOrigin } from './lib/isAllowedOrigin';
+import { handleAdmin } from './admin/router';
 
 export interface Env {
   ASSETS: Fetcher;
@@ -32,6 +33,8 @@ export interface Env {
   // Set to "1" in a gitignored `.dev.vars` to skip the rate limiter under `wrangler dev`.
   // See ADR 2026-05-12-kv-rate-limiter.md.
   ALLOW_RATE_LIMIT_BYPASS?: string;
+  // Set to "1" in `.dev.vars` to bypass Cloudflare Access auth on admin routes under `wrangler dev`.
+  ALLOW_ADMIN_BYPASS?: string;
 }
 
 function methodNotAllowed(): Response {
@@ -119,6 +122,11 @@ export default {
       if (method === 'GET') return applySecurityHeaders(await sessionsList(request, env));
       if (method === 'POST') return applySecurityHeaders(await sessionsAppend(request, env));
       return methodNotAllowed();
+    }
+
+    // ── Admin ─────────────────────────────────────────────────────────────────
+    if (path.startsWith('/admin')) {
+      return applySecurityHeaders(await handleAdmin(request, env));
     }
 
     // ── SPA fallback ──────────────────────────────────────────────────────────

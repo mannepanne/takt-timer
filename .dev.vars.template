@@ -11,6 +11,14 @@
 # ALLOW_RATE_LIMIT_BYPASS=1
 
 # ──────────────────────────────────────────────────────────────────────────────
+# Phase 6 — admin backend.
+# ──────────────────────────────────────────────────────────────────────────────
+
+# Skip Cloudflare Access auth on /admin routes. Set to "1" to exercise the
+# admin UI locally under `wrangler dev` without an Access-protected domain.
+# ALLOW_ADMIN_BYPASS=1
+
+# ──────────────────────────────────────────────────────────────────────────────
 # Phase 4 — accounts and passkeys. Placeholders below activate then.
 # ──────────────────────────────────────────────────────────────────────────────
 
