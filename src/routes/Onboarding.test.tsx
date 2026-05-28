@@ -20,6 +20,7 @@ function renderOnboarding(onDone = vi.fn()) {
 
 beforeEach(() => {
   localStorage.clear();
+  sessionStorage.clear();
 });
 
 describe('localStorage helpers', () => {
@@ -128,5 +129,33 @@ describe('Onboarding component', () => {
     }
     await userEvent.keyboard('{ArrowRight}');
     expect(onDone).toHaveBeenCalledOnce();
+  });
+});
+
+describe('sessionStorage slide persistence', () => {
+  it('saves current slide to sessionStorage on advance', async () => {
+    renderOnboarding();
+    await userEvent.click(screen.getByRole('button', { name: /next/i }));
+    expect(sessionStorage.getItem('takt.onboarding.slide')).toBe('1');
+  });
+
+  it('restores slide from sessionStorage on mount', () => {
+    sessionStorage.setItem('takt.onboarding.slide', '2');
+    renderOnboarding();
+    expect(screen.getByRole('link', { name: /privacy policy/i })).toBeInTheDocument();
+  });
+
+  it('clears sessionStorage when done', async () => {
+    const onDone = vi.fn();
+    sessionStorage.setItem('takt.onboarding.slide', '2');
+    renderOnboarding(onDone);
+    await userEvent.click(screen.getByRole('button', { name: /skip/i }));
+    expect(sessionStorage.getItem('takt.onboarding.slide')).toBeNull();
+  });
+
+  it('ignores out-of-range sessionStorage value', () => {
+    sessionStorage.setItem('takt.onboarding.slide', '99');
+    renderOnboarding();
+    expect(screen.getByRole('heading', { name: /takt/i })).toBeInTheDocument();
   });
 });

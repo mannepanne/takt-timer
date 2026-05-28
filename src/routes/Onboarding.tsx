@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import { useI18n } from '@/i18n/context';
 
 const ONBOARDING_KEY = 'takt.onboarding.v1';
+const SLIDE_SESSION_KEY = 'takt.onboarding.slide';
 const TOTAL_SLIDES = 4;
 
 export function hasSeenOnboarding(): boolean {
@@ -25,15 +26,43 @@ export function markOnboardingSeen(): void {
   }
 }
 
+function readSavedSlide(): number {
+  try {
+    const v = sessionStorage.getItem(SLIDE_SESSION_KEY);
+    const n = v !== null ? Number(v) : 0;
+    return n >= 0 && n < TOTAL_SLIDES ? n : 0;
+  } catch {
+    return 0;
+  }
+}
+
 type Props = { onDone: () => void };
 
 export function Onboarding({ onDone }: Props) {
   const { t } = useI18n();
-  const [slide, setSlide] = useState(0);
+  const [slide, setSlide] = useState(readSavedSlide);
   const slideValue = useRef(slide);
   slideValue.current = slide;
 
   const isLast = slide === TOTAL_SLIDES - 1;
+
+  // Persist slide position so navigating to /privacy and back resumes here.
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(SLIDE_SESSION_KEY, String(slide));
+    } catch {
+      // ignore
+    }
+  }, [slide]);
+
+  function handleDone() {
+    try {
+      sessionStorage.removeItem(SLIDE_SESSION_KEY);
+    } catch {
+      // ignore
+    }
+    onDone();
+  }
 
   // Keyboard navigation: ←/→ to move between slides, Esc to skip
   useEffect(() => {
@@ -41,21 +70,21 @@ export function Onboarding({ onDone }: Props) {
       const s = slideValue.current;
       if (e.key === 'ArrowRight') {
         if (s < TOTAL_SLIDES - 1) setSlide(s + 1);
-        else onDone();
+        else handleDone();
       } else if (e.key === 'ArrowLeft') {
         if (s > 0) setSlide(s - 1);
       } else if (e.key === 'Escape') {
-        onDone();
+        handleDone();
       }
     }
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [onDone]);
+  }, [onDone]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="onboarding screen">
       {!isLast && (
-        <button type="button" className="onboarding-skip" onClick={onDone}>
+        <button type="button" className="onboarding-skip" onClick={handleDone}>
           {t('onboarding.skip')}
         </button>
       )}
@@ -113,7 +142,7 @@ export function Onboarding({ onDone }: Props) {
           className="btn btn-primary onboarding-cta"
           onClick={() => {
             if (slide < TOTAL_SLIDES - 1) setSlide(slide + 1);
-            else onDone();
+            else handleDone();
           }}
         >
           {isLast ? t('onboarding.getStarted') : t('onboarding.next')}
