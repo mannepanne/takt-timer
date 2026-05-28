@@ -35,10 +35,12 @@ export async function handleDeleteUserConfirmPage(request: Request, env: Env): P
 
   const formData = await request.formData();
   const handle = (formData.get('handle') as string | null) ?? '';
-  if (!handle) return new Response('Bad Request', { status: 400 });
+  if (!handle)
+    return new Response('Bad Request', { status: 400, headers: { 'Cache-Control': 'no-store' } });
 
   const user = await getUserByHandleAdmin(env.DB, handle);
-  if (!user) return new Response('Not Found', { status: 404 });
+  if (!user)
+    return new Response('Not Found', { status: 404, headers: { 'Cache-Control': 'no-store' } });
 
   return adminLayout(
     `Delete ${handle}`,
@@ -53,10 +55,12 @@ export async function handleDeleteUserExecute(request: Request, env: Env): Promi
 
   const formData = await request.formData();
   const handle = (formData.get('handle') as string | null) ?? '';
-  if (!handle) return new Response('Bad Request', { status: 400 });
+  if (!handle)
+    return new Response('Bad Request', { status: 400, headers: { 'Cache-Control': 'no-store' } });
 
   const user = await getUserByHandleAdmin(env.DB, handle);
-  if (!user) return new Response('Not Found', { status: 404 });
+  if (!user)
+    return new Response('Not Found', { status: 404, headers: { 'Cache-Control': 'no-store' } });
 
   // Audit log first — ensures a record exists even if the cascade fails midway.
   await insertAdminLog(env.DB, 'delete_user', actor, handle, Date.now());

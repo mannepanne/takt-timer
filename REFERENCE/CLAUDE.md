@@ -58,6 +58,12 @@ The `strings.ts` schema, key naming conventions, `satisfies` pattern, `takt.lang
 
 HTTP contract for `/api/voice/parse` — status codes, NDJSON event shapes (whisper / parsed / error), cold-start AbortController behaviour, and the dev-only rate-limit bypass.
 
+### [admin-api.md](./admin-api.md)
+
+**When to read:** Working on the admin backend, debugging admin auth or delete flows, or checking the exact HTTP contract for `/admin/*` routes.
+
+HTTP contract for the admin backend — auth guard, dashboard metrics, user-lookup, two-step delete with audit log, error responses, local dev bypass.
+
 ### [decisions/](./decisions/)
 
 **When to read:** Making architectural decisions, choosing between alternatives, or looking up why something was built the way it was.

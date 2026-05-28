@@ -22,6 +22,7 @@ ${detail}`;
 }
 
 function renderUserDetail(user: AdminUserRow): string {
+  // Delete form uses POST so the handle stays out of URL history and server access logs.
   return `
 <table>
   <tr><th>Handle</th><td><code>${escHtml(user.user_handle)}</code></td></tr>

@@ -80,15 +80,16 @@ describe('handleDeleteUserConfirmPage', () => {
     expect(text).toContain('/admin/user-delete/confirm');
   });
 
-  it('returns 404 for unknown handle', async () => {
+  it('returns 404 with Cache-Control: no-store for unknown handle', async () => {
     const { db } = makeD1(null);
     const kv = makeKv();
     const req = postRequest('https://takt.hultberg.org/admin/user-delete', 'nobody');
     const res = await handleDeleteUserConfirmPage(req, makeEnv(db, kv));
     expect(res.status).toBe(404);
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
   });
 
-  it('returns 400 when handle is missing', async () => {
+  it('returns 400 with Cache-Control: no-store when handle is missing', async () => {
     const { db } = makeD1();
     const kv = makeKv();
     const req = new Request('https://takt.hultberg.org/admin/user-delete', {
@@ -101,9 +102,10 @@ describe('handleDeleteUserConfirmPage', () => {
     });
     const res = await handleDeleteUserConfirmPage(req, makeEnv(db, kv));
     expect(res.status).toBe(400);
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
   });
 
-  it('returns 403 when CSRF origin is disallowed', async () => {
+  it('returns 403 with Cache-Control: no-store when CSRF origin is disallowed', async () => {
     const { db } = makeD1();
     const kv = makeKv();
     const req = postRequest(
@@ -113,6 +115,7 @@ describe('handleDeleteUserConfirmPage', () => {
     );
     const res = await handleDeleteUserConfirmPage(req, makeEnv(db, kv));
     expect(res.status).toBe(403);
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
   });
 });
 
@@ -151,15 +154,16 @@ describe('handleDeleteUserExecute', () => {
     expect(text).toContain('permanently removed');
   });
 
-  it('returns 404 for unknown handle', async () => {
+  it('returns 404 with Cache-Control: no-store for unknown handle', async () => {
     const { db } = makeD1(null);
     const kv = makeKv();
     const req = postRequest('https://takt.hultberg.org/admin/user-delete/confirm', 'nobody');
     const res = await handleDeleteUserExecute(req, makeEnv(db, kv));
     expect(res.status).toBe(404);
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
   });
 
-  it('returns 400 when handle is missing from form', async () => {
+  it('returns 400 with Cache-Control: no-store when handle is missing from form', async () => {
     const { db } = makeD1();
     const kv = makeKv();
     const req = new Request('https://takt.hultberg.org/admin/user-delete/confirm', {
@@ -172,5 +176,6 @@ describe('handleDeleteUserExecute', () => {
     });
     const res = await handleDeleteUserExecute(req, makeEnv(db, kv));
     expect(res.status).toBe(400);
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
   });
 });

@@ -55,11 +55,13 @@ describe('getAdminActor', () => {
 });
 
 describe('requireAdminAuth', () => {
-  it('returns 403 Response when actor is null', () => {
+  it('returns 403 with Cache-Control: no-store when actor is null', () => {
     const req = makeRequest({ url: 'https://takt.herrings.workers.dev/admin' });
     const result = requireAdminAuth(req, PROD_ENV);
     expect(result).toBeInstanceOf(Response);
-    expect((result as Response).status).toBe(403);
+    const res = result as Response;
+    expect(res.status).toBe(403);
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
   });
 
   it('returns actor object when authenticated', () => {
@@ -76,24 +78,28 @@ describe('requireAdminAuth', () => {
 });
 
 describe('requireAdminAuthWithCsrf', () => {
-  it('returns 403 when actor is null', () => {
+  it('returns 403 with Cache-Control: no-store when actor is null', () => {
     const req = makeRequest({
       url: 'https://takt.herrings.workers.dev/admin',
       origin: 'https://takt.hultberg.org',
     });
     const result = requireAdminAuthWithCsrf(req, PROD_ENV);
     expect(result).toBeInstanceOf(Response);
-    expect((result as Response).status).toBe(403);
+    const res = result as Response;
+    expect(res.status).toBe(403);
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
   });
 
-  it('returns 403 when origin is disallowed', () => {
+  it('returns 403 with Cache-Control: no-store when origin is disallowed', () => {
     const req = makeRequest({
       accessEmail: 'magnus@example.com',
       origin: 'https://evil.example.com',
     });
     const result = requireAdminAuthWithCsrf(req, PROD_ENV);
     expect(result).toBeInstanceOf(Response);
-    expect((result as Response).status).toBe(403);
+    const res = result as Response;
+    expect(res.status).toBe(403);
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
   });
 
   it('returns actor when authenticated and origin is allowed', () => {

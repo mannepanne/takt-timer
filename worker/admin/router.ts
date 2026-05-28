@@ -23,5 +23,5 @@ export async function handleAdmin(request: Request, env: Env): Promise<Response>
     return handleDeleteUserExecute(request, env);
   }
 
-  return new Response('Not Found', { status: 404 });
+  return new Response('Not Found', { status: 404, headers: { 'Cache-Control': 'no-store' } });
 }

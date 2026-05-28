@@ -24,7 +24,8 @@ export function requireAdminAuth(
   env: Pick<Env, 'ALLOW_ADMIN_BYPASS'>,
 ): { actor: string } | Response {
   const actor = getAdminActor(request, env);
-  if (!actor) return new Response('Forbidden', { status: 403 });
+  if (!actor)
+    return new Response('Forbidden', { status: 403, headers: { 'Cache-Control': 'no-store' } });
   return { actor };
 }
 
@@ -33,7 +34,9 @@ export function requireAdminAuthWithCsrf(
   env: Pick<Env, 'ALLOW_ADMIN_BYPASS'>,
 ): { actor: string } | Response {
   const actor = getAdminActor(request, env);
-  if (!actor) return new Response('Forbidden', { status: 403 });
-  if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
+  if (!actor)
+    return new Response('Forbidden', { status: 403, headers: { 'Cache-Control': 'no-store' } });
+  if (!isAllowedOrigin(request))
+    return new Response('Forbidden', { status: 403, headers: { 'Cache-Control': 'no-store' } });
   return { actor };
 }
