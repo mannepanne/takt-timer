@@ -41,7 +41,7 @@ Full product vision: [ORIGINAL_IDEA/project-outline.md](./ORIGINAL_IDEA/project-
 5. ~~**[05-i18n-settings-onboarding.md](./ARCHIVE/05-i18n-settings-onboarding.md)**~~ — ✅ complete
    English and Swedish translations, full Settings screen (language, accent, sound, account), Onboarding flow, real Privacy policy content in both languages. Archived.
 
-6. **[06-admin-and-launch.md](./06-admin-and-launch.md)** — 4–6 days
+6. **[06-admin-and-launch.md](./06-admin-and-launch.md)** — 3–4 days
    Admin backend gated by Cloudflare Access, dashboard + user listing + delete, retention purge cron, security headers, observability, pre-launch checklist, launch.
 
 ### Supporting documentation

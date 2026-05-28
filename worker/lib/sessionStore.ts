@@ -74,11 +74,20 @@ export function parseCookieHeader(header: string | null): string | null {
   return null;
 }
 
+function userSessionKey(userHandle: string, sessionId: string): string {
+  return `user-session:${userHandle}:${sessionId}`;
+}
+
 export async function createSession(
   env: Pick<Env, 'SESSIONS' | 'SESSION_COOKIE_SECRET'>,
   data: SessionData,
 ): Promise<string> {
   const sessionId = crypto.randomUUID();
+  // Reverse-index written first: if session-data write fails, index points at nothing
+  // and deleteUserSessions issues a harmless delete — no orphan session.
+  await env.SESSIONS.put(userSessionKey(data.userHandle, sessionId), '1', {
+    expirationTtl: TTL_SECONDS,
+  });
   await env.SESSIONS.put(sessionId, JSON.stringify(data), { expirationTtl: TTL_SECONDS });
   return sign(sessionId, env.SESSION_COOKIE_SECRET);
 }
@@ -105,4 +114,27 @@ export async function deleteSession(
   const sessionId = await verify(signed, env.SESSION_COOKIE_SECRET);
   if (!sessionId) return;
   await env.SESSIONS.delete(sessionId);
+}
+
+export async function deleteUserSessions(
+  env: Pick<Env, 'SESSIONS'>,
+  userHandle: string,
+): Promise<number> {
+  const prefix = userSessionKey(userHandle, '');
+  let total = 0;
+  let cursor: string | undefined;
+  do {
+    const page = await env.SESSIONS.list({ prefix, ...(cursor ? { cursor } : {}) });
+    if (page.keys.length > 0) {
+      total += page.keys.length;
+      await Promise.all(
+        page.keys.flatMap((k) => {
+          const sessionId = k.name.slice(prefix.length);
+          return [env.SESSIONS.delete(sessionId), env.SESSIONS.delete(k.name)];
+        }),
+      );
+    }
+    cursor = page.list_complete ? undefined : (page as { cursor?: string }).cursor;
+  } while (cursor);
+  return total;
 }

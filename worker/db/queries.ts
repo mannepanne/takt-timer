@@ -1,7 +1,7 @@
-// ABOUT: D1 query helpers for users, presets, and sessions.
+// ABOUT: D1 query helpers for users, presets, sessions, and admin tables.
 // ABOUT: Account deletion uses explicit cascading deletes — D1 FK constraints are advisory only.
 
-import type { UserRow, UserSettings, PresetRow, SessionRow } from './schema';
+import type { UserRow, UserSettings, PresetRow, SessionRow, AdminUserRow } from './schema';
 
 // ── Users ──────────────────────────────────────────────────────────────────
 
@@ -165,4 +165,107 @@ export function getLatestSession(db: D1Database, userHandle: string) {
     .prepare('SELECT * FROM sessions WHERE user_handle = ? ORDER BY completed_at DESC LIMIT 1')
     .bind(userHandle)
     .first<SessionRow>();
+}
+
+// ── Admin / metrics ────────────────────────────────────────────────────────
+
+export function insertVoiceCall(db: D1Database, userHandle: string | null, calledAt: number) {
+  return db
+    .prepare('INSERT INTO voice_calls (user_handle, called_at) VALUES (?, ?)')
+    .bind(userHandle, calledAt)
+    .run();
+}
+
+export function insertPurgeRun(db: D1Database, ranAt: number, usersDeleted: number) {
+  return db
+    .prepare('INSERT INTO purge_runs (ran_at, users_deleted) VALUES (?, ?)')
+    .bind(ranAt, usersDeleted)
+    .run();
+}
+
+export function insertAdminLog(
+  db: D1Database,
+  action: 'delete_user' | 'purge_run',
+  actor: string,
+  target: string | null,
+  loggedAt: number,
+) {
+  return db
+    .prepare('INSERT INTO admin_log (action, actor, target, logged_at) VALUES (?, ?, ?, ?)')
+    .bind(action, actor, target, loggedAt)
+    .run();
+}
+
+export function pruneVoiceCalls(db: D1Database, olderThanMs: number) {
+  return db.prepare('DELETE FROM voice_calls WHERE called_at < ?').bind(olderThanMs).run();
+}
+
+// Correlated subqueries avoid cartesian product from JOIN-ing sessions and presets simultaneously.
+export function getUserByHandleAdmin(db: D1Database, userHandle: string) {
+  return db
+    .prepare(
+      `SELECT
+         u.user_handle,
+         u.created_at,
+         (SELECT COUNT(*) FROM sessions WHERE sessions.user_handle = u.user_handle) AS session_count,
+         (SELECT MAX(completed_at) FROM sessions WHERE sessions.user_handle = u.user_handle) AS last_session_at,
+         (SELECT COUNT(*) FROM presets WHERE presets.user_handle = u.user_handle) AS preset_count
+       FROM users u
+       WHERE u.user_handle = ?`,
+    )
+    .bind(userHandle)
+    .first<AdminUserRow>();
+}
+
+// CHUNK_SIZE=30 → 90 statements per batch (3 DELETEs × 30 users), safely under D1's 100-stmt limit.
+const PURGE_CHUNK_SIZE = 30;
+
+export async function pruneInactiveUsers(
+  db: D1Database,
+  thresholdMs: number,
+  dryRun: boolean,
+): Promise<{ userHandles: string[]; deleted: number }> {
+  const { results } = await db
+    .prepare(
+      `SELECT user_handle FROM users
+       WHERE created_at < ?
+         AND NOT EXISTS (SELECT 1 FROM sessions WHERE sessions.user_handle = users.user_handle)
+         AND NOT EXISTS (SELECT 1 FROM presets WHERE presets.user_handle = users.user_handle)`,
+    )
+    .bind(thresholdMs)
+    .all<{ user_handle: string }>();
+
+  const handles = results.map((r) => r.user_handle);
+
+  if (dryRun || handles.length === 0) {
+    return { userHandles: handles, deleted: 0 };
+  }
+
+  let deleted = 0;
+  for (let i = 0; i < handles.length; i += PURGE_CHUNK_SIZE) {
+    const chunk = handles.slice(i, i + PURGE_CHUNK_SIZE);
+    // Re-verify eligibility per chunk: a user could have created a session or preset
+    // between the initial SELECT and this batch, so we must not delete them.
+    const placeholders = chunk.map(() => '?').join(', ');
+    const { results: stillEligible } = await db
+      .prepare(
+        `SELECT user_handle FROM users
+         WHERE user_handle IN (${placeholders})
+           AND NOT EXISTS (SELECT 1 FROM sessions WHERE sessions.user_handle = users.user_handle)
+           AND NOT EXISTS (SELECT 1 FROM presets WHERE presets.user_handle = users.user_handle)`,
+      )
+      .bind(...chunk)
+      .all<{ user_handle: string }>();
+    const eligible = new Set(stillEligible.map((r) => r.user_handle));
+    const safeChunk = chunk.filter((h) => eligible.has(h));
+    if (safeChunk.length === 0) continue;
+    deleted += safeChunk.length;
+    await db.batch([
+      ...safeChunk.map((h) => db.prepare('DELETE FROM sessions WHERE user_handle = ?').bind(h)),
+      ...safeChunk.map((h) => db.prepare('DELETE FROM presets WHERE user_handle = ?').bind(h)),
+      ...safeChunk.map((h) => db.prepare('DELETE FROM users WHERE user_handle = ?').bind(h)),
+    ]);
+  }
+
+  return { userHandles: handles, deleted };
 }

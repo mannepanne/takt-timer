@@ -155,7 +155,24 @@ pnpm dlx wrangler tail
 
 The `/admin` route is gated at the edge by Cloudflare Access with Magnus's existing Google IdP policy. Configuration lives in the Cloudflare dashboard, not in code.
 
-To change who has admin access: update the Access application in the dashboard. The app reads the authenticated email header (`CF-Access-Authenticated-User-Email` or equivalent) and uses it for authorisation only — never persists it.
+To change who has admin access: update the Access application in the dashboard. The app reads the authenticated email header (`CF-Access-Authenticated-User-Email` or equivalent) and uses it for authorisation. It is persisted to `admin_log.actor` for audit purposes when an admin action is taken (e.g. deleting a user), but is not stored anywhere else.
+
+---
+
+## Operator levers
+
+### Rotate `SESSION_COOKIE_SECRET` — logout everyone
+
+Rotating this secret invalidates all existing signed session cookies immediately. Every active user is silently logged out on their next request. Old KV entries expire naturally via their 30-day TTL.
+
+```bash
+pnpm dlx wrangler secret put SESSION_COOKIE_SECRET
+# Enter a new random secret at the prompt (e.g. openssl rand -base64 32)
+```
+
+**When to use:** security incident requiring mass session revocation, pre-launch clean-state initialisation, or any time you need to force all users to re-authenticate.
+
+**Deploy ordering matters (pre-launch):** if `isAdmin` seed runs _after_ secret rotation, your rotated session lands with `isAdmin: false`. Correct sequence: (1) deploy code, (2) seed `isAdmin = 1`, (3) rotate `SESSION_COOKIE_SECRET`, (4) re-authenticate.
 
 ---
 
@@ -176,7 +193,7 @@ Before promoting a build:
 
 - All responses include a baseline security header set (CSP, HSTS, Referrer-Policy, Permissions-Policy). Tightened in Phase 6.
 - Session cookies: `HttpOnly`, `Secure`, `SameSite=Lax`.
-- No user-identifying fields in any D1 table. Admin authentication reads the Access email header for authorisation only; it is not persisted.
+- No user-identifying fields in any D1 table beyond what is necessary. Admin authentication reads the Access email header for authorisation; it is persisted to `admin_log.actor` only when an admin action is taken.
 - Workers AI calls are rate-limited before inference; anonymous users by IP, authenticated users by `userHandle`, admin exempt.
 
 ---
