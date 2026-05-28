@@ -53,7 +53,7 @@ Build the admin surface Magnus needs to operate the service, wire the retention 
 - [ ] Magnus's user row has `isAdmin = 1` after running the one-off D1 seed command post-registration.
 - [ ] Magnus can call the voice API without hitting the rate limit.
 - [ ] The cron `scheduled` export runs against a seeded test database and correctly purges users with no sessions and no presets older than the threshold; users with sessions or presets are kept.
-- [ ] Security headers verified via securityheaders.com showing **A-grade** (A+ deferred — TD-010 blocks it).
+- [x] Security headers verified via securityheaders.com — **A+ achieved** (2026-05-28).
 - [ ] `/api/health` green; uptime check passing.
 - [ ] Tests pass with coverage targets met.
 - [ ] Soft launch: site is publicly accessible with no Coming Soon gate.
