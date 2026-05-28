@@ -1,4 +1,5 @@
 // ABOUT: Segmented control for switching between English and Swedish.
+// ABOUT: Renders each language label in its own tongue; calls onChange only when switching.
 
 import { useI18n } from '@/i18n/context';
 import type { Lang } from '@/i18n/strings';

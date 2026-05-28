@@ -14,7 +14,7 @@ describe('LanguageToggle', () => {
   it('renders two language buttons', () => {
     render(<LanguageToggle />, { wrapper });
     expect(screen.getByRole('button', { name: /english/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /swedish/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /svenska/i })).toBeInTheDocument();
   });
 
   it('marks the active language with aria-pressed=true', () => {
@@ -24,7 +24,7 @@ describe('LanguageToggle', () => {
       'aria-pressed',
       'true',
     );
-    expect(screen.getByRole('button', { name: /swedish/i })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: /svenska/i })).toHaveAttribute(
       'aria-pressed',
       'false',
     );
@@ -33,7 +33,7 @@ describe('LanguageToggle', () => {
   it('calls onChange when a different language is clicked', async () => {
     const onChange = vi.fn();
     render(<LanguageToggle onChange={onChange} />, { wrapper });
-    await userEvent.click(screen.getByRole('button', { name: /swedish/i }));
+    await userEvent.click(screen.getByRole('button', { name: /svenska/i }));
     expect(onChange).toHaveBeenCalledWith('sv');
   });
 

@@ -70,11 +70,25 @@ describe('putSettings', () => {
 
   it('saves valid settings and returns ok', async () => {
     vi.mocked(getSession).mockResolvedValueOnce({ userHandle: 'u1', isAdmin: false });
-    vi.mocked(updateUserSettings).mockResolvedValueOnce({ success: true } as any);
+    vi.mocked(updateUserSettings).mockResolvedValueOnce({
+      success: true,
+      meta: { changes: 1 },
+    } as any);
     const res = await putSettings(putReq(DEFAULTS), makeEnv());
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ ok: true });
     expect(updateUserSettings).toHaveBeenCalledWith(expect.anything(), 'u1', DEFAULTS);
+  });
+
+  it('returns 404 when user row is missing (0 changes)', async () => {
+    vi.mocked(getSession).mockResolvedValueOnce({ userHandle: 'ghost', isAdmin: false });
+    vi.mocked(updateUserSettings).mockResolvedValueOnce({
+      success: true,
+      meta: { changes: 0 },
+    } as any);
+    const res = await putSettings(putReq(DEFAULTS), makeEnv());
+    expect(res.status).toBe(404);
+    expect(await res.json()).toMatchObject({ error: 'not_found' });
   });
 
   it('rejects unknown language', async () => {

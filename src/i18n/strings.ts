@@ -265,7 +265,7 @@ const strings = {
   'settings.title': { en: 'Settings', sv: 'Inställningar' },
   'settings.language': { en: 'Language', sv: 'Språk' },
   'settings.language.en': { en: 'English', sv: 'Engelska' },
-  'settings.language.sv': { en: 'Swedish', sv: 'Svenska' },
+  'settings.language.sv': { en: 'Svenska', sv: 'Svenska' },
   'settings.sound': { en: 'Sound effects', sv: 'Ljudeffekter' },
   'settings.accent': { en: 'Accent colour', sv: 'Accentfärg' },
   'settings.accent.lichen': { en: 'Lichen', sv: 'Lav' },
@@ -274,6 +274,7 @@ const strings = {
   'settings.accent.amber': { en: 'Amber', sv: 'Bärnsten' },
   'settings.accent.iris': { en: 'Iris', sv: 'Iris' },
   'settings.accent.slate': { en: 'Slate', sv: 'Skiffer' },
+  'settings.saved': { en: 'Saved', sv: 'Sparat' },
   'home.settings': { en: 'Settings', sv: 'Inställningar' },
 
   // ── Stepper sheet ─────────────────────────────────────────────────────

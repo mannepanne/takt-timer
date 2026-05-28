@@ -1,4 +1,5 @@
 // ABOUT: Grid of colour swatches for choosing the accent colour.
+// ABOUT: Each swatch emits the chosen AccentId via onChange; aria-checked tracks selection.
 
 import { useI18n } from '@/i18n/context';
 import { ACCENTS, type AccentId } from '@/lib/settings/accents';

@@ -95,7 +95,7 @@ export function Home() {
     <div className="screen">
       <TopBar
         left={
-          <div style={{ display: 'flex', gap: 4 }}>
+          <div className="icon-btn-group">
             {isAuthenticated && (
               <button
                 className="icon-btn"

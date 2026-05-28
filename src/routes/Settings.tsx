@@ -1,6 +1,7 @@
 // ABOUT: Settings route — language, accent colour, sound effects.
 // ABOUT: Available to all users; changes persist to D1 for authenticated users.
 
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { AccentPicker } from '@/components/AccentPicker';
@@ -16,18 +17,29 @@ export function Settings() {
   const { t, setLang } = useI18n();
   const { accentId, soundOn, setAccent, setSoundOn, putAllSettings } = useSettings();
   const navigate = useNavigate();
+  const [savedVisible, setSavedVisible] = useState(false);
+  const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function triggerSaved() {
+    if (savedTimer.current) clearTimeout(savedTimer.current);
+    setSavedVisible(true);
+    savedTimer.current = setTimeout(() => setSavedVisible(false), 1500);
+  }
 
   function handleLangChange(next: Lang) {
     setLang(next);
     putAllSettings({ language: next });
+    triggerSaved();
   }
 
   function handleAccentChange(id: AccentId) {
     setAccent(id);
+    triggerSaved();
   }
 
   function handleSoundToggle() {
     setSoundOn(!soundOn);
+    triggerSaved();
   }
 
   return (
@@ -47,6 +59,9 @@ export function Settings() {
 
       <div className="settings-body">
         <h1 className="settings-title">{t('settings.title')}</h1>
+        <p className="settings-saved" aria-live="polite" aria-atomic="true">
+          {savedVisible ? t('settings.saved') : ''}
+        </p>
 
         <section className="settings-section">
           <div className="settings-row">

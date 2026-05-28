@@ -36,7 +36,26 @@ export async function register(): Promise<AuthUser> {
     const body = await verifyRes.json().catch(() => ({}));
     throw new Error((body as { error?: string }).error ?? 'Registration failed');
   }
-  return verifyRes.json() as Promise<AuthUser>;
+  const authUser = (await verifyRes.json()) as AuthUser;
+  // Push local settings to server so anon preferences survive registration.
+  try {
+    const langRaw = localStorage.getItem('takt.lang.v1');
+    const accentRaw = localStorage.getItem('takt.accent.v1');
+    const soundRaw = localStorage.getItem('takt.sound.v1');
+    const VALID_ACCENTS = new Set(['lichen', 'coral', 'ocean', 'amber', 'iris', 'slate']);
+    await apiFetch('/api/me/settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        language: langRaw === 'en' || langRaw === 'sv' ? langRaw : 'en',
+        accent_colour: accentRaw && VALID_ACCENTS.has(accentRaw) ? accentRaw : 'lichen',
+        sound_on: soundRaw === '0' ? 0 : 1,
+      }),
+    });
+  } catch {
+    // Push failure is non-fatal — server keeps registration defaults.
+  }
+  return authUser;
 }
 
 export async function signIn(): Promise<AuthUser> {

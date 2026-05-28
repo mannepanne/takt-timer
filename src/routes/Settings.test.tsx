@@ -91,7 +91,7 @@ describe('Settings route', () => {
 
   it('language toggle click calls setLang', async () => {
     renderSettings();
-    await userEvent.click(screen.getByRole('button', { name: /swedish/i }));
+    await userEvent.click(screen.getByRole('button', { name: /svenska/i }));
     // After switching to sv the Swedish button should be pressed
     expect(screen.getByRole('button', { name: /svenska/i })).toHaveAttribute(
       'aria-pressed',

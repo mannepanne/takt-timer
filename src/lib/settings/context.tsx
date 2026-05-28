@@ -99,13 +99,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
 
-  const putAllSettings = useCallback(
-    (overrides?: { language?: string }) => {
+  const persistToServer = useCallback(
+    (overrides?: { language?: string; accent_colour?: string; sound_on?: number }) => {
       if (!isAuthenticated) return;
       const body = {
         language: overrides?.language ?? lang,
-        accent_colour: accentId,
-        sound_on: soundOn ? 1 : 0,
+        accent_colour: overrides?.accent_colour ?? accentId,
+        sound_on: overrides?.sound_on ?? (soundOn ? 1 : 0),
       };
       apiFetch('/api/me/settings', {
         method: 'PUT',
@@ -116,6 +116,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     [isAuthenticated, lang, accentId, soundOn],
   );
 
+  const putAllSettings = useCallback(
+    (overrides?: { language?: string }) => {
+      persistToServer(overrides);
+    },
+    [persistToServer],
+  );
+
   const setAccent = useCallback(
     (id: AccentId) => {
       setAccentId(id);
@@ -124,15 +131,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       } catch {
         /* ignore */
       }
-      if (isAuthenticated) {
-        apiFetch('/api/me/settings', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ language: lang, accent_colour: id, sound_on: soundOn ? 1 : 0 }),
-        }).catch(() => {});
-      }
+      persistToServer({ accent_colour: id });
     },
-    [isAuthenticated, lang, soundOn],
+    [persistToServer],
   );
 
   const setSoundOn = useCallback(
@@ -143,15 +144,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       } catch {
         /* ignore */
       }
-      if (isAuthenticated) {
-        apiFetch('/api/me/settings', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ language: lang, accent_colour: accentId, sound_on: on ? 1 : 0 }),
-        }).catch(() => {});
-      }
+      persistToServer({ sound_on: on ? 1 : 0 });
     },
-    [isAuthenticated, lang, accentId],
+    [persistToServer],
   );
 
   const value = useMemo(

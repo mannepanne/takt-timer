@@ -45,6 +45,11 @@ export async function putSettings(request: Request, env: Env): Promise<Response>
     return Response.json({ error: 'invalid_sound_on' }, { status: 400 });
   }
 
-  await updateUserSettings(env.DB, session.userHandle, { language, accent_colour, sound_on });
+  const result = await updateUserSettings(env.DB, session.userHandle, {
+    language,
+    accent_colour,
+    sound_on,
+  });
+  if (result.meta.changes === 0) return Response.json({ error: 'not_found' }, { status: 404 });
   return Response.json({ ok: true });
 }
