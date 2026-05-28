@@ -56,7 +56,7 @@ Build the admin surface Magnus needs to operate the service, wire the retention 
 - [x] Security headers verified via securityheaders.com — **A+ achieved** (2026-05-28).
 - [ ] `/api/health` green; uptime check passing.
 - [ ] Tests pass with coverage targets met.
-- [ ] Soft launch: site is publicly accessible with no Coming Soon gate.
+- [x] Soft launch: site is publicly accessible with no Coming Soon gate.
 
 ---
 
