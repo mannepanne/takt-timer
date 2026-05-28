@@ -8,6 +8,7 @@ export interface RequestLog {
   latencyMs: number;
   authenticated?: boolean;
   rateLimited?: boolean;
+  errorKind?: string;
   whisperMs?: number;
   llamaMs?: number;
 }

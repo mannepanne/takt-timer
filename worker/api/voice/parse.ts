@@ -175,6 +175,7 @@ export async function parseVoice(
           latencyMs: Math.round(performance.now() - startedAt),
           authenticated: !!userId,
           rateLimited: false,
+          errorKind: 'whisper-error',
         });
         toSafeErrorMessage(err, 'whisper-error');
         await writer.write(jsonLine({ kind: 'error', reason: 'whisper-error' }));
@@ -199,6 +200,7 @@ export async function parseVoice(
           latencyMs: Math.round(performance.now() - startedAt),
           authenticated: !!userId,
           rateLimited: false,
+          errorKind: 'empty-transcript',
           whisperMs: whisper.latencyMs,
         });
         await writer.write(jsonLine({ kind: 'error', reason: 'empty-transcript' }));
@@ -211,6 +213,7 @@ export async function parseVoice(
           latencyMs: Math.round(performance.now() - startedAt),
           authenticated: !!userId,
           rateLimited: false,
+          errorKind: 'language-unsupported',
           whisperMs: whisper.latencyMs,
         });
         // The detected-language tag is public info on the stream — safe to echo per the
@@ -229,11 +232,18 @@ export async function parseVoice(
       const totalMs = Math.round(performance.now() - startedAt);
 
       if (!llama.ok) {
+        const llamaErrorKind =
+          llama.reason === 'not-a-session'
+            ? 'not-a-session'
+            : llama.reason === 'model-error'
+              ? 'llama-error'
+              : 'schema-failed';
         logVoice({
           status: 200,
           latencyMs: totalMs,
           authenticated: !!userId,
           rateLimited: false,
+          errorKind: llamaErrorKind,
           whisperMs: whisper.latencyMs,
         });
         if (llama.reason === 'not-a-session') {
@@ -272,6 +282,7 @@ export async function parseVoice(
         latencyMs: Math.round(performance.now() - startedAt),
         authenticated: !!userId,
         rateLimited: false,
+        errorKind: 'unhandled',
       });
       toSafeErrorMessage(err, 'llama-error', { stage: 'unhandled' });
       try {

@@ -126,6 +126,38 @@ Two paths skip the rate-limit check:
 
 ---
 
+## Observability
+
+Unlike every other API route (which are logged by the outer `fetch` wrapper in `worker/index.ts`), `/api/voice/parse` self-logs from inside its async pipeline. This is intentional: the response returns immediately with the streaming body, so wrapper-level timing would only capture pre-inference latency. The log line is emitted once per request after the pipeline concludes.
+
+**Log shape — all outcomes:**
+
+```json
+{
+  "ts": 1748000000000,
+  "method": "POST",
+  "path": "/api/voice/parse",
+  "status": 200,
+  "latencyMs": 1834,
+  "authenticated": true,
+  "rateLimited": false
+}
+```
+
+Additional fields on specific paths:
+
+| Field       | Present when                                                                                                                                                    |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `errorKind` | Any error path — value matches the NDJSON `reason` (e.g. `"whisper-error"`, `"empty-transcript"`, `"not-a-session"`) or `"unhandled"` for unexpected exceptions |
+| `whisperMs` | Whisper completed (even if Llama then failed)                                                                                                                   |
+| `llamaMs`   | Llama completed successfully (success path only)                                                                                                                |
+
+Pre-stream rejections (405, 403, 413, 400, 429) are also logged; they use `t0` from function entry rather than `startedAt` (body-read start), so their `latencyMs` captures the full dispatch time including guard checks.
+
+**Privacy:** the log payload deliberately excludes `userHandle`, IP address, email, transcript text, and audio content. `authenticated` is a boolean only.
+
+---
+
 ## Side effects on a successful parse
 
 After the `parsed` event is written to the NDJSON stream, a `voice_calls` row is inserted into D1 via `ctx.waitUntil` (fire-and-forget, not on the response critical path):

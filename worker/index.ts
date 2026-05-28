@@ -148,7 +148,8 @@ export default {
     const response = await routeRequest(request, env, ctx, url);
 
     // Voice self-logs with accurate AI inference latency inside its async pipeline.
-    if (path !== '/api/voice/parse') {
+    // SPA asset requests are excluded — only /api/* and /admin routes are logged.
+    if ((path.startsWith('/api/') || path.startsWith('/admin')) && path !== '/api/voice/parse') {
       logRequest({
         method: request.method,
         path,
