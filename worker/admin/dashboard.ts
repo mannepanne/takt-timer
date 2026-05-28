@@ -11,12 +11,14 @@ export interface DashboardMetrics {
   activeUsers30d: number;
   sessions7d: number;
   sessions30d: number;
+  voiceCalls7d: number;
+  voiceCalls30d: number;
 }
 
 export async function getDashboardMetrics(db: D1Database, now: number): Promise<DashboardMetrics> {
   const ms7d = now - 7 * 24 * 60 * 60 * 1000;
   const ms30d = now - 30 * 24 * 60 * 60 * 1000;
-  const [r0, r1, r2, r3, r4, r5] = await db.batch<{ n: number }>([
+  const [r0, r1, r2, r3, r4, r5, r6, r7] = await db.batch<{ n: number }>([
     db.prepare('SELECT COUNT(*) as n FROM users'),
     db.prepare('SELECT COUNT(*) as n FROM users WHERE created_at >= ?').bind(ms7d),
     db
@@ -27,6 +29,8 @@ export async function getDashboardMetrics(db: D1Database, now: number): Promise<
       .bind(ms30d),
     db.prepare('SELECT COUNT(*) as n FROM sessions WHERE completed_at >= ?').bind(ms7d),
     db.prepare('SELECT COUNT(*) as n FROM sessions WHERE completed_at >= ?').bind(ms30d),
+    db.prepare('SELECT COUNT(*) as n FROM voice_calls WHERE called_at >= ?').bind(ms7d),
+    db.prepare('SELECT COUNT(*) as n FROM voice_calls WHERE called_at >= ?').bind(ms30d),
   ]);
   const n = (r: D1Result<{ n: number }>) => r.results[0]?.n ?? 0;
   return {
@@ -36,6 +40,8 @@ export async function getDashboardMetrics(db: D1Database, now: number): Promise<
     activeUsers30d: n(r3),
     sessions7d: n(r4),
     sessions30d: n(r5),
+    voiceCalls7d: n(r6),
+    voiceCalls30d: n(r7),
   };
 }
 
@@ -58,7 +64,13 @@ function renderDashboard(m: DashboardMetrics): string {
     <div class="metric-label">Sessions (7d)</div>
     <div class="metric-sub">${m.sessions30d} (30d)</div>
   </div>
-</div>`;
+  <div class="metric">
+    <div class="metric-value">${m.voiceCalls7d}</div>
+    <div class="metric-label">Voice calls (7d)</div>
+    <div class="metric-sub">${m.voiceCalls30d} (30d)</div>
+  </div>
+</div>
+<p style="margin-top:1.5rem"><a href="/admin/purge" class="btn btn-secondary">Retention purge</a></p>`;
 }
 
 export async function handleDashboard(request: Request, env: Env): Promise<Response> {

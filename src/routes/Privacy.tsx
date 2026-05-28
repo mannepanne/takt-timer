@@ -37,15 +37,17 @@ export function Privacy() {
             <p className="privacy-body">
               Takt lagrar ett pseudonymt användarhandtag (en slumpmässig identifierare), en
               passkey-publik nyckel om du har registrerat dig, namn och inställningar för dina
-              förinställningar, samt sammanfattningar av pass — enbart antal och längder på
-              intervaller. Inga namn, inga e-postadresser, inga platser.
+              förinställningar, sammanfattningar av pass — enbart antal och längder på intervaller —
+              samt tidsstämplar för röst-API-anrop (kopplade till ditt pseudonyma handtag när du är
+              inloggad, anonymt annars). Inga namn, inga e-postadresser, inga platser.
             </p>
           ) : (
             <p className="privacy-body">
               Takt stores a pseudonymous user handle (a random identifier), a passkey public key if
-              you've registered, the names and settings of any presets you've saved, and session
-              summaries — just the counts and durations of intervals you've completed. No names, no
-              email addresses, no locations.
+              you've registered, the names and settings of any presets you've saved, session
+              summaries — just the counts and durations of intervals you've completed — and
+              timestamps of voice API requests (linked to your pseudonymous handle when signed in,
+              anonymous otherwise). No names, no email addresses, no locations.
             </p>
           )}
         </section>
