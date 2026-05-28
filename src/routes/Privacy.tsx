@@ -1,46 +1,121 @@
-// ABOUT: Privacy policy page — stub for Phase 1, real bilingual content arrives in Phase 5.
+// ABOUT: Privacy policy page — bilingual (English and Swedish).
+// ABOUT: Headings via t(); paragraph copy inline JSX conditioned on lang to keep strings.ts lean.
 
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { Icon } from '@/components/icons';
 import { TopBar } from '@/components/TopBar';
+import { useI18n } from '@/i18n/context';
 
 export function Privacy() {
+  const { t, lang } = useI18n();
+  const navigate = useNavigate();
+
   return (
     <div className="screen">
       <TopBar
         left={
-          <Link to="/" className="icon-btn" aria-label="Back to Home">
-            <Icon.ChevronLeft />
-          </Link>
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={() => navigate('/')}
+            aria-label={t('nav.backToHome')}
+          >
+            <Icon.ChevronLeft size={20} />
+          </button>
         }
       />
 
-      <main className="scroll" style={{ padding: '8px 24px 40px', flex: 1 }}>
-        <div className="eyebrow" style={{ marginBottom: 10, color: 'var(--ink-3)' }}>
-          Privacy
-        </div>
-        <h1
-          style={{
-            fontSize: 28,
-            fontWeight: 500,
-            letterSpacing: '-0.02em',
-            lineHeight: 1.2,
-            margin: 0,
-            textWrap: 'balance',
-          }}
-        >
-          No email. No phone. No personal details.
-        </h1>
-        <p style={{ color: 'var(--ink-3)', fontSize: 15, lineHeight: 1.6, marginTop: 16 }}>
-          Takt is built so that it cannot identify you. Full policy content is finalised in a later
-          phase. The short version: we store a pseudonymous user handle, a public key (if you
-          register), and your own session history. We never ask for your email, your phone, or your
-          name.
-        </p>
-        <p style={{ color: 'var(--ink-3)', fontSize: 13, lineHeight: 1.6, marginTop: 24 }}>
-          Stub page — full content ships in Phase 5 (English and Swedish).
-        </p>
+      <main className="scroll privacy-main">
+        <div className="eyebrow privacy-eyebrow">{t('privacy.eyebrow')}</div>
+
+        <h1 className="privacy-heading">{t('privacy.heading')}</h1>
+
+        <section>
+          <h2 className="privacy-section-heading">{t('privacy.stored.heading')}</h2>
+          {lang === 'sv' ? (
+            <p className="privacy-body">
+              Takt lagrar ett pseudonymt användarhandtag (en slumpmässig identifierare), en
+              passkey-publik nyckel om du har registrerat dig, namn och inställningar för dina
+              förinställningar, samt sammanfattningar av pass — enbart antal och längder på
+              intervaller. Inga namn, inga e-postadresser, inga platser.
+            </p>
+          ) : (
+            <p className="privacy-body">
+              Takt stores a pseudonymous user handle (a random identifier), a passkey public key if
+              you've registered, the names and settings of any presets you've saved, and session
+              summaries — just the counts and durations of intervals you've completed. No names, no
+              email addresses, no locations.
+            </p>
+          )}
+        </section>
+
+        <section className="privacy-section">
+          <h2 className="privacy-section-heading">{t('privacy.cloudflare.heading')}</h2>
+          {lang === 'sv' ? (
+            <p className="privacy-body">
+              Takt är hostat på Cloudflares globala nätverk. Cloudflare ser IP-adresser vid
+              nätverkskanten som en del av normal routing. Vi använder Cloudflares anonyma analys
+              (inga kakor, ingen spårning). Tillfälliga begränsningsräknare är kopplade till din
+              IP-adress i upp till 26 timmar, sedan raderas de.
+            </p>
+          ) : (
+            <p className="privacy-body">
+              Takt is hosted on Cloudflare's global network. Cloudflare sees IP addresses at the
+              edge as part of normal routing. We use Cloudflare's anonymous analytics — no cookies,
+              no cross-site tracking. Temporary rate-limit counters are tied to your IP address for
+              up to 26 hours, then discarded.
+            </p>
+          )}
+        </section>
+
+        <section className="privacy-section">
+          <h2 className="privacy-section-heading">{t('privacy.delete.heading')}</h2>
+          {lang === 'sv' ? (
+            <>
+              <p className="privacy-body">
+                Gå till Inställningar → Konto → Ta bort konto. Radering är omedelbar och
+                oåterkallelig. Alla förinställningar och pass-historik tas bort permanent.
+              </p>
+              <p className="privacy-body" style={{ marginTop: 12 }}>
+                Om du inte har loggat in lagrar Takt ingenting om dig på servern. Rensa webbplatsens
+                data i din webbläsare för att ta bort det som sparats lokalt.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="privacy-body">
+                Go to Settings → Account → Delete account. Deletion is immediate and irreversible.
+                All presets and session history are permanently removed.
+              </p>
+              <p className="privacy-body" style={{ marginTop: 12 }}>
+                If you haven't signed in, Takt holds no server-side data about you. Clear this
+                site's data in your browser to remove anything stored locally.
+              </p>
+            </>
+          )}
+        </section>
+
+        <section className="privacy-section">
+          <h2 className="privacy-section-heading">{t('privacy.contact.heading')}</h2>
+          {lang === 'sv' ? (
+            <p className="privacy-body">
+              Frågor eller funderingar? Skicka e-post till{' '}
+              <a href="mailto:privacy@takt.hultberg.org" className="privacy-link">
+                privacy@takt.hultberg.org
+              </a>
+              .
+            </p>
+          ) : (
+            <p className="privacy-body">
+              Questions or concerns? Email{' '}
+              <a href="mailto:privacy@takt.hultberg.org" className="privacy-link">
+                privacy@takt.hultberg.org
+              </a>
+              .
+            </p>
+          )}
+        </section>
       </main>
     </div>
   );

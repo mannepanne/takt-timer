@@ -10,6 +10,9 @@ const plugins = [react()] as UserConfig['plugins'];
 
 export default defineConfig({
   plugins,
+  define: {
+    __APP_VERSION__: JSON.stringify('0.0.0-test'),
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

@@ -1,6 +1,7 @@
 // ABOUT: Top-level application component.
 // ABOUT: Wraps routes in PhoneFrame and provides the session context, i18n, and settings to the tree.
 
+import { useCallback, useState } from 'react';
 import { Route, Routes } from 'react-router-dom';
 
 import { PhoneFrame } from '@/components/PhoneFrame';
@@ -12,9 +13,21 @@ import { Complete } from '@/routes/Complete';
 import { Configure } from '@/routes/Configure';
 import { Home } from '@/routes/Home';
 import { NotFound } from '@/routes/NotFound';
+import { Onboarding, hasSeenOnboarding, markOnboardingSeen } from '@/routes/Onboarding';
 import { Privacy } from '@/routes/Privacy';
 import { Run } from '@/routes/Run';
 import { Settings } from '@/routes/Settings';
+
+function HomeOrOnboarding() {
+  const [seen, setSeen] = useState(() => hasSeenOnboarding());
+
+  const handleDone = useCallback(() => {
+    markOnboardingSeen();
+    setSeen(true);
+  }, []);
+
+  return seen ? <Home /> : <Onboarding onDone={handleDone} />;
+}
 
 export function App() {
   return (
@@ -23,7 +36,7 @@ export function App() {
         <SettingsProvider>
           <PhoneFrame>
             <Routes>
-              <Route path="/" element={<Home />} />
+              <Route path="/" element={<HomeOrOnboarding />} />
               <Route path="/configure" element={<Configure />} />
               <Route path="/run" element={<Run />} />
               <Route path="/complete" element={<Complete />} />

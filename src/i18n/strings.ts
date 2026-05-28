@@ -88,6 +88,10 @@ const strings = {
     sv: 'Detta tar permanent bort ditt konto, förinställningar och historik. Det går inte att ångra.',
   },
   'account.cancel': { en: 'Cancel', sv: 'Avbryt' },
+  'account.unauthDescription': {
+    en: 'Sign in with a passkey to save presets and sync session history across devices.',
+    sv: 'Logga in med en passkey för att spara förinställningar och synkronisera sessionshistorik.',
+  },
 
   // ── Not found ────────────────────────────────────────────────────────
   'notFound.title': { en: '404', sv: '404' },
@@ -284,6 +288,69 @@ const strings = {
   'stepper.minSec': { en: 'min : sec', sv: 'min : sek' },
   'stepper.cancel': { en: 'Cancel', sv: 'Avbryt' },
   'stepper.done': { en: 'Done', sv: 'Klar' },
+
+  // ── Onboarding ────────────────────────────────────────────────────────
+  'onboarding.skip': { en: 'Skip', sv: 'Hoppa över' },
+  'onboarding.next': { en: 'Next', sv: 'Nästa' },
+  'onboarding.getStarted': { en: 'Get started', sv: 'Sätt igång' },
+  'onboarding.s1.tagline': { en: 'Takt — keep it going.', sv: 'Takt — håller takten.' },
+  'onboarding.s1.body': {
+    en: 'Simplest possible interval timer. Voice configured, tap to go. No account required.',
+    sv: 'Enklast möjliga intervall timer. Röst-styrd, tuta och kör. Konto valfritt.',
+  },
+  'onboarding.s2.eyebrow': { en: 'Voice configured', sv: 'Styr med rösten' },
+  'onboarding.s2.intro': {
+    en: 'Tap the mic and speak naturally.',
+    sv: 'Klicka micken och prata som vanligt.',
+  },
+  'onboarding.s2.example1': {
+    en: '"Three sets of one minute, thirty seconds rest"',
+    sv: '"Tre rundor om en minut, tretti sekunders vila"',
+  },
+  'onboarding.s2.example2': {
+    en: '"Five sets, thirty seconds each, no rest"',
+    sv: '"Fem set, tretti sekunder vardera, inga pauser"',
+  },
+  'onboarding.s2.outro': {
+    en: "That's all the setup you need.",
+    sv: 'Det är allt som behövs.',
+  },
+  'onboarding.s3.eyebrow': { en: 'No personal details', sv: 'Inga personliga detaljer' },
+  'onboarding.s3.body': {
+    en: 'Want presets and settings? Sign in with a passkey — no email, no password, no personal details.',
+    sv: 'Vill du spara dina rundor? Logga in med en passkey — ingen email, inget lösenord, inga detaljer.',
+  },
+  'onboarding.s3.warning': {
+    en: 'Fair warning: if you lose your passkey, your account goes with it.',
+    sv: 'Varning: om du blir av med din passkey kan du inte återställa ditt konto.',
+  },
+  'onboarding.s3.privacyLink': { en: 'Privacy policy', sv: 'Integritetspolicy' },
+  'onboarding.s4.eyebrow': { en: 'Off you go', sv: 'Kör så det ryker' },
+  'onboarding.s4.body': { en: "That's it.", sv: 'Det var allt.' },
+
+  // ── Privacy ───────────────────────────────────────────────────────────
+  'privacy.eyebrow': { en: 'Privacy', sv: 'Integritetspolicy' },
+  'privacy.heading': {
+    en: 'No email. No phone. No personal details.',
+    sv: 'Ingen e-post. Ingen telefon. Inga personuppgifter.',
+  },
+  'privacy.stored.heading': { en: 'What we store', sv: 'Vad vi lagrar' },
+  'privacy.cloudflare.heading': { en: 'What Cloudflare sees', sv: 'Vad Cloudflare ser' },
+  'privacy.delete.heading': { en: 'How to delete your data', sv: 'Hur du raderar dina uppgifter' },
+  'privacy.contact.heading': { en: 'Contact', sv: 'Kontakt' },
+
+  // ── Settings — account and about additions ────────────────────────────
+  'settings.account': { en: 'Account', sv: 'Konto' },
+  'settings.signedIn': { en: 'Signed in', sv: 'Inloggad' },
+  'settings.manageAccount': { en: 'Manage account', sv: 'Hantera konto' },
+  'settings.notSignedIn': { en: 'Not signed in', sv: 'Inte inloggad' },
+  'settings.signInCta': {
+    en: 'Sign in or create account',
+    sv: 'Logga in eller skapa konto',
+  },
+  'settings.about': { en: 'About', sv: 'Om' },
+  'settings.privacyPolicy': { en: 'Privacy policy', sv: 'Integritetspolicy' },
+  'settings.version': { en: 'Version', sv: 'Version' },
 } as const satisfies Record<string, Translation>;
 
 export type StringKey = keyof typeof strings;
