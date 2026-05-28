@@ -138,7 +138,7 @@ export function Settings() {
         aria-atomic="true"
         role="status"
       >
-        {t('settings.saved')}
+        {savedVisible ? t('settings.saved') : ''}
       </div>
     </div>
   );
