@@ -20,9 +20,9 @@ Before making an architectural decision that outlasts today's PR, consult [../RE
 
 Full product vision: [ORIGINAL_IDEA/project-outline.md](./ORIGINAL_IDEA/project-outline.md).
 
-**Current phase:** Phase 5 — i18n, Settings & Onboarding. See [05-i18n-settings-onboarding.md](./05-i18n-settings-onboarding.md).
+**Current phase:** Phase 6 — Admin & Launch. See [06-admin-and-launch.md](./06-admin-and-launch.md).
 
-**Live deployment:** https://takt.hultberg.org — Phase 2 core timer live since 2026-04-19.
+**Live deployment:** https://takt.hultberg.org — Phases 1–5 live.
 
 ### Phase files (work through in order)
 
@@ -38,8 +38,8 @@ Full product vision: [ORIGINAL_IDEA/project-outline.md](./ORIGINAL_IDEA/project-
 4. ~~**[04-accounts-and-presets.md](./ARCHIVE/04-accounts-and-presets.md)**~~ — ✅ complete
    Passkey auth, D1 schema for users/presets/sessions, presets drawer, save preset sheet, voice "save as preset", history sync with one-shot import-on-register, authenticated rate-limit tier. Archived.
 
-5. **[05-i18n-settings-onboarding.md](./05-i18n-settings-onboarding.md)** — 4–6 days
-   English and Swedish translations, full Settings screen (language, accent, sound, account), Onboarding flow, real Privacy policy content in both languages.
+5. ~~**[05-i18n-settings-onboarding.md](./ARCHIVE/05-i18n-settings-onboarding.md)**~~ — ✅ complete
+   English and Swedish translations, full Settings screen (language, accent, sound, account), Onboarding flow, real Privacy policy content in both languages. Archived.
 
 6. **[06-admin-and-launch.md](./06-admin-and-launch.md)** — 4–6 days
    Admin backend gated by Cloudflare Access, dashboard + user listing + delete, retention purge cron, security headers, observability, pre-launch checklist, launch.
