@@ -1,7 +1,7 @@
 // ABOUT: Privacy policy page — bilingual (English and Swedish).
 // ABOUT: Headings via t(); paragraph copy inline JSX conditioned on lang to keep strings.ts lean.
 
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { Icon } from '@/components/icons';
 import { TopBar } from '@/components/TopBar';
@@ -10,6 +10,8 @@ import { useI18n } from '@/i18n/context';
 export function Privacy() {
   const { t, lang } = useI18n();
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnSlide = (location.state as { returnSlide?: number } | null)?.returnSlide;
 
   return (
     <div className="screen">
@@ -18,7 +20,11 @@ export function Privacy() {
           <button
             type="button"
             className="icon-btn"
-            onClick={() => navigate('/')}
+            onClick={() =>
+              navigate('/', {
+                state: typeof returnSlide === 'number' ? { resumeSlide: returnSlide } : undefined,
+              })
+            }
             aria-label={t('nav.backToHome')}
           >
             <Icon.ChevronLeft size={20} />
