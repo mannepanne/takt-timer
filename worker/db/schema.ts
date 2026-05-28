@@ -53,7 +53,7 @@ export interface PurgeRunRow {
 
 export interface AdminLogRow {
   id: number;
-  action: string;
+  action: 'delete_user' | 'purge_run';
   actor: string; // CF-Access-Authenticated-User-Email
   target: string | null; // userHandle when applicable
   logged_at: number; // unix ms

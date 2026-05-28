@@ -54,7 +54,7 @@ Development is organised into six sequential phases. Each phase has its own spec
 3. ~~[03-voice.md](./SPECIFICATIONS/ARCHIVE/03-voice.md)~~ — ✅ complete, archived
 4. ~~[04-accounts-and-presets.md](./SPECIFICATIONS/ARCHIVE/04-accounts-and-presets.md)~~ — ✅ complete, archived
 5. ~~[05-i18n-settings-onboarding.md](./SPECIFICATIONS/ARCHIVE/05-i18n-settings-onboarding.md)~~ — ✅ complete, archived
-6. [06-admin-and-launch.md](./SPECIFICATIONS/06-admin-and-launch.md) — admin backend, retention purge, hardening, launch (4–6 days)
+6. [06-admin-and-launch.md](./SPECIFICATIONS/06-admin-and-launch.md) — admin backend, retention purge, hardening, launch (3–4 days)
 
 **Current phase:** Phase 6 — Admin & Launch. See [SPECIFICATIONS/06-admin-and-launch.md](./SPECIFICATIONS/06-admin-and-launch.md).
 

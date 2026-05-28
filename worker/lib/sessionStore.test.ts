@@ -87,11 +87,11 @@ describe('createSession', () => {
     await createSession(env, { userHandle: 'aabb', isAdmin: false });
     const puts = (env.SESSIONS.put as ReturnType<typeof vi.fn>).mock.calls;
     expect(puts).toHaveLength(2);
-    // First put: session data keyed by UUID
-    expect(puts[0][0]).toMatch(/^[0-9a-f-]{36}$/);
-    // Second put: reverse index key
-    expect(puts[1][0]).toMatch(/^user-session:aabb:[0-9a-f-]{36}$/);
-    expect(puts[1][1]).toBe('1');
+    // First put: reverse index key (written first so a failed second write leaves no orphan)
+    expect(puts[0][0]).toMatch(/^user-session:aabb:[0-9a-f-]{36}$/);
+    expect(puts[0][1]).toBe('1');
+    // Second put: session data keyed by UUID
+    expect(puts[1][0]).toMatch(/^[0-9a-f-]{36}$/);
   });
 });
 
@@ -197,6 +197,35 @@ describe('deleteUserSessions', () => {
     const count = await deleteUserSessions(env, 'u1');
     expect(count).toBe(2);
     expect((kv.delete as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(4);
+  });
+
+  it('paginates with cursor when list returns list_complete: false', async () => {
+    const id1 = crypto.randomUUID();
+    const id2 = crypto.randomUUID();
+    const prefix = 'user-session:u1:';
+    const listMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        keys: [{ name: `${prefix}${id1}` }],
+        list_complete: false,
+        cursor: 'cur1',
+      })
+      .mockResolvedValueOnce({
+        keys: [{ name: `${prefix}${id2}` }],
+        list_complete: true,
+      });
+    const kv = {
+      get: vi.fn(),
+      put: vi.fn(),
+      delete: vi.fn(),
+      list: listMock,
+      getWithMetadata: vi.fn(),
+    } as unknown as KVNamespace;
+    const count = await deleteUserSessions({ SESSIONS: kv }, 'u1');
+    expect(count).toBe(2);
+    expect((kv.delete as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(4);
+    expect(listMock).toHaveBeenCalledTimes(2);
+    expect(listMock.mock.calls[1][0]).toMatchObject({ cursor: 'cur1' });
   });
 
   it('does not delete sessions belonging to a different user', async () => {

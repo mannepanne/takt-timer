@@ -100,7 +100,7 @@ worker/
 │   └── auth.ts                       # reads CF-Access headers, enforces presence + CSRF Origin check
 ├── db/
 │   └── migrations/
-│       └── 0004_admin_tables.sql     # voice_calls, purge_runs, admin_log
+│       └── 0003_admin_tables.sql     # voice_calls, purge_runs, admin_log
 ├── cron/
 │   └── purge.ts                      # inactive-user purge (scheduled export on main Worker)
 └── lib/
@@ -137,7 +137,7 @@ CREATE TABLE admin_log (
 );
 ```
 
-KV: add a reverse index `user:{handle}:sessions` → set of sessionIds, maintained by `sessionStore.ts`. Used to invalidate all sessions when a user is deleted from the admin UI.
+KV: add a per-session reverse index `user-session:{handle}:{sessionId}` → `'1'`, maintained by `sessionStore.ts`. Used to invalidate all sessions when a user is deleted from the admin UI. One key per session avoids the read-modify-write race inherent in a shared set.
 
 `isAdmin` column from Phase 4 is already present (`worker/db/migrations/0001_initial_schema.sql:11`).
 

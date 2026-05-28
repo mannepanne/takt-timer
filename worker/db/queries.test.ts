@@ -23,6 +23,7 @@ import {
   insertAdminLog,
   getUserByHandleAdmin,
   pruneInactiveUsers,
+  pruneVoiceCalls,
 } from './queries';
 
 function makeStmt(returnVal?: unknown) {
@@ -388,5 +389,28 @@ describe('pruneInactiveUsers', () => {
     const { db, stmt } = makeD1([]);
     await pruneInactiveUsers(db, 9_999_999_999, false);
     expect(stmt.bind).toHaveBeenCalledWith(9_999_999_999);
+  });
+
+  it('skips users that become active between initial query and chunk re-verify (TOCTOU guard)', async () => {
+    const { db, stmt } = makeD1();
+    // Initial eligible query returns 2 users; re-verify returns only u1 (u2 became active).
+    (stmt.all as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ results: [{ user_handle: 'u1' }, { user_handle: 'u2' }] })
+      .mockResolvedValueOnce({ results: [{ user_handle: 'u1' }] });
+    const result = await pruneInactiveUsers(db, 1000, false);
+    expect(result.userHandles).toEqual(['u1', 'u2']);
+    expect(result.deleted).toBe(1);
+    const stmts = (db.batch as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    expect(stmts).toHaveLength(3); // only u1: 1 × 3 DELETEs
+  });
+});
+
+describe('pruneVoiceCalls', () => {
+  it('prepares DELETE with called_at filter', async () => {
+    const { db, stmt } = makeD1();
+    await pruneVoiceCalls(db, 1700000000000);
+    expect(db.prepare).toHaveBeenCalledWith(expect.stringContaining('DELETE FROM voice_calls'));
+    expect(stmt.bind).toHaveBeenCalledWith(1700000000000);
+    expect(stmt.run).toHaveBeenCalled();
   });
 });

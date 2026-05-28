@@ -185,7 +185,7 @@ export function insertPurgeRun(db: D1Database, ranAt: number, usersDeleted: numb
 
 export function insertAdminLog(
   db: D1Database,
-  action: string,
+  action: 'delete_user' | 'purge_run',
   actor: string,
   target: string | null,
   loggedAt: number,
@@ -194,6 +194,10 @@ export function insertAdminLog(
     .prepare('INSERT INTO admin_log (action, actor, target, logged_at) VALUES (?, ?, ?, ?)')
     .bind(action, actor, target, loggedAt)
     .run();
+}
+
+export function pruneVoiceCalls(db: D1Database, olderThanMs: number) {
+  return db.prepare('DELETE FROM voice_calls WHERE called_at < ?').bind(olderThanMs).run();
 }
 
 // Correlated subqueries avoid cartesian product from JOIN-ing sessions and presets simultaneously.
@@ -237,14 +241,31 @@ export async function pruneInactiveUsers(
     return { userHandles: handles, deleted: 0 };
   }
 
+  let deleted = 0;
   for (let i = 0; i < handles.length; i += PURGE_CHUNK_SIZE) {
     const chunk = handles.slice(i, i + PURGE_CHUNK_SIZE);
+    // Re-verify eligibility per chunk: a user could have created a session or preset
+    // between the initial SELECT and this batch, so we must not delete them.
+    const placeholders = chunk.map(() => '?').join(', ');
+    const { results: stillEligible } = await db
+      .prepare(
+        `SELECT user_handle FROM users
+         WHERE user_handle IN (${placeholders})
+           AND NOT EXISTS (SELECT 1 FROM sessions WHERE sessions.user_handle = users.user_handle)
+           AND NOT EXISTS (SELECT 1 FROM presets WHERE presets.user_handle = users.user_handle)`,
+      )
+      .bind(...chunk)
+      .all<{ user_handle: string }>();
+    const eligible = new Set(stillEligible.map((r) => r.user_handle));
+    const safeChunk = chunk.filter((h) => eligible.has(h));
+    if (safeChunk.length === 0) continue;
+    deleted += safeChunk.length;
     await db.batch([
-      ...chunk.map((h) => db.prepare('DELETE FROM sessions WHERE user_handle = ?').bind(h)),
-      ...chunk.map((h) => db.prepare('DELETE FROM presets WHERE user_handle = ?').bind(h)),
-      ...chunk.map((h) => db.prepare('DELETE FROM users WHERE user_handle = ?').bind(h)),
+      ...safeChunk.map((h) => db.prepare('DELETE FROM sessions WHERE user_handle = ?').bind(h)),
+      ...safeChunk.map((h) => db.prepare('DELETE FROM presets WHERE user_handle = ?').bind(h)),
+      ...safeChunk.map((h) => db.prepare('DELETE FROM users WHERE user_handle = ?').bind(h)),
     ]);
   }
 
-  return { userHandles: handles, deleted: handles.length };
+  return { userHandles: handles, deleted };
 }
