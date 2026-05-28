@@ -147,18 +147,19 @@ describe('updateUserCounter', () => {
 });
 
 describe('deleteUserCascade', () => {
-  it('calls db.batch with 3 statements (sessions, presets, users)', async () => {
+  it('calls db.batch with 4 statements (sessions, presets, voice_calls, users)', async () => {
     const { db } = makeD1();
     await deleteUserCascade(db, 'aabb');
     const batchArgs = (db.batch as ReturnType<typeof vi.fn>).mock.calls[0][0];
-    expect(batchArgs).toHaveLength(3);
-    // Verify order: sessions first, presets second, users third
+    expect(batchArgs).toHaveLength(4);
+    // Verify order: sessions, presets, voice_calls, users
     const sqls = (db.prepare as ReturnType<typeof vi.fn>).mock.calls.map(
       (args: any[]) => args[0] as string,
     );
     expect(sqls[0]).toContain('DELETE FROM sessions');
     expect(sqls[1]).toContain('DELETE FROM presets');
-    expect(sqls[2]).toContain('DELETE FROM users');
+    expect(sqls[2]).toContain('DELETE FROM voice_calls');
+    expect(sqls[3]).toContain('DELETE FROM users');
   });
 });
 
@@ -363,26 +364,26 @@ describe('pruneInactiveUsers', () => {
     expect(db.batch).not.toHaveBeenCalled();
   });
 
-  it('batches 3N delete statements for N eligible users', async () => {
+  it('batches 4N delete statements for N eligible users', async () => {
     const handles = [{ user_handle: 'u1' }, { user_handle: 'u2' }];
     const { db } = makeD1(handles);
     const result = await pruneInactiveUsers(db, 1000, false);
     expect(result.deleted).toBe(2);
     expect(db.batch).toHaveBeenCalledTimes(1);
     const stmts = (db.batch as ReturnType<typeof vi.fn>).mock.calls[0][0];
-    expect(stmts).toHaveLength(6); // 2 users × 3 DELETEs
+    expect(stmts).toHaveLength(8); // 2 users × 4 DELETEs
   });
 
-  it('splits into multiple batches when user count exceeds chunk size (30)', async () => {
+  it('splits into multiple batches when user count exceeds chunk size (24)', async () => {
     const handles = Array.from({ length: 31 }, (_, i) => ({ user_handle: `u${i}` }));
     const { db } = makeD1(handles);
     const result = await pruneInactiveUsers(db, 1000, false);
     expect(result.deleted).toBe(31);
     expect(db.batch).toHaveBeenCalledTimes(2);
     const firstBatch = (db.batch as ReturnType<typeof vi.fn>).mock.calls[0][0];
-    expect(firstBatch).toHaveLength(90); // 30 × 3
+    expect(firstBatch).toHaveLength(96); // 24 × 4
     const secondBatch = (db.batch as ReturnType<typeof vi.fn>).mock.calls[1][0];
-    expect(secondBatch).toHaveLength(3); // 1 × 3
+    expect(secondBatch).toHaveLength(28); // 7 × 4
   });
 
   it('binds thresholdMs as the SELECT filter parameter', async () => {
@@ -401,7 +402,7 @@ describe('pruneInactiveUsers', () => {
     expect(result.userHandles).toEqual(['u1', 'u2']);
     expect(result.deleted).toBe(1);
     const stmts = (db.batch as ReturnType<typeof vi.fn>).mock.calls[0][0];
-    expect(stmts).toHaveLength(3); // only u1: 1 × 3 DELETEs
+    expect(stmts).toHaveLength(4); // only u1: 1 × 4 DELETEs
   });
 });
 

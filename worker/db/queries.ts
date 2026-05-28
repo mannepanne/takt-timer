@@ -56,6 +56,7 @@ export async function deleteUserCascade(db: D1Database, userHandle: string) {
   await db.batch([
     db.prepare('DELETE FROM sessions WHERE user_handle = ?').bind(userHandle),
     db.prepare('DELETE FROM presets WHERE user_handle = ?').bind(userHandle),
+    db.prepare('DELETE FROM voice_calls WHERE user_handle = ?').bind(userHandle),
     db.prepare('DELETE FROM users WHERE user_handle = ?').bind(userHandle),
   ]);
 }
@@ -217,8 +218,8 @@ export function getUserByHandleAdmin(db: D1Database, userHandle: string) {
     .first<AdminUserRow>();
 }
 
-// CHUNK_SIZE=30 → 90 statements per batch (3 DELETEs × 30 users), safely under D1's 100-stmt limit.
-const PURGE_CHUNK_SIZE = 30;
+// CHUNK_SIZE=24 → 96 statements per batch (4 DELETEs × 24 users), safely under D1's 100-stmt limit.
+const PURGE_CHUNK_SIZE = 24;
 
 export async function pruneInactiveUsers(
   db: D1Database,
@@ -263,6 +264,7 @@ export async function pruneInactiveUsers(
     await db.batch([
       ...safeChunk.map((h) => db.prepare('DELETE FROM sessions WHERE user_handle = ?').bind(h)),
       ...safeChunk.map((h) => db.prepare('DELETE FROM presets WHERE user_handle = ?').bind(h)),
+      ...safeChunk.map((h) => db.prepare('DELETE FROM voice_calls WHERE user_handle = ?').bind(h)),
       ...safeChunk.map((h) => db.prepare('DELETE FROM users WHERE user_handle = ?').bind(h)),
     ]);
   }

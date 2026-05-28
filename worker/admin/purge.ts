@@ -3,13 +3,13 @@
 
 import type { Env } from '../index';
 import { requireAdminAuth, requireAdminAuthWithCsrf } from './auth';
-import { adminLayout } from './views/layout.html';
-import { pruneInactiveUsers, insertPurgeRun } from '../db/queries';
+import { adminLayout, escHtml } from './views/layout.html';
+import { pruneInactiveUsers, insertPurgeRun, insertAdminLog } from '../db/queries';
 import { RETENTION_DAYS } from '../cron/purge';
 
 function renderDryRun(handles: string[]): string {
   const count = handles.length;
-  const listItems = handles.map((h) => `<li><code>${h}</code></li>`).join('\n');
+  const listItems = handles.map((h) => `<li><code>${escHtml(h)}</code></li>`).join('\n');
   return `
 <h1>Retention purge</h1>
 <p>Users inactive for more than <strong>${RETENTION_DAYS} days</strong> with no sessions and no presets.</p>
@@ -51,5 +51,6 @@ export async function handlePurgeRun(request: Request, env: Env): Promise<Respon
   const thresholdMs = now - RETENTION_DAYS * 24 * 60 * 60 * 1000;
   const { deleted } = await pruneInactiveUsers(env.DB, thresholdMs, false);
   await insertPurgeRun(env.DB, now, deleted);
+  await insertAdminLog(env.DB, 'purge_run', auth.actor, null, now);
   return adminLayout('Purge complete', renderResult(deleted));
 }

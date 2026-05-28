@@ -86,7 +86,7 @@ Executes a hard delete of the user and all associated data. The sequence is:
 
 1. `INSERT` into `admin_log` (audit trail — written first so a partial failure still leaves a record)
 2. Delete all KV session tokens for the user (`deleteUserSessions`)
-3. Cascade-delete the user row and all related D1 rows (`deleteUserCascade`)
+3. Explicit-delete all D1 rows for the user in a single batch (`deleteUserCascade`): `sessions`, `presets`, `voice_calls`, then `users`. D1 does not honour FK cascades; all deletes are explicit.
 
 **Request body** (`application/x-www-form-urlencoded`):
 
@@ -122,14 +122,15 @@ This is a read-only page; no data is modified.
 
 Executes the retention purge:
 
-1. Calls `pruneInactiveUsers(db, thresholdMs, false)` — cascaded delete of users + sessions + presets + voice_calls (via FK cascade).
-2. Calls `insertPurgeRun(db, now, deleted)` — records an audit row even when nothing was deleted.
+1. Calls `pruneInactiveUsers(db, thresholdMs, false)` — explicit-deletes `sessions`, `presets`, `voice_calls`, and `users` rows in chunks.
+2. Calls `insertPurgeRun(db, now, deleted)` — records a `purge_runs` audit row even when nothing was deleted.
+3. Calls `insertAdminLog(db, 'purge_run', actor, null, now)` — records who triggered the purge.
 
 **Outcomes:**
 
 - Success → "Purge complete" page with the count of deleted users.
 
-**Auth:** `requireAdminAuthWithCsrf` (checks `Origin` header against allowed list)
+**Auth:** `requireAdminAuthWithCsrf` (rejects absent `Origin` header; checks present `Origin` against allowed list)
 
 ---
 

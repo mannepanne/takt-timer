@@ -160,4 +160,27 @@ describe('handlePurgeRun (POST /admin/purge/run)', () => {
     const res = await handlePurgeRun(req, makeEnv(db));
     expect(res.status).toBe(403);
   });
+
+  it('returns 403 when Origin header is absent (CSRF guard — no-origin path)', async () => {
+    const { db } = makeDb([]);
+    const req = new Request(`${ORIGIN}/admin/purge/run`, { method: 'POST' });
+    const res = await handlePurgeRun(req, makeEnv(db));
+    expect(res.status).toBe(403);
+  });
+
+  it('writes an admin_log row recording the actor', async () => {
+    const { db } = makeDb(['user-a'], ['user-a']);
+    const adminLogSqls: string[] = [];
+    const origPrepare = (db.prepare as ReturnType<typeof vi.fn>).getMockImplementation();
+    (db.prepare as ReturnType<typeof vi.fn>).mockImplementation((sql: string) => {
+      if (sql.includes('admin_log')) adminLogSqls.push(sql);
+      return origPrepare!(sql);
+    });
+    const req = new Request(`${ORIGIN}/admin/purge/run`, {
+      method: 'POST',
+      headers: { Origin: ORIGIN },
+    });
+    await handlePurgeRun(req, makeEnv(db));
+    expect(adminLogSqls.length).toBeGreaterThanOrEqual(1);
+  });
 });

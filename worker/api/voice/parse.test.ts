@@ -331,21 +331,15 @@ describe('POST /api/voice/parse (streaming)', () => {
     });
   });
 
-  // The privacy story is "audio is processed in flight and never written down". This test
-  // pins that contract by passing probe bindings for the resources Phase 4+ will add (D1,
-  // R2, an authenticated-user KV) and asserting none of them are touched on a successful
-  // parse. The only write allowed is the rate-limit counter on RATE_LIMITS. If this test
-  // fails because someone added a write to one of these probes, that write needs an ADR
+  // Privacy contract: on a successful parse the ONLY writes are:
+  //   1. The rate-limit counter on RATE_LIMITS (KV).
+  //   2. Exactly one row inserted into voice_calls via ctx.waitUntil (D1, fire-and-forget).
+  // No other tables, buckets, or KV namespaces are touched.
+  // If this test needs to change because new writes are added, those writes require an ADR
   // and a corresponding update to the privacy policy — do not just relax the assertion.
-  it('writes nothing beyond the rate-limit counter on a successful parse (privacy contract)', async () => {
+  it('writes exactly one voice_calls row via waitUntil on a successful parse, nothing else (privacy contract)', async () => {
     const kv = makeKv();
     const probeUserKv = makeKv();
-    const probeD1 = {
-      prepare: vi.fn(),
-      exec: vi.fn(),
-      batch: vi.fn(),
-      dump: vi.fn(),
-    };
     const probeR2 = {
       put: vi.fn(),
       get: vi.fn(),
@@ -353,6 +347,31 @@ describe('POST /api/voice/parse (streaming)', () => {
       list: vi.fn(),
       head: vi.fn(),
     };
+
+    // DB probe that records voice_calls inserts and handles the prepare().bind().run() chain.
+    const voiceCallsInserted: Array<{ handle: string | null; calledAt: number }> = [];
+    const probeD1 = {
+      prepare: vi.fn((sql: string) => ({
+        bind: (handle: string | null, calledAt: number) => ({
+          run: async () => {
+            if (sql.includes('voice_calls')) voiceCallsInserted.push({ handle, calledAt });
+            return {};
+          },
+        }),
+      })),
+      exec: vi.fn(),
+      batch: vi.fn(),
+      dump: vi.fn(),
+    };
+
+    // ctx stub that captures and executes waitUntil promises.
+    const deferred: Promise<unknown>[] = [];
+    const ctx = {
+      waitUntil: vi.fn((p: Promise<unknown>) => {
+        deferred.push(p);
+      }),
+    };
+
     const env = {
       ...makeEnv(
         {
@@ -361,37 +380,39 @@ describe('POST /api/voice/parse (streaming)', () => {
         },
         kv,
       ),
-      DB: probeD1,
+      DB: probeD1 as unknown as D1Database,
       AUDIO_BUCKET: probeR2,
       USER_DATA: probeUserKv,
     } as unknown as Env;
 
-    const res = await parseVoice(makeRequest(), env);
+    const res = await parseVoice(makeRequest(), env, ctx);
     const events = await readNdjson(res);
     expect(events[1]).toMatchObject({ kind: 'parsed' });
 
+    // Flush the deferred waitUntil tasks so the DB write completes.
+    await Promise.all(deferred);
+
+    // Rate-limit counter written; nothing else in KV.
     const ratePut = kv.put as ReturnType<typeof vi.fn>;
     expect(ratePut).toHaveBeenCalledTimes(1);
     expect(ratePut.mock.calls[0][0]).toMatch(/^ratelimit:(anon|user):/);
 
-    expect(probeD1.prepare).not.toHaveBeenCalled();
-    expect(probeD1.exec).not.toHaveBeenCalled();
-    expect(probeD1.batch).not.toHaveBeenCalled();
-    expect(probeD1.dump).not.toHaveBeenCalled();
+    // Exactly one voice_calls INSERT, anonymous (no session in this request).
+    expect(ctx.waitUntil).toHaveBeenCalledTimes(1);
+    expect(voiceCallsInserted).toHaveLength(1);
+    expect(voiceCallsInserted[0].handle).toBeNull();
+    expect(typeof voiceCallsInserted[0].calledAt).toBe('number');
+
+    // No audio storage, no user KV, no other D1 operations.
     expect(probeR2.put).not.toHaveBeenCalled();
     expect(probeR2.get).not.toHaveBeenCalled();
-    expect(probeR2.delete).not.toHaveBeenCalled();
-    expect(probeR2.list).not.toHaveBeenCalled();
-    expect(probeR2.head).not.toHaveBeenCalled();
     expect(probeUserKv.put as ReturnType<typeof vi.fn>).not.toHaveBeenCalled();
     expect(probeUserKv.get as ReturnType<typeof vi.fn>).not.toHaveBeenCalled();
   });
 
-  // The success-path probe above guards the happy path, but Phase 4 might log failed
-  // parses to D1 for analytics — that write also needs an ADR. Re-run the same probes
-  // through an error branch (schema-failed) so a future logging-on-error path fails
-  // this test loudly.
-  it('writes nothing beyond the rate-limit counter when the parse fails (privacy contract — error branch)', async () => {
+  // On failure paths the voice_calls insert never fires — it is placed after the `parsed`
+  // event write. A future analytics-on-error write would need an ADR + policy update too.
+  it('writes no D1 rows and never calls ctx.waitUntil when the parse fails (privacy contract — error branch)', async () => {
     const kv = makeKv();
     const probeUserKv = makeKv();
     const probeD1 = {
@@ -407,6 +428,7 @@ describe('POST /api/voice/parse (streaming)', () => {
       list: vi.fn(),
       head: vi.fn(),
     };
+    const ctx = { waitUntil: vi.fn() };
     const env = {
       ...makeEnv(
         {
@@ -423,7 +445,7 @@ describe('POST /api/voice/parse (streaming)', () => {
       USER_DATA: probeUserKv,
     } as unknown as Env;
 
-    const res = await parseVoice(makeRequest(), env);
+    const res = await parseVoice(makeRequest(), env, ctx);
     const events = await readNdjson(res);
     expect(events.at(-1)).toMatchObject({ kind: 'error', reason: 'schema-failed' });
 
@@ -431,6 +453,7 @@ describe('POST /api/voice/parse (streaming)', () => {
     expect(ratePut).toHaveBeenCalledTimes(1);
     expect(ratePut.mock.calls[0][0]).toMatch(/^ratelimit:(anon|user):/);
 
+    expect(ctx.waitUntil).not.toHaveBeenCalled();
     expect(probeD1.prepare).not.toHaveBeenCalled();
     expect(probeD1.exec).not.toHaveBeenCalled();
     expect(probeD1.batch).not.toHaveBeenCalled();
