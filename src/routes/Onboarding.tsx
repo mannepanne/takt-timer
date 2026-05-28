@@ -2,7 +2,7 @@
 // ABOUT: Exports hasSeenOnboarding() and markOnboardingSeen() localStorage helpers.
 
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 import { useI18n } from '@/i18n/context';
 
@@ -29,7 +29,9 @@ type Props = { onDone: () => void };
 
 export function Onboarding({ onDone }: Props) {
   const { t } = useI18n();
-  const [slide, setSlide] = useState(0);
+  const location = useLocation();
+  const resumeSlide = (location.state as { resumeSlide?: number } | null)?.resumeSlide;
+  const [slide, setSlide] = useState(typeof resumeSlide === 'number' ? resumeSlide : 0);
   const slideValue = useRef(slide);
   slideValue.current = slide;
 
@@ -87,7 +89,7 @@ export function Onboarding({ onDone }: Props) {
             <div className="eyebrow onboarding-eyebrow">{t('onboarding.s3.eyebrow')}</div>
             <p className="onboarding-body">{t('onboarding.s3.body')}</p>
             <p className="onboarding-warning">{t('onboarding.s3.warning')}</p>
-            <Link to="/privacy" className="onboarding-privacy-link">
+            <Link to="/privacy" state={{ returnSlide: slide }} className="onboarding-privacy-link">
               {t('onboarding.s3.privacyLink')}
             </Link>
           </div>
