@@ -88,6 +88,10 @@ const strings = {
     sv: 'Detta tar permanent bort ditt konto, förinställningar och historik. Det går inte att ångra.',
   },
   'account.cancel': { en: 'Cancel', sv: 'Avbryt' },
+  'account.unauthDescription': {
+    en: 'Sign in with a passkey to save presets and sync session history across devices.',
+    sv: 'Logga in med en passkey för att spara förinställningar och synkronisera sessionshistorik.',
+  },
 
   // ── Not found ────────────────────────────────────────────────────────
   'notFound.title': { en: '404', sv: '404' },

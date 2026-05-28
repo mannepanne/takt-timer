@@ -30,16 +30,10 @@ type Props = { onDone: () => void };
 export function Onboarding({ onDone }: Props) {
   const { t } = useI18n();
   const [slide, setSlide] = useState(0);
-  const contentRef = useRef<HTMLDivElement>(null);
   const slideValue = useRef(slide);
   slideValue.current = slide;
 
   const isLast = slide === TOTAL_SLIDES - 1;
-
-  // Focus slide content on change for screen reader announcements
-  useEffect(() => {
-    contentRef.current?.focus();
-  }, [slide]);
 
   // Keyboard navigation: ←/→ to move between slides, Esc to skip
   useEffect(() => {
@@ -66,13 +60,7 @@ export function Onboarding({ onDone }: Props) {
         </button>
       )}
 
-      <div
-        ref={contentRef}
-        className="onboarding-slide"
-        tabIndex={-1}
-        aria-live="polite"
-        aria-atomic="true"
-      >
+      <div className="onboarding-slide" aria-live="polite" aria-atomic="true">
         {slide === 0 && (
           <div className="onboarding-slide-content">
             <h1 className="onboarding-tagline">{t('onboarding.s1.tagline')}</h1>

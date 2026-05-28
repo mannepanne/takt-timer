@@ -1,19 +1,25 @@
 // ABOUT: Account route — sign out and account deletion for authenticated users.
-// ABOUT: Minimal page; expanded with more settings in Phase 5.
+// ABOUT: Shows a passkey sign-in prompt for unauthenticated visitors.
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Icon } from '@/components/icons';
+import { PasskeyPrompt } from '@/components/PasskeyPrompt';
 import { TopBar } from '@/components/TopBar';
 import { useI18n } from '@/i18n/context';
-import { signOut } from '@/lib/auth/client';
+import { signOut, type AuthUser } from '@/lib/auth/client';
 import { apiFetch } from '@/lib/apiFetch';
 import { useSession } from '@/lib/auth/session';
 import { clearHistory } from '@/lib/history';
-import { markUnregistered } from '@/lib/auth/local-hint';
+import { markUnregistered, hasRegisteredBefore } from '@/lib/auth/local-hint';
 
 export function Account() {
+  const { session } = useSession();
+  return session.status === 'authenticated' ? <AccountAuth /> : <AccountAnon />;
+}
+
+function AccountAuth() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const { refresh } = useSession();
@@ -101,6 +107,54 @@ export function Account() {
           )}
         </div>
       </main>
+    </div>
+  );
+}
+
+function AccountAnon() {
+  const { t } = useI18n();
+  const navigate = useNavigate();
+  const { refresh } = useSession();
+  const [promptOpen, setPromptOpen] = useState(false);
+
+  function handleAuthSuccess(_user: AuthUser) {
+    refresh();
+    setPromptOpen(false);
+    navigate('/');
+  }
+
+  return (
+    <div className="screen">
+      <TopBar
+        left={
+          <button
+            className="icon-btn"
+            aria-label={t('nav.backToHome')}
+            onClick={() => navigate(-1)}
+            type="button"
+          >
+            <Icon.Close />
+          </button>
+        }
+      />
+
+      <main className="account-body">
+        <h1 className="account-title">{t('account.title')}</h1>
+        <p className="account-description">{t('account.unauthDescription')}</p>
+
+        <div className="account-actions">
+          <button type="button" className="btn btn-primary" onClick={() => setPromptOpen(true)}>
+            {t('passkey.button.discover')}
+          </button>
+        </div>
+      </main>
+
+      <PasskeyPrompt
+        open={promptOpen}
+        mode={hasRegisteredBefore() ? 'discover' : 'register'}
+        onSuccess={handleAuthSuccess}
+        onClose={() => setPromptOpen(false)}
+      />
     </div>
   );
 }

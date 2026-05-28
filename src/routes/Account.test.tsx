@@ -1,4 +1,5 @@
 // ABOUT: Tests for the Account route — sign out and delete account flows.
+// ABOUT: Covers both authenticated (AccountAuth) and unauthenticated (AccountAnon) branches.
 
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
@@ -7,12 +8,20 @@ import { I18nProvider } from '@/i18n/context';
 
 vi.mock('@/lib/auth/client', () => ({ signOut: vi.fn() }));
 vi.mock('@/lib/apiFetch', () => ({ apiFetch: vi.fn() }));
+vi.mock('@/lib/auth/local-hint', () => ({
+  hasRegisteredBefore: vi.fn(() => false),
+  markUnregistered: vi.fn(),
+}));
 vi.mock('@/lib/auth/session', () => ({
   useSession: vi.fn(() => ({
     session: { status: 'authenticated', user: { userHandle: 'u1', isAdmin: false } },
     refresh: vi.fn(),
     login: vi.fn(),
   })),
+}));
+vi.mock('@/components/PasskeyPrompt', () => ({
+  PasskeyPrompt: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="passkey-prompt" /> : null,
 }));
 
 import { signOut } from '@/lib/auth/client';
@@ -40,7 +49,7 @@ function renderAccount() {
   );
 }
 
-describe('Account', () => {
+describe('Account — authenticated', () => {
   it('renders the account title', () => {
     renderAccount();
     expect(screen.getByRole('heading', { name: /account/i })).toBeTruthy();
@@ -98,5 +107,34 @@ describe('Account', () => {
     fireEvent.click(screen.getByRole('button', { name: /delete account/i }));
     fireEvent.click(screen.getByRole('button', { name: /tap again/i }));
     await waitFor(() => expect(screen.getByText(/could not delete/i)).toBeTruthy());
+  });
+});
+
+describe('Account — unauthenticated', () => {
+  beforeEach(() => {
+    vi.mocked(useSession).mockReturnValue({
+      session: { status: 'unauthenticated' },
+      refresh: vi.fn(),
+      login: vi.fn(),
+    });
+  });
+
+  it('renders the account title', () => {
+    renderAccount();
+    expect(screen.getByRole('heading', { name: /account/i })).toBeInTheDocument();
+  });
+
+  it('shows the passkey sign-in CTA instead of sign-out/delete', () => {
+    renderAccount();
+    expect(screen.getByRole('button', { name: /continue with passkey/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /sign out/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /delete account/i })).toBeNull();
+  });
+
+  it('opens the passkey prompt on CTA click', () => {
+    renderAccount();
+    expect(screen.queryByTestId('passkey-prompt')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /continue with passkey/i }));
+    expect(screen.getByTestId('passkey-prompt')).toBeInTheDocument();
   });
 });
