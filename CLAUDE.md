@@ -43,7 +43,7 @@ Built for Magnus's rehab training, released to the world because the problem —
 - Cloudflare Access with Magnus's existing Google IdP policy — admin gate.
 - Cloudflare Web Analytics — traffic visibility.
 
-**Current status:** Phases 1–4 complete and deployed. Phase 5 (i18n, Settings & Onboarding) in progress — PR #55 (Settings screen, D1 settings persistence, Whisper language hint) open.
+**Current status:** Phases 1–4 complete and deployed. Phase 5 in progress — PR1 (i18n foundation) and PR2 (Settings screen, D1 settings persistence, Whisper language hint) merged; PR3 (Onboarding + Privacy policy) next.
 
 ## Implementation phases
 
@@ -58,7 +58,7 @@ Development is organised into six sequential phases. Each phase has its own spec
 
 **Current phase:** Phase 5 — i18n, Settings & Onboarding. See [SPECIFICATIONS/05-i18n-settings-onboarding.md](./SPECIFICATIONS/05-i18n-settings-onboarding.md).
 
-**Live at:** https://takt.hultberg.org — Phase 2 core timer live since 2026-04-19.
+**Live at:** https://takt.hultberg.org — Phases 1–5 PR2 deployed and live.
 
 ### SPECIFICATIONS/
 
@@ -75,6 +75,11 @@ How-it-works documentation and operational reference:
 - [environment-setup.md](./REFERENCE/environment-setup.md) — Cloudflare account, Wrangler, D1/KV/Workers AI setup.
 - [troubleshooting.md](./REFERENCE/troubleshooting.md) — common issues (populated as we encounter them).
 - [pr-review-workflow.md](./REFERENCE/pr-review-workflow.md) — how to use `/review-spec`, `/review-pr`, `/review-pr-team`.
+- [auth-and-presets-api.md](./REFERENCE/auth-and-presets-api.md) — HTTP contract for auth, presets, sessions, and `/api/me/settings`.
+- [voice-api-contract.md](./REFERENCE/voice-api-contract.md) — HTTP contract for `/api/voice/parse`, NDJSON events, `X-Takt-Lang` hint.
+- [i18n.md](./REFERENCE/i18n.md) — `strings.ts` schema, key naming, `t()` API, testing patterns.
+- [safety-harness.md](./REFERENCE/safety-harness.md) — pre-tool-use hook: blocked patterns, bypass, extending.
+- [scratch-write-hook.md](./REFERENCE/scratch-write-hook.md) — Write auto-approval for `SCRATCH/`.
 - [decisions/](./REFERENCE/decisions/) — Architecture Decision Records. Consult before making decisions in the same space.
 
 _Note: CLAUDE.md files are kept short (<300 lines). Details live in subdirectory files that auto-load when relevant._

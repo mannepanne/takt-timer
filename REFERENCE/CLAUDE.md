@@ -42,9 +42,9 @@ What the hook approves and why, where it sits in the call path alongside `safety
 
 ### [auth-and-presets-api.md](./auth-and-presets-api.md)
 
-**When to read:** Implementing or debugging auth flows, presets CRUD, or session history sync; checking exact request/response shapes for client/server contracts.
+**When to read:** Implementing or debugging auth flows, presets CRUD, session history sync, or user settings; checking exact request/response shapes for client/server contracts.
 
-HTTP contract for `/api/auth/*`, `/api/presets/*`, and `/api/sessions` — registration/sign-in ceremony flow, verify response shapes, preset CRUD, session import, `isAllowedOrigin` guard, and the session cookie.
+HTTP contract for `/api/auth/*`, `/api/presets/*`, `/api/sessions`, and `/api/me/settings` — registration/sign-in ceremony flow, verify response shapes, preset CRUD, session import, settings GET/PUT, `isAllowedOrigin` guard, and the session cookie.
 
 ### [i18n.md](./i18n.md)
 
