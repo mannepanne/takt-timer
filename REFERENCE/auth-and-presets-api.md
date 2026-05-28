@@ -303,9 +303,55 @@ Set-Cookie: takt_session=<signedToken>; HttpOnly; Secure; SameSite=Lax; Path=/; 
 
 ---
 
+## User settings
+
+### GET /api/me/settings
+
+Returns the authenticated user's persisted settings.
+
+**Auth:** Session cookie required (`401` if missing or invalid).
+
+**Response `200`**
+
+```json
+{ "language": "en", "accent_colour": "lichen", "sound_on": 1 }
+```
+
+**Response `404`** — user row not found (session for a deleted account).
+
+---
+
+### PUT /api/me/settings
+
+Replaces all three settings atomically.
+
+**Auth:** Session cookie required (`401` if missing or invalid).
+
+**Request body**
+
+```json
+{ "language": "sv", "accent_colour": "iris", "sound_on": 0 }
+```
+
+**Validation**
+
+| Field           | Rule                                         | Error code              |
+| --------------- | -------------------------------------------- | ----------------------- |
+| `language`      | `"en"` or `"sv"`                             | `invalid_language`      |
+| `accent_colour` | One of `lichen coral ocean amber iris slate` | `invalid_accent_colour` |
+| `sound_on`      | `0` or `1`                                   | `invalid_sound_on`      |
+
+All fields are required. Missing or invalid fields return `400` with `{ "error": "<code>" }`.
+
+**Response `200`** — `{ "ok": true }`
+
+**Response `404`** — user row not found (session for a deleted account, `meta.changes === 0`).
+
+---
+
 ## `isAllowedOrigin` guard
 
-All `/api/*` routes (auth, presets, sessions) enforce `isAllowedOrigin(request)`. The rule:
+All `/api/*` routes (auth, presets, sessions, me) enforce `isAllowedOrigin(request)`. The rule:
 
 - No `Origin` header → **allow** (integration tests, curl, Wrangler local dev)
 - `Origin` matches `WEBAUTHN_ORIGIN` → **allow**

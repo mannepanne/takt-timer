@@ -1,7 +1,7 @@
 // ABOUT: D1 query helpers for users, presets, and sessions.
 // ABOUT: Account deletion uses explicit cascading deletes — D1 FK constraints are advisory only.
 
-import type { UserRow, PresetRow, SessionRow } from './schema';
+import type { UserRow, UserSettings, PresetRow, SessionRow } from './schema';
 
 // ── Users ──────────────────────────────────────────────────────────────────
 
@@ -15,9 +15,18 @@ export function insertUser(
 ) {
   return db
     .prepare(
-      'INSERT INTO users (user_handle, public_key, counter, is_admin, created_at) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO users (user_handle, public_key, counter, is_admin, created_at, language, accent_colour, sound_on) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
     )
-    .bind(user.user_handle, user.public_key, user.counter, user.is_admin ?? 0, user.created_at)
+    .bind(
+      user.user_handle,
+      user.public_key,
+      user.counter,
+      user.is_admin ?? 0,
+      user.created_at,
+      user.language,
+      user.accent_colour,
+      user.sound_on,
+    )
     .run();
 }
 
@@ -25,6 +34,20 @@ export function updateUserCounter(db: D1Database, userHandle: string, counter: n
   return db
     .prepare('UPDATE users SET counter = ? WHERE user_handle = ?')
     .bind(counter, userHandle)
+    .run();
+}
+
+export function getUserSettings(db: D1Database, userHandle: string) {
+  return db
+    .prepare('SELECT language, accent_colour, sound_on FROM users WHERE user_handle = ?')
+    .bind(userHandle)
+    .first<UserSettings>();
+}
+
+export function updateUserSettings(db: D1Database, userHandle: string, settings: UserSettings) {
+  return db
+    .prepare('UPDATE users SET language = ?, accent_colour = ?, sound_on = ? WHERE user_handle = ?')
+    .bind(settings.language, settings.accent_colour, settings.sound_on, userHandle)
     .run();
 }
 

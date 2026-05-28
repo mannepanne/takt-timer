@@ -132,6 +132,11 @@ export async function parseVoice(request: Request, env: Env): Promise<Response> 
     );
   }
 
+  // Read the client's language hint (ISO 639-1, from X-Takt-Lang header).
+  // Only forward values we actually support — unknown values are silently ignored.
+  const langHeader = request.headers.get('X-Takt-Lang')?.toLowerCase();
+  const whisperLang = langHeader && SUPPORTED_LANGUAGES.has(langHeader) ? langHeader : undefined;
+
   const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
   const writer = writable.getWriter();
 
@@ -140,7 +145,7 @@ export async function parseVoice(request: Request, env: Env): Promise<Response> 
     try {
       let whisper;
       try {
-        whisper = await transcribe(env.AI, audioBytes);
+        whisper = await transcribe(env.AI, audioBytes, whisperLang);
       } catch (err) {
         toSafeErrorMessage(err, 'whisper-error');
         await writer.write(jsonLine({ kind: 'error', reason: 'whisper-error' }));

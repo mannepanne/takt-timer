@@ -43,7 +43,7 @@ Built for Magnus's rehab training, released to the world because the problem —
 - Cloudflare Access with Magnus's existing Google IdP policy — admin gate.
 - Cloudflare Web Analytics — traffic visibility.
 
-**Current status:** Phases 1–4 complete and deployed. Phase 5 (i18n, Settings & Onboarding) in progress — PR #54 (i18n foundation) under review.
+**Current status:** Phases 1–4 complete and deployed. Phase 5 (i18n, Settings & Onboarding) in progress — PR #55 (Settings screen, D1 settings persistence, Whisper language hint) open.
 
 ## Implementation phases
 

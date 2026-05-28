@@ -67,6 +67,8 @@ export type VoiceRequestOptions = {
   fetchFn?: typeof fetch;
   /** Override the cold-start timeout — tests use a low value with fake timers. */
   coldStartTimeoutMs?: number;
+  /** ISO 639-1 language hint forwarded to Whisper as X-Takt-Lang header. */
+  lang?: string;
 };
 
 /**
@@ -104,12 +106,17 @@ export async function postVoice(
     options.signal?.removeEventListener('abort', forwardAbort);
   };
 
+  const headers: Record<string, string> = {
+    'Content-Type': blob.type || 'application/octet-stream',
+  };
+  if (options.lang) headers['X-Takt-Lang'] = options.lang;
+
   let response: Response;
   try {
     response = await fetchFn(endpoint, {
       method: 'POST',
       body: blob,
-      headers: { 'Content-Type': blob.type || 'application/octet-stream' },
+      headers,
       signal: internal.signal,
     });
   } catch (err) {

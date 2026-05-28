@@ -105,6 +105,9 @@ export async function registrationVerify(request: Request, env: Env): Promise<Re
     counter: cred.counter,
     is_admin: 0,
     created_at: Date.now(),
+    language: 'en',
+    accent_colour: 'lichen',
+    sound_on: 1,
   });
 
   const signed = await createSession(env, { userHandle, isAdmin: false });

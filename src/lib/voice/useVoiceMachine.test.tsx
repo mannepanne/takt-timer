@@ -2,6 +2,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { I18nProvider } from '@/i18n/context';
 import { useVoiceMachine } from './useVoiceMachine';
 
 type MockRecorder = {
@@ -56,7 +57,11 @@ function installBrowserMocks(
 }
 
 function wrapper({ children }: { children: React.ReactNode }) {
-  return <MemoryRouter>{children}</MemoryRouter>;
+  return (
+    <I18nProvider>
+      <MemoryRouter>{children}</MemoryRouter>
+    </I18nProvider>
+  );
 }
 
 function deliverBlob(size: number, mimeType = 'audio/webm;codecs=opus'): void {

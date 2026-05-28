@@ -98,6 +98,24 @@ cleared only on receipt of the first NDJSON line. A timeout fires `errorArrived(
 
 ---
 
+## Request headers
+
+### `X-Takt-Lang` (optional)
+
+A language hint sent by the client to help Whisper transcription. The value is the user's current UI language (e.g. `"en"` or `"sv"`).
+
+```
+X-Takt-Lang: sv
+```
+
+**Contract:**
+
+- The server lower-cases the value and validates it against `SUPPORTED_LANGUAGES`.
+- Unknown or absent values are silently ignored — the hint is advisory.
+- Older clients that do not send the header continue to work without change.
+
+---
+
 ## Rate-limit bypass (dev only)
 
 When the Worker runs under `wrangler dev` with `ALLOW_RATE_LIMIT_BYPASS=1` in `.dev.vars`, the
