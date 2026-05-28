@@ -7,6 +7,7 @@
 
 import type { Env } from '../../index';
 import { isAllowedOrigin } from '../../lib/isAllowedOrigin';
+import { logRequest } from '../../lib/logger';
 import { toSafeErrorMessage } from '../../lib/toSafeErrorMessage';
 import { getSession } from '../../lib/sessionStore';
 import { insertVoiceCall } from '../../db/queries';
@@ -96,11 +97,19 @@ export async function parseVoice(
   env: Env,
   ctx?: Pick<ExecutionContext, 'waitUntil'>,
 ): Promise<Response> {
+  const t0 = performance.now();
+
+  function logVoice(fields: Omit<Parameters<typeof logRequest>[0], 'method' | 'path'>): void {
+    logRequest({ method: 'POST', path: '/api/voice/parse', ...fields });
+  }
+
   if (request.method !== 'POST') {
+    logVoice({ status: 405, latencyMs: Math.round(performance.now() - t0) });
     return errorResponse({ kind: 'error', reason: 'method-not-allowed' }, 405);
   }
 
   if (!isAllowedOrigin(request)) {
+    logVoice({ status: 403, latencyMs: Math.round(performance.now() - t0) });
     return errorResponse({ kind: 'error', reason: 'origin-not-allowed' }, 403);
   }
 
@@ -108,15 +117,18 @@ export async function parseVoice(
   // this header, so the belt-and-braces byteLength check below still runs.
   const declaredLength = request.headers.get('content-length');
   if (declaredLength && Number(declaredLength) > MAX_AUDIO_BYTES) {
+    logVoice({ status: 413, latencyMs: Math.round(performance.now() - t0) });
     return errorResponse({ kind: 'error', reason: 'upload-too-large' }, 413);
   }
 
   const startedAt = performance.now();
   const audioBytes = new Uint8Array(await request.arrayBuffer());
   if (audioBytes.byteLength > MAX_AUDIO_BYTES) {
+    logVoice({ status: 413, latencyMs: Math.round(performance.now() - t0) });
     return errorResponse({ kind: 'error', reason: 'upload-too-large' }, 413);
   }
   if (audioBytes.byteLength < MIN_AUDIO_BYTES) {
+    logVoice({ status: 400, latencyMs: Math.round(performance.now() - t0) });
     return errorResponse({ kind: 'error', reason: 'upload-empty' }, 400);
   }
 
@@ -131,6 +143,12 @@ export async function parseVoice(
     userId,
   });
   if (!rateCheck.allowed) {
+    logVoice({
+      status: 429,
+      latencyMs: Math.round(performance.now() - t0),
+      authenticated: !!userId,
+      rateLimited: true,
+    });
     return errorResponse(
       { kind: 'error', reason: 'rate-limited', retryAfterSec: rateCheck.retryAfterSec },
       429,
@@ -152,6 +170,12 @@ export async function parseVoice(
       try {
         whisper = await transcribe(env.AI, audioBytes, whisperLang);
       } catch (err) {
+        logVoice({
+          status: 200,
+          latencyMs: Math.round(performance.now() - startedAt),
+          authenticated: !!userId,
+          rateLimited: false,
+        });
         toSafeErrorMessage(err, 'whisper-error');
         await writer.write(jsonLine({ kind: 'error', reason: 'whisper-error' }));
         return;
@@ -170,11 +194,25 @@ export async function parseVoice(
       );
 
       if (!transcript) {
+        logVoice({
+          status: 200,
+          latencyMs: Math.round(performance.now() - startedAt),
+          authenticated: !!userId,
+          rateLimited: false,
+          whisperMs: whisper.latencyMs,
+        });
         await writer.write(jsonLine({ kind: 'error', reason: 'empty-transcript' }));
         return;
       }
 
       if (language && !SUPPORTED_LANGUAGES.has(language)) {
+        logVoice({
+          status: 200,
+          latencyMs: Math.round(performance.now() - startedAt),
+          authenticated: !!userId,
+          rateLimited: false,
+          whisperMs: whisper.latencyMs,
+        });
         // The detected-language tag is public info on the stream — safe to echo per the
         // error-content-safety contract (see ADR 2026-04-20).
         await writer.write(
@@ -191,6 +229,13 @@ export async function parseVoice(
       const totalMs = Math.round(performance.now() - startedAt);
 
       if (!llama.ok) {
+        logVoice({
+          status: 200,
+          latencyMs: totalMs,
+          authenticated: !!userId,
+          rateLimited: false,
+          whisperMs: whisper.latencyMs,
+        });
         if (llama.reason === 'not-a-session') {
           await writer.write(jsonLine({ kind: 'error', reason: 'not-a-session', totalMs }));
         } else if (llama.reason === 'model-error') {
@@ -203,6 +248,14 @@ export async function parseVoice(
         return;
       }
 
+      logVoice({
+        status: 200,
+        latencyMs: totalMs,
+        authenticated: !!userId,
+        rateLimited: false,
+        whisperMs: whisper.latencyMs,
+        llamaMs: llama.latencyMs,
+      });
       await writer.write(
         jsonLine({
           kind: 'parsed',
@@ -214,6 +267,12 @@ export async function parseVoice(
       ctx?.waitUntil(insertVoiceCall(env.DB, userId ?? null, Date.now()));
     } catch (err) {
       // Final safety net — shouldn't happen, but we never want to leave the stream hanging.
+      logVoice({
+        status: 200,
+        latencyMs: Math.round(performance.now() - startedAt),
+        authenticated: !!userId,
+        rateLimited: false,
+      });
       toSafeErrorMessage(err, 'llama-error', { stage: 'unhandled' });
       try {
         await writer.write(jsonLine({ kind: 'error', reason: 'llama-error' }));

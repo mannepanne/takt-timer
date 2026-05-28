@@ -152,6 +152,62 @@ pnpm dlx wrangler tail
 
 ---
 
+## Observability
+
+### Structured logs
+
+Every API request emits a single JSON line to Cloudflare's log pipeline:
+
+```json
+{
+  "ts": 1748000000000,
+  "method": "POST",
+  "path": "/api/auth/signin/verify",
+  "status": 200,
+  "latencyMs": 42
+}
+```
+
+Voice requests include extra fields (logged after inference completes inside the async pipeline):
+
+```json
+{
+  "ts": 1748000000000,
+  "method": "POST",
+  "path": "/api/voice/parse",
+  "status": 200,
+  "latencyMs": 1834,
+  "authenticated": true,
+  "rateLimited": false,
+  "whisperMs": 620,
+  "llamaMs": 1180
+}
+```
+
+**Viewing logs:**
+
+```bash
+# Tail live production logs
+pnpm dlx wrangler tail
+
+# With JSON formatting (requires `jq`)
+pnpm dlx wrangler tail | jq .
+```
+
+For persistent log storage, configure Cloudflare Logpush in the dashboard (Workers → Logs → Logpush) to forward to R2, S3, or a log aggregator.
+
+### Uptime check
+
+Configure an external uptime monitor against `https://takt.hultberg.org/api/health` (returns `{"ok":true}` with status 200). Recommended services:
+
+- **BetterStack** — free tier, 3-minute intervals, Slack/email alerting.
+- **UptimeRobot** — free tier, 5-minute intervals.
+- **Cloudflare Health Checks** — built into the dashboard under Traffic → Health Checks; requires a paid plan.
+
+Check interval: 1–5 minutes. Alert threshold: 2 consecutive failures (avoids spurious alerts on single cold-start timeouts).
+
+---
+
 ## Admin access (Cloudflare Access)
 
 The `/admin` route is gated at the edge by Cloudflare Access with Magnus's existing Google IdP policy. Configuration lives in the Cloudflare dashboard, not in code.
