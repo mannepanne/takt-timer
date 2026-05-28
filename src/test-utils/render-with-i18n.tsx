@@ -1,4 +1,5 @@
 // ABOUT: Test helper that renders a component inside I18nProvider with a fixed language.
+// ABOUT: Use in tests that need to assert language-specific copy or language-switching behaviour.
 
 import { render, type RenderOptions } from '@testing-library/react';
 import { I18nProvider } from '@/i18n/context';

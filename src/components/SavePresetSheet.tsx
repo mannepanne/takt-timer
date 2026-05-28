@@ -26,8 +26,8 @@ export function SavePresetSheet({ open, session, onClose, onSaved }: Props) {
   // which generates a spurious tap at the bottom of the visible screen.
   useEffect(() => {
     if (!open) return;
-    const t = setTimeout(() => inputRef.current?.focus(), 350);
-    return () => clearTimeout(t);
+    const timerId = setTimeout(() => inputRef.current?.focus(), 350);
+    return () => clearTimeout(timerId);
   }, [open]);
 
   async function handleSave() {
@@ -81,7 +81,7 @@ export function SavePresetSheet({ open, session, onClose, onSaved }: Props) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={t('savePreset.namePlaceholder')}
-            maxLength={80}
+            maxLength={50}
           />
           {error && <p className="save-preset-error">{error}</p>}
           <div className="save-preset-actions">

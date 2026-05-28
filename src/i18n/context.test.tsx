@@ -1,10 +1,11 @@
 // ABOUT: Unit tests for I18nProvider and useI18n — defaults, localStorage, lang switching, param interpolation.
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { I18nProvider, useI18n } from './context';
 
 beforeEach(() => localStorage.clear());
+afterEach(() => vi.unstubAllGlobals());
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <I18nProvider>{children}</I18nProvider>
@@ -16,19 +17,19 @@ describe('useI18n', () => {
   });
 
   it('defaults to en when no localStorage entry and navigator.language is en-GB', () => {
-    Object.defineProperty(navigator, 'language', { value: 'en-GB', configurable: true });
+    vi.stubGlobal('navigator', { language: 'en-GB' });
     const { result } = renderHook(() => useI18n(), { wrapper });
     expect(result.current.lang).toBe('en');
   });
 
   it('defaults to sv when navigator.language is sv-SE and no localStorage entry', () => {
-    Object.defineProperty(navigator, 'language', { value: 'sv-SE', configurable: true });
+    vi.stubGlobal('navigator', { language: 'sv-SE' });
     const { result } = renderHook(() => useI18n(), { wrapper });
     expect(result.current.lang).toBe('sv');
   });
 
   it('reads language from localStorage and overrides navigator.language', () => {
-    Object.defineProperty(navigator, 'language', { value: 'en-GB', configurable: true });
+    vi.stubGlobal('navigator', { language: 'en-GB' });
     localStorage.setItem('takt.lang.v1', 'sv');
     const { result } = renderHook(() => useI18n(), { wrapper });
     expect(result.current.lang).toBe('sv');
@@ -41,7 +42,7 @@ describe('useI18n', () => {
   });
 
   it('t() returns the English string for a known key', () => {
-    Object.defineProperty(navigator, 'language', { value: 'en-GB', configurable: true });
+    vi.stubGlobal('navigator', { language: 'en-GB' });
     localStorage.clear();
     const { result } = renderHook(() => useI18n(), { wrapper });
     expect(result.current.t('nav.backToHome')).toBe('Back to Home');

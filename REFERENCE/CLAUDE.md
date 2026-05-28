@@ -46,6 +46,12 @@ What the hook approves and why, where it sits in the call path alongside `safety
 
 HTTP contract for `/api/auth/*`, `/api/presets/*`, and `/api/sessions` — registration/sign-in ceremony flow, verify response shapes, preset CRUD, session import, `isAllowedOrigin` guard, and the session cookie.
 
+### [i18n.md](./i18n.md)
+
+**When to read:** Adding or editing UI strings, adding a new language, understanding `t()` interpolation, or writing tests for i18n-dependent components.
+
+The `strings.ts` schema, key naming conventions, `satisfies` pattern, `takt.lang.v1` persistence, `useI18n()` hook API, interpolation contract, and testing patterns.
+
 ### [voice-api-contract.md](./voice-api-contract.md)
 
 **When to read:** Implementing or debugging the voice pipeline client; understanding HTTP status codes vs NDJSON error events; cold-start behaviour; rate-limit bypass.

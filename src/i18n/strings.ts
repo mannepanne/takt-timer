@@ -72,8 +72,8 @@ const strings = {
   // ── Account ──────────────────────────────────────────────────────────
   'account.title': { en: 'Account', sv: 'Konto' },
   'account.description': {
-    en: "You're signed in. Your presets and session history sync across devices.",
-    sv: 'Du är inloggad. Dina förinställningar och historik synkas mellan enheter.',
+    en: 'Your account is pseudonymous — no email address, no personal data.',
+    sv: 'Ditt konto är pseudonymt — ingen e-postadress, inga personuppgifter.',
   },
   'account.signOut': { en: 'Sign out', sv: 'Logga ut' },
   'account.deleteError': {
@@ -167,8 +167,8 @@ const strings = {
     sv: 'Något gick fel. Försök igen.',
   },
   'voice.retryToast': {
-    en: 'Retrying…',
-    sv: 'Försöker igen…',
+    en: 'Didn’t catch that — tap the mic and try again.',
+    sv: 'Förstod inte — tryck på mikrofonen och försök igen.',
   },
 
   // ── Mic button ───────────────────────────────────────────────────────
@@ -201,8 +201,8 @@ const strings = {
     sv: 'Använd din passkey för att logga in.',
   },
   'passkey.multiplatformNote': {
-    en: 'Works across different platforms — iOS, Android, and desktop.',
-    sv: 'Fungerar på olika plattformar — iOS, Android och dator.',
+    en: 'If you use different platforms (e.g. Android phone + MacBook), you may need to add each device separately.',
+    sv: 'Om du använder olika plattformar (t.ex. Android-telefon + MacBook) kan du behöva lägga till varje enhet separat.',
   },
   'passkey.cancel': { en: 'Cancel', sv: 'Avbryt' },
   'passkey.waiting': { en: 'Waiting…', sv: 'Väntar…' },

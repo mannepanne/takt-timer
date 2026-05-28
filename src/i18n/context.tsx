@@ -1,5 +1,5 @@
 // ABOUT: React context providing the active language, a language setter, and the t() translation helper.
-// ABOUT: Language is persisted in localStorage (takt.lang.v1); D1 persistence is added in Phase 5 PR 2.
+// ABOUT: Language is persisted in localStorage (takt.lang.v1); authenticated users also sync to D1 via the settings endpoint.
 
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import strings, { type Lang, type StringKey } from './strings';
