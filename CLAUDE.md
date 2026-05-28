@@ -43,7 +43,7 @@ Built for Magnus's rehab training, released to the world because the problem —
 - Cloudflare Access with Magnus's existing Google IdP policy — admin gate.
 - Cloudflare Web Analytics — traffic visibility.
 
-**Current status:** Phases 1–4 complete and deployed. Phase 5 in progress — PR1 (i18n foundation) and PR2 (Settings screen, D1 settings persistence, Whisper language hint) merged; PR3 (Onboarding + Privacy policy) next.
+**Current status:** Phases 1–5 complete and deployed. Phase 6 next — admin backend, retention purge, hardening, launch.
 
 ## Implementation phases
 
@@ -53,12 +53,12 @@ Development is organised into six sequential phases. Each phase has its own spec
 2. ~~[02-core-timer.md](./SPECIFICATIONS/ARCHIVE/02-core-timer.md)~~ — ✅ complete, archived
 3. ~~[03-voice.md](./SPECIFICATIONS/ARCHIVE/03-voice.md)~~ — ✅ complete, archived
 4. ~~[04-accounts-and-presets.md](./SPECIFICATIONS/ARCHIVE/04-accounts-and-presets.md)~~ — ✅ complete, archived
-5. [05-i18n-settings-onboarding.md](./SPECIFICATIONS/05-i18n-settings-onboarding.md) — English + Swedish, Settings, Onboarding, Privacy policy (4–6 days)
+5. ~~[05-i18n-settings-onboarding.md](./SPECIFICATIONS/ARCHIVE/05-i18n-settings-onboarding.md)~~ — ✅ complete, archived
 6. [06-admin-and-launch.md](./SPECIFICATIONS/06-admin-and-launch.md) — admin backend, retention purge, hardening, launch (4–6 days)
 
-**Current phase:** Phase 5 — i18n, Settings & Onboarding. See [SPECIFICATIONS/05-i18n-settings-onboarding.md](./SPECIFICATIONS/05-i18n-settings-onboarding.md).
+**Current phase:** Phase 6 — Admin & Launch. See [SPECIFICATIONS/06-admin-and-launch.md](./SPECIFICATIONS/06-admin-and-launch.md).
 
-**Live at:** https://takt.hultberg.org — Phases 1–5 PR2 deployed and live.
+**Live at:** https://takt.hultberg.org — Phases 1–5 deployed and live.
 
 ### SPECIFICATIONS/
 
