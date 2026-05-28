@@ -1772,8 +1772,7 @@ input {
 .onboarding {
   display: flex;
   flex-direction: column;
-  position: relative;
-  padding: 0 24px 32px;
+  padding: 60px 24px 32px;
 }
 .onboarding-skip {
   position: absolute;
