@@ -29,6 +29,7 @@ enabled = true
 binding = "DB"
 database_name = "takt"
 database_id = "f2fd3a7f-c5db-4f61-9d7c-d1add2f881ad"
+migrations_dir = "worker/db/migrations"
 
 # KV — session tokens. Activated in Phase 4.
 [[kv_namespaces]]
