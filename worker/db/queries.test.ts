@@ -18,6 +18,11 @@ import {
   listSessions,
   insertSessions,
   getLatestSession,
+  insertVoiceCall,
+  insertPurgeRun,
+  insertAdminLog,
+  getUserByHandleAdmin,
+  pruneInactiveUsers,
 } from './queries';
 
 function makeStmt(returnVal?: unknown) {
@@ -279,5 +284,109 @@ describe('getLatestSession', () => {
     await getLatestSession(db, 'u1');
     expect(db.prepare).toHaveBeenCalledWith(expect.stringMatching(/LIMIT 1/));
     expect(stmt.bind).toHaveBeenCalledWith('u1');
+  });
+});
+
+describe('insertVoiceCall', () => {
+  it('prepares INSERT with user_handle and called_at', async () => {
+    const { db, stmt } = makeD1();
+    await insertVoiceCall(db, 'u1', 1700000000000);
+    expect(db.prepare).toHaveBeenCalledWith(expect.stringContaining('INSERT INTO voice_calls'));
+    expect(stmt.bind).toHaveBeenCalledWith('u1', 1700000000000);
+  });
+
+  it('accepts null user_handle for anonymous calls', async () => {
+    const { db, stmt } = makeD1();
+    await insertVoiceCall(db, null, 1700000000000);
+    expect(stmt.bind).toHaveBeenCalledWith(null, 1700000000000);
+  });
+});
+
+describe('insertPurgeRun', () => {
+  it('prepares INSERT with ran_at and users_deleted', async () => {
+    const { db, stmt } = makeD1();
+    await insertPurgeRun(db, 1700000000000, 5);
+    expect(db.prepare).toHaveBeenCalledWith(expect.stringContaining('INSERT INTO purge_runs'));
+    expect(stmt.bind).toHaveBeenCalledWith(1700000000000, 5);
+  });
+});
+
+describe('insertAdminLog', () => {
+  it('prepares INSERT with all 4 fields', async () => {
+    const { db, stmt } = makeD1();
+    await insertAdminLog(db, 'delete_user', 'admin@example.com', 'u1', 1700000000000);
+    expect(db.prepare).toHaveBeenCalledWith(expect.stringContaining('INSERT INTO admin_log'));
+    expect(stmt.bind).toHaveBeenCalledWith('delete_user', 'admin@example.com', 'u1', 1700000000000);
+  });
+
+  it('accepts null target', async () => {
+    const { db, stmt } = makeD1();
+    await insertAdminLog(db, 'purge_run', 'admin@example.com', null, 1700000000000);
+    expect(stmt.bind).toHaveBeenCalledWith('purge_run', 'admin@example.com', null, 1700000000000);
+  });
+});
+
+describe('getUserByHandleAdmin', () => {
+  it('prepares correlated-subquery SELECT and binds userHandle', async () => {
+    const adminUser = {
+      user_handle: 'u1',
+      created_at: 1000,
+      session_count: 3,
+      last_session_at: 2000,
+      preset_count: 1,
+    };
+    const { db, stmt } = makeD1(adminUser);
+    await getUserByHandleAdmin(db, 'u1');
+    expect(db.prepare).toHaveBeenCalledWith(expect.stringContaining('session_count'));
+    expect(db.prepare).toHaveBeenCalledWith(expect.stringContaining('preset_count'));
+    expect(stmt.bind).toHaveBeenCalledWith('u1');
+    expect(stmt.first).toHaveBeenCalled();
+  });
+});
+
+describe('pruneInactiveUsers', () => {
+  it('dry run returns handles without calling db.batch', async () => {
+    const handles = [{ user_handle: 'u1' }, { user_handle: 'u2' }];
+    const { db } = makeD1(handles);
+    const result = await pruneInactiveUsers(db, 1000, true);
+    expect(result.userHandles).toEqual(['u1', 'u2']);
+    expect(result.deleted).toBe(0);
+    expect(db.batch).not.toHaveBeenCalled();
+  });
+
+  it('returns empty result without batching when no eligible users', async () => {
+    const { db } = makeD1([]);
+    const result = await pruneInactiveUsers(db, 1000, false);
+    expect(result.userHandles).toEqual([]);
+    expect(result.deleted).toBe(0);
+    expect(db.batch).not.toHaveBeenCalled();
+  });
+
+  it('batches 3N delete statements for N eligible users', async () => {
+    const handles = [{ user_handle: 'u1' }, { user_handle: 'u2' }];
+    const { db } = makeD1(handles);
+    const result = await pruneInactiveUsers(db, 1000, false);
+    expect(result.deleted).toBe(2);
+    expect(db.batch).toHaveBeenCalledTimes(1);
+    const stmts = (db.batch as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    expect(stmts).toHaveLength(6); // 2 users × 3 DELETEs
+  });
+
+  it('splits into multiple batches when user count exceeds chunk size (30)', async () => {
+    const handles = Array.from({ length: 31 }, (_, i) => ({ user_handle: `u${i}` }));
+    const { db } = makeD1(handles);
+    const result = await pruneInactiveUsers(db, 1000, false);
+    expect(result.deleted).toBe(31);
+    expect(db.batch).toHaveBeenCalledTimes(2);
+    const firstBatch = (db.batch as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    expect(firstBatch).toHaveLength(90); // 30 × 3
+    const secondBatch = (db.batch as ReturnType<typeof vi.fn>).mock.calls[1][0];
+    expect(secondBatch).toHaveLength(3); // 1 × 3
+  });
+
+  it('binds thresholdMs as the SELECT filter parameter', async () => {
+    const { db, stmt } = makeD1([]);
+    await pruneInactiveUsers(db, 9_999_999_999, false);
+    expect(stmt.bind).toHaveBeenCalledWith(9_999_999_999);
   });
 });

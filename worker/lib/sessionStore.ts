@@ -80,6 +80,10 @@ export async function createSession(
 ): Promise<string> {
   const sessionId = crypto.randomUUID();
   await env.SESSIONS.put(sessionId, JSON.stringify(data), { expirationTtl: TTL_SECONDS });
+  // Reverse index: one key per session for race-free admin bulk invalidation via deleteUserSessions.
+  await env.SESSIONS.put(`user-session:${data.userHandle}:${sessionId}`, '1', {
+    expirationTtl: TTL_SECONDS,
+  });
   return sign(sessionId, env.SESSION_COOKIE_SECRET);
 }
 
@@ -105,4 +109,20 @@ export async function deleteSession(
   const sessionId = await verify(signed, env.SESSION_COOKIE_SECRET);
   if (!sessionId) return;
   await env.SESSIONS.delete(sessionId);
+}
+
+export async function deleteUserSessions(
+  env: Pick<Env, 'SESSIONS'>,
+  userHandle: string,
+): Promise<number> {
+  const prefix = `user-session:${userHandle}:`;
+  const { keys } = await env.SESSIONS.list({ prefix });
+  if (keys.length === 0) return 0;
+  await Promise.all(
+    keys.flatMap((k) => {
+      const sessionId = k.name.slice(prefix.length);
+      return [env.SESSIONS.delete(sessionId), env.SESSIONS.delete(k.name)];
+    }),
+  );
+  return keys.length;
 }
