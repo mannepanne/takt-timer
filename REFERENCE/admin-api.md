@@ -1,6 +1,6 @@
 # Admin Backend Reference
 
-HTTP contract for the `/admin/*` endpoints introduced in Phase 6b.
+HTTP contract for the `/admin/*` endpoints introduced in Phases 6b and 6c.
 
 The admin backend is server-rendered HTML — no JSON API. It is gated by Cloudflare Access (Google IdP, Magnus only). All endpoints require the `CF-Access-Authenticated-User-Email` header that Cloudflare Access injects; requests that arrive without it (or via `workers.dev` instead of `takt.hultberg.org`) receive `403 Forbidden`.
 
@@ -26,10 +26,11 @@ Renders the admin dashboard with aggregate metrics from D1.
 | New users (7d)          | Users with `created_at` in last 7 days                                    |
 | Active users (7d / 30d) | Distinct `user_handle` in `sessions` with `completed_at` in last 7d / 30d |
 | Sessions (7d / 30d)     | `COUNT(*)` from `sessions` with `completed_at` in last 7d / 30d           |
+| Voice calls (7d / 30d)  | `COUNT(*)` from `voice_calls` with `called_at` in last 7d / 30d           |
 
-All six queries run in a single `db.batch()` call.
+All eight queries run in a single `db.batch()` call.
 
-**Note:** Voice-call metrics land in Phase 6c (depends on the `voice_calls` D1 migration). Interim cost monitoring via the Cloudflare billing dashboard.
+The dashboard also displays a link to `GET /admin/purge`.
 
 **Auth:** `requireAdminAuth`
 
@@ -100,6 +101,35 @@ Executes a hard delete of the user and all associated data. The sequence is:
 - Success → confirmation page with "User deleted" message and link back to dashboard
 
 **Auth:** `requireAdminAuthWithCsrf`
+
+---
+
+## GET /admin/purge
+
+**Handler:** `handlePurgeDryRun`
+
+Renders a dry-run preview of the retention purge — lists all user handles eligible for deletion (inactive >90 days, no sessions, no presets) and shows a "Run purge" button if any are found.
+
+This is a read-only page; no data is modified.
+
+**Auth:** `requireAdminAuth`
+
+---
+
+## POST /admin/purge/run
+
+**Handler:** `handlePurgeRun`
+
+Executes the retention purge:
+
+1. Calls `pruneInactiveUsers(db, thresholdMs, false)` — cascaded delete of users + sessions + presets + voice_calls (via FK cascade).
+2. Calls `insertPurgeRun(db, now, deleted)` — records an audit row even when nothing was deleted.
+
+**Outcomes:**
+
+- Success → "Purge complete" page with the count of deleted users.
+
+**Auth:** `requireAdminAuthWithCsrf` (checks `Origin` header against allowed list)
 
 ---
 
