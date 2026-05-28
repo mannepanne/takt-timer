@@ -120,4 +120,10 @@ describe('Settings route', () => {
     renderSettings();
     expect(screen.getByText(/version/i)).toBeInTheDocument();
   });
+
+  it('shows saved toast after toggling sound', async () => {
+    renderSettings();
+    await userEvent.click(screen.getByRole('switch'));
+    expect(screen.getByRole('status')).toHaveClass('show');
+  });
 });
