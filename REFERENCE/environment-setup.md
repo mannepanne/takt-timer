@@ -97,11 +97,12 @@ Takt is deliberately secret-light. The Cloudflare account credentials are held b
 
 **Application secrets that do exist:**
 
-| Secret                  | Purpose                     | How to obtain                                                                          | Set via                                              |
-| ----------------------- | --------------------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| `SESSION_COOKIE_SECRET` | Signs session cookies       | Generate a random 32+ byte value                                                       | `pnpm dlx wrangler secret put SESSION_COOKIE_SECRET` |
-| `WEBAUTHN_RP_ID`        | WebAuthn relying-party ID   | Set to `takt.hultberg.org` (production) / `localhost` (local)                          | `.dev.vars` locally; Worker secret in production     |
-| `WEBAUTHN_ORIGIN`       | Allowed origin for WebAuthn | `https://takt.hultberg.org` (production) / `http://localhost:8787` (local Worker port) | `.dev.vars` locally; Worker secret in production     |
+| Secret                  | Purpose                                           | How to obtain                                                                          | Set via                                              |
+| ----------------------- | ------------------------------------------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `SESSION_COOKIE_SECRET` | Signs session cookies                             | Generate a random 32+ byte value                                                       | `pnpm dlx wrangler secret put SESSION_COOKIE_SECRET` |
+| `WEBAUTHN_RP_ID`        | WebAuthn relying-party ID                         | Set to `takt.hultberg.org` (production) / `localhost` (local)                          | `.dev.vars` locally; Worker secret in production     |
+| `WEBAUTHN_ORIGIN`       | Allowed origin for WebAuthn                       | `https://takt.hultberg.org` (production) / `http://localhost:8787` (local Worker port) | `.dev.vars` locally; Worker secret in production     |
+| `ALLOW_ADMIN_BYPASS`    | Bypass Cloudflare Access on `/admin` in local dev | Set to `"1"`                                                                           | `.dev.vars` only — never set in production           |
 
 WebAuthn bindings are inert until Phase 4 ships account registration. `WEBAUTHN_ORIGIN` points at the _Worker_ dev port (8787) — not Vite's 5173 — because WebAuthn requests go through the Worker.
 

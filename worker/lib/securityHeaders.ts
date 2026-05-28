@@ -5,7 +5,7 @@ const CSP_DIRECTIVES: Array<[string, string]> = [
   ['default-src', "'self'"],
   ['script-src', "'self' https://static.cloudflareinsights.com"],
   // 'unsafe-inline' on style-src is required while Home.tsx uses inline style objects.
-  // Tracked as TD-010; remove before Phase 4 ships passkey UI.
+  // Tracked as GitHub issue #21. Remove when inline styles are refactored to CSS classes.
   ['style-src', "'self' https://fonts.googleapis.com 'unsafe-inline'"],
   ['font-src', "'self' https://fonts.gstatic.com"],
   ['img-src', "'self' data:"],
