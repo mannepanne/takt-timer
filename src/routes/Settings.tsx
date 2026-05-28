@@ -63,9 +63,6 @@ export function Settings() {
 
       <div className="settings-body">
         <h1 className="settings-title">{t('settings.title')}</h1>
-        <p className="settings-saved" aria-live="polite" aria-atomic="true">
-          {savedVisible ? t('settings.saved') : ''}
-        </p>
 
         <section className="settings-section">
           <div className="settings-row">
@@ -133,6 +130,15 @@ export function Settings() {
             </span>
           </div>
         </section>
+      </div>
+
+      <div
+        className={`toast${savedVisible ? ' show' : ''}`}
+        aria-live="polite"
+        aria-atomic="true"
+        role="status"
+      >
+        {savedVisible ? t('settings.saved') : ''}
       </div>
     </div>
   );

@@ -1661,13 +1661,6 @@ input {
   letter-spacing: -0.5px;
   margin: 0 0 8px;
 }
-.settings-saved {
-  min-height: 1.2em;
-  margin: 0 0 12px;
-  font-size: 0.875rem;
-  color: var(--success);
-  text-align: right;
-}
 .settings-section {
   padding: 4px 0;
 }
