@@ -18,6 +18,7 @@ import { sessionsList } from './api/sessions/list';
 import { parseVoice } from './api/voice/parse';
 import { applySecurityHeaders } from './lib/securityHeaders';
 import { isAllowedOrigin } from './lib/isAllowedOrigin';
+import { logRequest } from './lib/logger';
 import { handleAdmin } from './admin/router';
 import { runPurge } from './cron/purge';
 
@@ -42,97 +43,122 @@ function methodNotAllowed(): Response {
   return new Response('Method Not Allowed', { status: 405 });
 }
 
+async function routeRequest(
+  request: Request,
+  env: Env,
+  ctx: ExecutionContext,
+  url: URL,
+): Promise<Response> {
+  const path = url.pathname;
+  const method = request.method;
+
+  // ── Health ───────────────────────────────────────────────────────────────
+  if (path === '/api/health') {
+    return applySecurityHeaders(await health());
+  }
+
+  // ── Voice (self-logs with accurate AI latency) ───────────────────────────
+  if (path === '/api/voice/parse') {
+    return applySecurityHeaders(await parseVoice(request, env, ctx));
+  }
+
+  // ── Auth ─────────────────────────────────────────────────────────────────
+  if (path === '/api/auth/registration/options' && method === 'POST') {
+    if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
+    return applySecurityHeaders(await registrationOptions(request, env));
+  }
+  if (path === '/api/auth/registration/verify' && method === 'POST') {
+    if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
+    return applySecurityHeaders(await registrationVerify(request, env));
+  }
+  if (path === '/api/auth/signin/options' && method === 'POST') {
+    if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
+    return applySecurityHeaders(await signinOptions(request, env));
+  }
+  if (path === '/api/auth/signin/verify' && method === 'POST') {
+    if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
+    return applySecurityHeaders(await signinVerify(request, env));
+  }
+  if (path === '/api/auth/signout' && method === 'POST') {
+    if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
+    return applySecurityHeaders(await signout(request, env));
+  }
+  if (path === '/api/auth/me' && method === 'GET') {
+    if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
+    return applySecurityHeaders(await me(request, env));
+  }
+  if (path === '/api/auth/delete' && method === 'DELETE') {
+    if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
+    return applySecurityHeaders(await deleteAccount(request, env));
+  }
+
+  // ── User settings ─────────────────────────────────────────────────────────
+  if (path === '/api/me/settings') {
+    if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
+    if (method === 'GET') return applySecurityHeaders(await getSettings(request, env));
+    if (method === 'PUT') return applySecurityHeaders(await putSettings(request, env));
+    return methodNotAllowed();
+  }
+
+  // ── Presets ───────────────────────────────────────────────────────────────
+  if (path === '/api/presets') {
+    if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
+    if (method === 'GET') return applySecurityHeaders(await presetsList(request, env));
+    if (method === 'POST') return applySecurityHeaders(await presetsCreate(request, env));
+    return methodNotAllowed();
+  }
+  if (path === '/api/presets/reorder') {
+    if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
+    if (method === 'PATCH') return applySecurityHeaders(await presetsReorder(request, env));
+    return methodNotAllowed();
+  }
+  const presetMatch = path.match(/^\/api\/presets\/([^/]+)$/);
+  if (presetMatch) {
+    if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
+    const id = presetMatch[1];
+    if (method === 'PATCH') return applySecurityHeaders(await presetsUpdate(request, env, id));
+    if (method === 'DELETE') return applySecurityHeaders(await presetsDelete(request, env, id));
+    return methodNotAllowed();
+  }
+
+  // ── Sessions ──────────────────────────────────────────────────────────────
+  if (path === '/api/sessions') {
+    if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
+    if (method === 'GET') return applySecurityHeaders(await sessionsList(request, env));
+    if (method === 'POST') return applySecurityHeaders(await sessionsAppend(request, env));
+    return methodNotAllowed();
+  }
+
+  // ── Admin ─────────────────────────────────────────────────────────────────
+  if (path.startsWith('/admin')) {
+    return applySecurityHeaders(await handleAdmin(request, env));
+  }
+
+  // ── SPA fallback ──────────────────────────────────────────────────────────
+  const assetResponse = await env.ASSETS.fetch(request);
+  return applySecurityHeaders(assetResponse);
+}
+
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    const t0 = performance.now();
     const url = new URL(request.url);
     const path = url.pathname;
-    const method = request.method;
 
-    // ── Health ───────────────────────────────────────────────────────────────
-    if (path === '/api/health') {
-      return applySecurityHeaders(await health());
-    }
+    const response = await routeRequest(request, env, ctx, url);
 
-    // ── Voice ────────────────────────────────────────────────────────────────
-    if (path === '/api/voice/parse') {
-      return applySecurityHeaders(await parseVoice(request, env, ctx));
-    }
-
-    // ── Auth ─────────────────────────────────────────────────────────────────
-    if (path === '/api/auth/registration/options' && method === 'POST') {
-      if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
-      return applySecurityHeaders(await registrationOptions(request, env));
-    }
-    if (path === '/api/auth/registration/verify' && method === 'POST') {
-      if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
-      return applySecurityHeaders(await registrationVerify(request, env));
-    }
-    if (path === '/api/auth/signin/options' && method === 'POST') {
-      if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
-      return applySecurityHeaders(await signinOptions(request, env));
-    }
-    if (path === '/api/auth/signin/verify' && method === 'POST') {
-      if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
-      return applySecurityHeaders(await signinVerify(request, env));
-    }
-    if (path === '/api/auth/signout' && method === 'POST') {
-      if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
-      return applySecurityHeaders(await signout(request, env));
-    }
-    if (path === '/api/auth/me' && method === 'GET') {
-      if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
-      return applySecurityHeaders(await me(request, env));
-    }
-    if (path === '/api/auth/delete' && method === 'DELETE') {
-      if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
-      return applySecurityHeaders(await deleteAccount(request, env));
+    // Voice self-logs with accurate AI inference latency inside its async pipeline.
+    // SPA asset requests are excluded — only /api/* and /admin routes are logged.
+    if ((path.startsWith('/api/') || path.startsWith('/admin')) && path !== '/api/voice/parse') {
+      logRequest({
+        method: request.method,
+        path,
+        status: response.status,
+        latencyMs: Math.round(performance.now() - t0),
+      });
     }
 
-    // ── User settings ─────────────────────────────────────────────────────────
-    if (path === '/api/me/settings') {
-      if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
-      if (method === 'GET') return applySecurityHeaders(await getSettings(request, env));
-      if (method === 'PUT') return applySecurityHeaders(await putSettings(request, env));
-      return methodNotAllowed();
-    }
-
-    // ── Presets ───────────────────────────────────────────────────────────────
-    if (path === '/api/presets') {
-      if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
-      if (method === 'GET') return applySecurityHeaders(await presetsList(request, env));
-      if (method === 'POST') return applySecurityHeaders(await presetsCreate(request, env));
-      return methodNotAllowed();
-    }
-    if (path === '/api/presets/reorder') {
-      if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
-      if (method === 'PATCH') return applySecurityHeaders(await presetsReorder(request, env));
-      return methodNotAllowed();
-    }
-    const presetMatch = path.match(/^\/api\/presets\/([^/]+)$/);
-    if (presetMatch) {
-      if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
-      const id = presetMatch[1];
-      if (method === 'PATCH') return applySecurityHeaders(await presetsUpdate(request, env, id));
-      if (method === 'DELETE') return applySecurityHeaders(await presetsDelete(request, env, id));
-      return methodNotAllowed();
-    }
-
-    // ── Sessions ──────────────────────────────────────────────────────────────
-    if (path === '/api/sessions') {
-      if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
-      if (method === 'GET') return applySecurityHeaders(await sessionsList(request, env));
-      if (method === 'POST') return applySecurityHeaders(await sessionsAppend(request, env));
-      return methodNotAllowed();
-    }
-
-    // ── Admin ─────────────────────────────────────────────────────────────────
-    if (path.startsWith('/admin')) {
-      return applySecurityHeaders(await handleAdmin(request, env));
-    }
-
-    // ── SPA fallback ──────────────────────────────────────────────────────────
-    const assetResponse = await env.ASSETS.fetch(request);
-    return applySecurityHeaders(assetResponse);
+    return response;
   },
   async scheduled(
     _controller: ScheduledController,

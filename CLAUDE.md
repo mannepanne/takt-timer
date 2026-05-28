@@ -43,7 +43,7 @@ Built for Magnus's rehab training, released to the world because the problem —
 - Cloudflare Access with Magnus's existing Google IdP policy — admin gate.
 - Cloudflare Web Analytics — traffic visibility.
 
-**Current status:** Phases 1–5 complete and deployed. Phase 6 in progress — 6b (admin backend) and 6c (retention purge + voice tracking) done, preparing for launch.
+**Current status:** Phases 1–5 complete and deployed. Phase 6 in progress — 6b (admin backend), 6c (retention purge + voice tracking), and 6d (observability) done. Remaining: security headers verification, soft launch.
 
 ## Implementation phases
 
@@ -54,7 +54,7 @@ Development is organised into six sequential phases. Each phase has its own spec
 3. ~~[03-voice.md](./SPECIFICATIONS/ARCHIVE/03-voice.md)~~ — ✅ complete, archived
 4. ~~[04-accounts-and-presets.md](./SPECIFICATIONS/ARCHIVE/04-accounts-and-presets.md)~~ — ✅ complete, archived
 5. ~~[05-i18n-settings-onboarding.md](./SPECIFICATIONS/ARCHIVE/05-i18n-settings-onboarding.md)~~ — ✅ complete, archived
-6. [06-admin-and-launch.md](./SPECIFICATIONS/06-admin-and-launch.md) — admin backend, retention purge, hardening, launch (6b + 6c done, launch remaining)
+6. [06-admin-and-launch.md](./SPECIFICATIONS/06-admin-and-launch.md) — admin backend, retention purge, hardening, launch (6b + 6c + 6d done; security headers verification + soft launch remaining)
 
 **Current phase:** Phase 6 — Admin & Launch. See [SPECIFICATIONS/06-admin-and-launch.md](./SPECIFICATIONS/06-admin-and-launch.md).
 

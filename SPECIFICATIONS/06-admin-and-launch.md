@@ -31,9 +31,9 @@ Build the admin surface Magnus needs to operate the service, wire the retention 
   - `Strict-Transport-Security` with `max-age=31536000; includeSubDomains`.
   - `Referrer-Policy: strict-origin-when-cross-origin`.
   - `Permissions-Policy` disabling features Takt doesn't use.
-- [ ] Observability:
+- [x] Observability:
   - Structured logs on every API route (method, path, latency, status, rate-limit state, inference latency for voice).
-  - Simple uptime check (Cloudflare Healthcheck or external) against `/api/health`.
+  - Simple uptime check (Cloudflare Healthcheck or external) against `/api/health` — documented in REFERENCE/environment-setup.md; manual configuration step.
 - [ ] Pre-launch checklist completed (see below).
 - [ ] **Soft launch:** remove any Coming Soon gate, verify nothing breaks under real traffic, no promotion yet. Phase 6 scope ends here.
 - [ ] **Hard launch (post-Phase 6):** announce publicly, drive traffic. Explicitly out of scope for this phase — deferred until after the dogfood week.

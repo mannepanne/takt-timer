@@ -74,14 +74,18 @@ async function readNdjson(res: Response): Promise<Array<Record<string, unknown>>
 
 describe('POST /api/voice/parse (streaming)', () => {
   let errorSpy: ReturnType<typeof vi.spyOn>;
+  let logSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     // toSafeErrorMessage logs via console.error — silence expected noise for error-path tests.
     errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    // logRequest logs via console.log — suppress structured log output during tests.
+    logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
   });
 
   afterEach(() => {
     errorSpy.mockRestore();
+    logSpy.mockRestore();
   });
 
   it('rejects non-POST requests', async () => {

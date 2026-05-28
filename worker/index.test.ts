@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import worker, { type Env } from './index';
 
@@ -30,6 +30,16 @@ function makeEnv(assetBody = 'spa bundle'): Env {
 }
 
 describe('Worker fetch handler', () => {
+  let logSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    logSpy.mockRestore();
+  });
+
   it('returns JSON from /api/health with security headers applied', async () => {
     const env = makeEnv();
     const response = await worker.fetch(
@@ -54,5 +64,25 @@ describe('Worker fetch handler', () => {
     expect(response.status).toBe(200);
     expect(await response.text()).toBe('<!DOCTYPE html>…');
     expect(env.ASSETS.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('logs API requests with method, path, status, and latencyMs', async () => {
+    const env = makeEnv();
+    await worker.fetch(
+      new Request('https://takt.hultberg.org/api/health'),
+      env,
+      {} as ExecutionContext,
+    );
+    expect(logSpy).toHaveBeenCalledOnce();
+    const logged = JSON.parse(logSpy.mock.calls[0][0] as string);
+    expect(logged).toMatchObject({ method: 'GET', path: '/api/health', status: 200 });
+    expect(typeof logged.latencyMs).toBe('number');
+    expect(logged.latencyMs).toBeGreaterThanOrEqual(0);
+  });
+
+  it('does not log SPA asset requests', async () => {
+    const env = makeEnv('<!DOCTYPE html>…');
+    await worker.fetch(new Request('https://takt.hultberg.org/'), env, {} as ExecutionContext);
+    expect(logSpy).not.toHaveBeenCalled();
   });
 });

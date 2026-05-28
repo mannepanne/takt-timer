@@ -1,6 +1,6 @@
 // ABOUT: Route dispatch tests for worker/index.ts — verifies each path/method reaches the right handler.
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import worker, { type Env } from './index';
 
 // Stub all handlers so we test routing, not handler logic.
@@ -58,6 +58,14 @@ import { presetsDelete } from './api/presets/delete';
 import { presetsReorder } from './api/presets/reorder';
 import { sessionsAppend } from './api/sessions/append';
 import { sessionsList } from './api/sessions/list';
+
+let logSpy: ReturnType<typeof vi.spyOn>;
+beforeEach(() => {
+  logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+});
+afterEach(() => {
+  logSpy.mockRestore();
+});
 
 function makeEnv(): Env {
   return {
