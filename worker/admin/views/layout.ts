@@ -19,7 +19,9 @@ export function adminLayout(title: string, body: string): Response {
   <title>${escHtml(title)} — Takt Admin</title>
   <style>
     body{font-family:system-ui,sans-serif;max-width:900px;margin:2rem auto;padding:0 1rem;color:#212529}
+    nav{display:flex;align-items:center}
     nav a{margin-right:1rem;color:#0d6efd;text-decoration:none}
+    nav .nav-home{margin-right:0;margin-left:auto}
     hr{margin:1rem 0;border:0;border-top:1px solid #dee2e6}
     h1{margin-top:1.5rem;font-size:1.5rem}
     .metrics{display:flex;flex-wrap:wrap;gap:1.5rem;margin:1.5rem 0}
@@ -45,6 +47,7 @@ export function adminLayout(title: string, body: string): Response {
   <nav>
     <a href="/admin">Dashboard</a>
     <a href="/admin/user">User lookup</a>
+    <a href="/" class="nav-home">← Takt</a>
   </nav>
   <hr>
   ${body}
