@@ -4,6 +4,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { initial, phaseTotalSec, progress, secondsLeft, step } from './machine';
+import { DEFAULT_COUNT_IN_SEC } from './types';
 import type { ActiveState, CompleteState, MachineState, Session } from './types';
 
 const baseSession: Session = { sets: 3, workSec: 60, restSec: 30 };
@@ -409,12 +410,18 @@ describe('derived helpers', () => {
     expect(progress(s, 0)).toBe(0); // clamps negative
   });
 
-  it('phaseTotalSec returns 3 for countIn, workSec for work, restSec for rest', () => {
+  it('phaseTotalSec returns DEFAULT_COUNT_IN_SEC for countIn, workSec for work, restSec for rest', () => {
     let s: MachineState = start(initial(baseSession), 0);
-    expect(phaseTotalSec(s as ActiveState)).toBe(3);
+    expect(phaseTotalSec(s as ActiveState)).toBe(DEFAULT_COUNT_IN_SEC);
     s = step(s, { type: 'tick', now: 3000 }).next;
     expect(phaseTotalSec(s as ActiveState)).toBe(60);
     s = step(s, { type: 'tick', now: 63000 }).next;
     expect(phaseTotalSec(s as ActiveState)).toBe(30);
+  });
+
+  it('phaseTotalSec uses countInSec from session when provided', () => {
+    const customSession: Session = { ...baseSession, countInSec: 5 };
+    const s = start(initial(customSession), 0);
+    expect(phaseTotalSec(s as ActiveState)).toBe(5);
   });
 });
