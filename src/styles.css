@@ -554,6 +554,18 @@ input {
 .settings-link:hover {
   text-decoration: underline;
 }
+button.settings-link {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.settings-account-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
 .settings-value {
   font-size: 14px;
   color: var(--ink-3);

@@ -8,7 +8,6 @@ import { PhoneFrame } from '@/components/PhoneFrame';
 import { I18nProvider } from '@/i18n/context';
 import { SessionProvider } from '@/lib/auth/session';
 import { SettingsProvider } from '@/lib/settings/context';
-import { Account } from '@/routes/Account';
 import { Complete } from '@/routes/Complete';
 import { Configure } from '@/routes/Configure';
 import { Home } from '@/routes/Home';
@@ -40,7 +39,6 @@ export function App() {
               <Route path="/configure" element={<Configure />} />
               <Route path="/run" element={<Run />} />
               <Route path="/complete" element={<Complete />} />
-              <Route path="/account" element={<Account />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="*" element={<NotFound />} />
