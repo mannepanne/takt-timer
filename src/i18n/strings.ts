@@ -10,8 +10,6 @@ const strings = {
 
   // ── Home ─────────────────────────────────────────────────────────────
   'home.openPresets': { en: 'Open presets', sv: 'Öppna förinställningar' },
-  'home.account': { en: 'Account', sv: 'Konto' },
-  'home.signIn': { en: 'Sign in or create account', sv: 'Logga in eller skapa konto' },
   'home.ready': { en: 'Ready', sv: 'Redo' },
   'home.prompt': { en: 'What cadence do you need?', sv: 'Vad är takten idag?' },
   'home.example': {
@@ -70,11 +68,6 @@ const strings = {
   'complete.done': { en: 'Done', sv: 'Klar' },
 
   // ── Account ──────────────────────────────────────────────────────────
-  'account.title': { en: 'Account', sv: 'Konto' },
-  'account.description': {
-    en: 'Your account is pseudonymous — no email address, no personal data.',
-    sv: 'Ditt konto är pseudonymt — ingen e-postadress, inga personuppgifter.',
-  },
   'account.signOut': { en: 'Sign out', sv: 'Logga ut' },
   'account.deleteError': {
     en: 'Could not delete account. Please try again.',
@@ -88,10 +81,6 @@ const strings = {
     sv: 'Detta tar permanent bort ditt konto, förinställningar och historik. Det går inte att ångra.',
   },
   'account.cancel': { en: 'Cancel', sv: 'Avbryt' },
-  'account.unauthDescription': {
-    en: 'Sign in with a passkey to save presets and sync session history across devices.',
-    sv: 'Logga in med en passkey för att spara förinställningar och synkronisera sessionshistorik.',
-  },
 
   // ── Not found ────────────────────────────────────────────────────────
   'notFound.title': { en: '404', sv: '404' },
@@ -342,7 +331,6 @@ const strings = {
   // ── Settings — account and about additions ────────────────────────────
   'settings.account': { en: 'Account', sv: 'Konto' },
   'settings.signedIn': { en: 'Signed in', sv: 'Inloggad' },
-  'settings.manageAccount': { en: 'Manage account', sv: 'Hantera konto' },
   'settings.notSignedIn': { en: 'Not signed in', sv: 'Inte inloggad' },
   'settings.signInCta': {
     en: 'Sign in or create account',
