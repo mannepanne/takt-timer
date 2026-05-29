@@ -4,6 +4,7 @@
 import type { Env } from '../../index';
 import { getSession } from '../../lib/sessionStore';
 import { getUserSettings, updateUserSettings } from '../../db/queries';
+import { checkAndIncrementUserDaily } from '../../lib/rate-limit';
 
 const VALID_LANGUAGES = new Set(['en', 'sv']);
 const VALID_ACCENTS = new Set(['lichen', 'coral', 'ocean', 'amber', 'iris', 'slate']);
@@ -21,6 +22,20 @@ export async function getSettings(request: Request, env: Env): Promise<Response>
 export async function putSettings(request: Request, env: Env): Promise<Response> {
   const session = await getSession(env, request.headers.get('Cookie'));
   if (!session) return Response.json({ error: 'unauthenticated' }, { status: 401 });
+
+  // Admin users and dev-bypass flag are exempt. 60/day is generous for a Settings screen while
+  // capping the blast radius of a runaway client repeatedly hitting this authenticated endpoint.
+  const rateCheck = await checkAndIncrementUserDaily(env.RATE_LIMITS, session.userHandle, {
+    namespace: 'settings',
+    cap: 60,
+    bypass: env.ALLOW_RATE_LIMIT_BYPASS === '1' || session.isAdmin,
+  });
+  if (!rateCheck.allowed) {
+    return Response.json(
+      { error: 'rate_limited' },
+      { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfterSec) } },
+    );
+  }
 
   let body: unknown;
   try {

@@ -9,9 +9,13 @@ vi.mock('../../db/queries', () => ({
   getUserSettings: vi.fn(),
   updateUserSettings: vi.fn(),
 }));
+vi.mock('../../lib/rate-limit', () => ({
+  checkAndIncrementUserDaily: vi.fn(async () => ({ allowed: true, remaining: 59 })),
+}));
 
 import { getSession } from '../../lib/sessionStore';
 import { getUserSettings, updateUserSettings } from '../../db/queries';
+import { checkAndIncrementUserDaily } from '../../lib/rate-limit';
 
 function makeEnv(): Env {
   return {
@@ -137,5 +141,17 @@ describe('putSettings', () => {
     const res = await putSettings(putReq(null), makeEnv());
     expect(res.status).toBe(400);
     expect(await res.json()).toMatchObject({ error: 'invalid_body' });
+  });
+
+  it('returns 429 with Retry-After when the daily rate limit is exceeded', async () => {
+    vi.mocked(getSession).mockResolvedValueOnce({ userHandle: 'u1', isAdmin: false });
+    vi.mocked(checkAndIncrementUserDaily).mockResolvedValueOnce({
+      allowed: false,
+      retryAfterSec: 3600,
+    });
+    const res = await putSettings(putReq(DEFAULTS), makeEnv());
+    expect(res.status).toBe(429);
+    expect(res.headers.get('Retry-After')).toBe('3600');
+    expect(await res.json()).toMatchObject({ error: 'rate_limited' });
   });
 });
