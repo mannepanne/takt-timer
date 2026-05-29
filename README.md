@@ -22,7 +22,7 @@ Voice is the primary input; every voice action has a tap equivalent. Designed mo
 
 ## Status
 
-All six development phases complete. Takt is live at [takt.hultberg.org](https://takt.hultberg.org). Voice input, passkey accounts, presets, session history, English/Swedish, and the admin backend are all shipped. See [SPECIFICATIONS/ARCHIVE/](./SPECIFICATIONS/ARCHIVE/) for the completed phase specs.
+Takt is live at [takt.hultberg.org](https://takt.hultberg.org). Voice input, passkey accounts, presets, session history, English/Swedish, and the admin backend are all shipped.
 
 ## Getting started (for contributors / future Magnus)
 
@@ -48,7 +48,6 @@ Full environment configuration, secrets, and production deployment steps: [REFER
 - [ARCHITECTURE.md](./ARCHITECTURE.md) — how Takt is built: system overview, voice pipeline, state machines, data model, key decisions.
 - [CLAUDE.md](./CLAUDE.md) — navigation index and project context.
 - [SPECIFICATIONS/ORIGINAL_IDEA/project-outline.md](./SPECIFICATIONS/ORIGINAL_IDEA/project-outline.md) — the full product spec.
-- [SPECIFICATIONS/ARCHIVE/](./SPECIFICATIONS/ARCHIVE/) — completed phase specs.
 - [REFERENCE/decisions/](./REFERENCE/decisions/) — architecture decision records.
 - [REFERENCE/](./REFERENCE/) — testing strategy, environment setup, troubleshooting.
 
