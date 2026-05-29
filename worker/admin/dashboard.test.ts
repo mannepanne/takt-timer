@@ -93,6 +93,15 @@ describe('handleDashboard', () => {
     expect(text).toContain('20');
   });
 
+  it('includes a back-to-Takt link in the nav', async () => {
+    const db = makeBatchDb([0, 0, 0, 0, 0, 0, 0, 0]);
+    const req = new Request('https://takt.hultberg.org/admin');
+    const res = await handleDashboard(req, makeEnv(db));
+    const text = await res.text();
+    expect(text).toContain('href="/"');
+    expect(text).toContain('← Takt');
+  });
+
   it('returns 403 when admin auth fails', async () => {
     const db = makeBatchDb([]);
     const env = { DB: db, ALLOW_ADMIN_BYPASS: undefined } as unknown as Env;

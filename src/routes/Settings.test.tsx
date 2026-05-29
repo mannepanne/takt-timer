@@ -147,6 +147,11 @@ describe('Settings route', () => {
     expect(screen.getByText(/version/i)).toBeInTheDocument();
   });
 
+  it('does not show admin link when unauthenticated', () => {
+    renderSettings();
+    expect(screen.queryByRole('link', { name: /admin/i })).toBeNull();
+  });
+
   it('shows saved toast after toggling sound', async () => {
     renderSettings();
     await userEvent.click(screen.getByRole('switch'));
@@ -281,5 +286,23 @@ describe('Settings — authenticated account section', () => {
     await userEvent.click(screen.getByRole('button', { name: /delete account/i }));
     await userEvent.click(screen.getByRole('button', { name: /tap again to confirm/i }));
     await waitFor(() => expect(screen.getByText(/could not delete/i)).toBeInTheDocument());
+  });
+
+  it('does not show admin link for non-admin users', () => {
+    renderSettings();
+    expect(screen.queryByRole('link', { name: /admin/i })).toBeNull();
+  });
+});
+
+describe('Settings — admin link', () => {
+  it('shows admin link for admin users', () => {
+    vi.mocked(useSession).mockReturnValue({
+      session: { status: 'authenticated', user: { userHandle: 'u1', isAdmin: true } },
+      refresh: vi.fn(),
+      login: vi.fn(),
+    });
+    renderSettings();
+    const link = screen.getByRole('link', { name: /admin/i });
+    expect(link).toHaveAttribute('href', '/admin');
   });
 });

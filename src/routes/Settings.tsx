@@ -35,6 +35,7 @@ export function Settings() {
   const signedInTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isAuthenticated = session.status === 'authenticated';
+  const isAdmin = session.status === 'authenticated' && session.user.isAdmin;
 
   function triggerSaved() {
     if (savedTimer.current) clearTimeout(savedTimer.current);
@@ -213,6 +214,11 @@ export function Settings() {
             <span className="settings-value">
               {t('settings.version')} {__APP_VERSION__}
             </span>
+            {isAdmin && (
+              <a href="/admin" className="settings-link">
+                {t('settings.admin')}
+              </a>
+            )}
           </div>
         </section>
       </div>
