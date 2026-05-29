@@ -1,3 +1,5 @@
+// ABOUT: Tests for the Home screen — mic button, Configure CTA, sparkline, last-session card, presets.
+
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
@@ -11,27 +13,6 @@ vi.mock('@/lib/auth/session', () => ({
   })),
 }));
 vi.mock('@/lib/apiFetch', () => ({ apiFetch: vi.fn() }));
-vi.mock('@/lib/history-sync', () => ({ importLocalHistory: vi.fn().mockResolvedValue(0) }));
-vi.mock('@/lib/auth/local-hint', () => ({
-  hasRegisteredBefore: vi.fn(() => false),
-  markRegistered: vi.fn(),
-}));
-vi.mock('@/components/PasskeyPrompt', () => ({
-  PasskeyPrompt: ({
-    open,
-    mode,
-    onSuccess,
-  }: {
-    open: boolean;
-    mode: string;
-    onSuccess: (u: unknown) => void;
-  }) =>
-    open ? (
-      <div data-testid="passkey-prompt" data-mode={mode}>
-        <button onClick={() => onSuccess({ userHandle: 'u1', isAdmin: false })}>confirm</button>
-      </div>
-    ) : null,
-}));
 vi.mock('@/components/PresetsDrawer', () => ({
   PresetsDrawer: ({ open }: { open: boolean }) =>
     open ? <div data-testid="presets-drawer" /> : null,
@@ -39,8 +20,6 @@ vi.mock('@/components/PresetsDrawer', () => ({
 
 import { useSession } from '@/lib/auth/session';
 import { apiFetch } from '@/lib/apiFetch';
-import { importLocalHistory } from '@/lib/history-sync';
-import { hasRegisteredBefore } from '@/lib/auth/local-hint';
 import { Home } from './Home';
 import { I18nProvider } from '@/i18n/context';
 
@@ -127,7 +106,12 @@ describe('Home', () => {
     expect(screen.getByRole('link', { name: /privacy/i })).toHaveAttribute('href', '/privacy');
   });
 
-  it('shows account link and fetches last session for authenticated users', async () => {
+  it('settings link is always visible in the top bar', () => {
+    renderHome();
+    expect(screen.getByRole('link', { name: /settings/i })).toHaveAttribute('href', '/settings');
+  });
+
+  it('fetches last session for authenticated users', async () => {
     vi.mocked(useSession).mockReturnValue({
       session: { status: 'authenticated', user: { userHandle: 'u1', isAdmin: false } },
       refresh: vi.fn(),
@@ -145,7 +129,6 @@ describe('Home', () => {
       json: async () => serverSession,
     } as Response);
     renderHome();
-    expect(screen.getByRole('link', { name: /account/i })).toBeInTheDocument();
     await waitFor(() => expect(apiFetch).toHaveBeenCalledWith('/api/sessions?latest=1'));
   });
 
@@ -162,54 +145,6 @@ describe('Home', () => {
     );
     renderHome();
     expect(screen.queryByText(/sessions so far/i)).toBeNull();
-  });
-
-  it('unauthenticated users see a sign in or create account button', () => {
-    renderHome();
-    expect(screen.getByRole('button', { name: /sign in or create account/i })).toBeInTheDocument();
-  });
-
-  it('auth button opens PasskeyPrompt in register mode for first-time users', async () => {
-    vi.mocked(hasRegisteredBefore).mockReturnValue(false);
-    renderHome();
-    await userEvent.click(screen.getByRole('button', { name: /sign in or create account/i }));
-    expect(screen.getByTestId('passkey-prompt')).toHaveAttribute('data-mode', 'register');
-  });
-
-  it('auth button opens PasskeyPrompt in signin mode for returning users', async () => {
-    vi.mocked(hasRegisteredBefore).mockReturnValue(true);
-    renderHome();
-    await userEvent.click(screen.getByRole('button', { name: /sign in or create account/i }));
-    expect(screen.getByTestId('passkey-prompt')).toHaveAttribute('data-mode', 'signin');
-  });
-
-  it('on register success calls login immediately then imports history in background', async () => {
-    const login = vi.fn();
-    vi.mocked(useSession).mockReturnValue({
-      session: { status: 'unauthenticated' },
-      refresh: vi.fn(),
-      login,
-    });
-    renderHome();
-    await userEvent.click(screen.getByRole('button', { name: /sign in or create account/i }));
-    await userEvent.click(screen.getByRole('button', { name: /confirm/i }));
-    expect(login).toHaveBeenCalledWith({ userHandle: 'u1', isAdmin: false });
-    await waitFor(() => expect(importLocalHistory).toHaveBeenCalled());
-  });
-
-  it('on register success calls login even when importLocalHistory throws', async () => {
-    const login = vi.fn();
-    vi.mocked(useSession).mockReturnValue({
-      session: { status: 'unauthenticated' },
-      refresh: vi.fn(),
-      login,
-    });
-    vi.mocked(importLocalHistory).mockRejectedValueOnce(new Error('network'));
-    renderHome();
-    await userEvent.click(screen.getByRole('button', { name: /sign in or create account/i }));
-    await userEvent.click(screen.getByRole('button', { name: /confirm/i }));
-    expect(login).toHaveBeenCalledWith({ userHandle: 'u1', isAdmin: false });
-    await waitFor(() => expect(importLocalHistory).toHaveBeenCalled());
   });
 
   it('authenticated users see an Open presets button', () => {
@@ -233,5 +168,10 @@ describe('Home', () => {
     renderHome();
     await userEvent.click(screen.getByRole('button', { name: /open presets/i }));
     expect(screen.getByTestId('presets-drawer')).toBeInTheDocument();
+  });
+
+  it('unauthenticated users do not see the presets button', () => {
+    renderHome();
+    expect(screen.queryByRole('button', { name: /open presets/i })).toBeNull();
   });
 });
