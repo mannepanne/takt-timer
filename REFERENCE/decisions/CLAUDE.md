@@ -138,6 +138,7 @@ grep -r "authentication" REFERENCE/decisions/
 
 **Format:** Listed chronologically (newest first)
 
+- [2026-05-29 — Origin guard: stratified policy by surface and method](./2026-05-29-origin-guard-stratified-by-surface.md) — public `/api/*` is method-aware (safe methods may omit Origin; state-changing methods require it); admin is always-strict (Origin required on all methods including GETs). Explains why the policies deliberately differ and consolidates the guard into a single middleware gate.
 - [2026-05-28 — Voice call tracking in D1](./2026-05-28-voice-calls-tracking.md) — fire-and-forget insertVoiceCall after each successful parse, for admin dashboard analytics and rate-limit audit; privacy policy updated.
 - [2026-05-26 — Phase 4 auth architecture: passkeys + KV sessions + counter-zero skip](./2026-05-26-phase-4-auth-architecture.md) — three decisions made before Phase 4 implementation: WebAuthn RP ID/origin as Wrangler env vars (not hardcoded), HMAC-SHA256 signed KV sessions over JWTs, and counter-zero skip for synced passkeys (iCloud Keychain / Google Password Manager always return counter=0).
 - [2026-05-12 — KV-backed daily-cap rate limiter for /api/voice/parse](./2026-05-12-kv-rate-limiter.md) — why the Phase 3 voice endpoint enforces its 3/day cap with a KV read-then-write counter (over Cloudflare's native Rate Limiting API or a Durable Object), why the race window is acceptable, why the user-tier key shape is stubbed for Phase 4, and why the `wrangler dev` bypass is an opt-in `.dev.vars` flag.
