@@ -216,7 +216,7 @@ export function Settings() {
             </span>
             {isAdmin && (
               <a href="/admin" className="settings-link">
-                Admin
+                {t('settings.admin')}
               </a>
             )}
           </div>

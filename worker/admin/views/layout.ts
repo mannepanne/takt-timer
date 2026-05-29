@@ -47,7 +47,7 @@ export function adminLayout(title: string, body: string): Response {
   <nav>
     <a href="/admin">Dashboard</a>
     <a href="/admin/user">User lookup</a>
-    <a href="/" class="nav-home">← Takt</a>
+    <a href="/" class="nav-home" aria-label="Back to Takt">← Takt</a>
   </nav>
   <hr>
   ${body}

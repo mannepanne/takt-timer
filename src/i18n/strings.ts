@@ -339,6 +339,7 @@ const strings = {
   'settings.about': { en: 'About', sv: 'Om' },
   'settings.privacyPolicy': { en: 'Privacy policy', sv: 'Integritetspolicy' },
   'settings.version': { en: 'Version', sv: 'Version' },
+  'settings.admin': { en: 'Admin', sv: 'Admin' },
 } as const satisfies Record<string, Translation>;
 
 export type StringKey = keyof typeof strings;
