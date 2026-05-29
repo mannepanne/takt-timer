@@ -202,6 +202,7 @@ export function pruneVoiceCalls(db: D1Database, olderThanMs: number) {
 }
 
 // Correlated subqueries avoid cartesian product from JOIN-ing sessions and presets simultaneously.
+// Unbounded scan — add LIMIT + pagination if this page becomes sluggish at scale.
 export function listAllUsersAdmin(db: D1Database) {
   return db
     .prepare(

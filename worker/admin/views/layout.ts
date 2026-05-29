@@ -38,6 +38,7 @@ export function adminLayout(title: string, body: string): Response {
     .btn-primary{background:#0d6efd;color:#fff;border-color:#0d6efd}
     .btn-danger{background:#dc3545;color:#fff;border-color:#dc3545}
     .btn-secondary{background:#6c757d;color:#fff;border-color:#6c757d}
+    .btn-sm{padding:0.2rem 0.5rem;font-size:0.85rem}
     .alert{padding:1rem;border-radius:4px;margin:1.5rem 0}
     .alert-warning{background:#fff3cd;border:1px solid #ffc107;color:#664d03}
     code{background:#f8f9fa;padding:0.1em 0.3em;border-radius:3px;font-size:0.9em}

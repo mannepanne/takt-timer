@@ -38,25 +38,24 @@ All eight queries run in a single `db.batch()` call.
 
 **Handler:** `handleUserLookup`
 
-Renders the Users page. Two sections are always rendered on every request.
+Renders the Users page. No query parameters — the response is identical regardless of URL search string. Both DB calls run in parallel via `Promise.all`.
 
-**Section 1 — User lookup**
+**Section 1 — Retention purge**
 
-If a `?handle=` query parameter is present, queries `users` and aggregates sessions/presets for that handle.
+Calls `pruneInactiveUsers(db, thresholdMs, dryRun=true)`. Lists handles eligible for deletion (inactive >90 days, no sessions, no presets) and shows a "Run purge" button if any are found. The button posts to `POST /admin/purge/run`.
 
-**Query parameter:** `handle` — the 32-character hex user handle.
+**Section 2 — All users**
 
-**Outcomes:**
+Calls `listAllUsersAdmin(db)`. Renders every user in a table, ordered by registration date descending:
 
-- No `handle` param → renders empty search form.
-- Handle found → renders user stats table + delete button.
-- Handle not found → renders "No user found" message + empty form.
+| Column   | Source                                  |
+| -------- | --------------------------------------- |
+| Handle   | `user_handle`                           |
+| Created  | `created_at` (formatted as YYYY-MM-DD)  |
+| Sessions | `COUNT(sessions)` + `MAX(completed_at)` |
+| Presets  | `COUNT(presets)`                        |
 
-**User stats table:** handle, registration date, session count + last session date, preset count.
-
-**Section 2 — Retention purge**
-
-Calls `pruneInactiveUsers(db, thresholdMs, dryRun=true)` on every request and renders the result below the lookup form. Lists handles eligible for deletion (inactive >90 days, no sessions, no presets) and shows a "Run purge" button if any are found. The "Run purge" button posts to `POST /admin/purge/run`.
+Each row has a "Delete…" button that POSTs the handle to `POST /admin/user-delete` (kicks off the two-step confirmation flow).
 
 **Auth:** `requireAdminAuth`
 

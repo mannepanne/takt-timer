@@ -44,7 +44,7 @@ function renderUserTable(users: AdminUserRow[]): string {
     <td>${u.session_count} (last: ${formatDate(u.last_session_at)})</td>
     <td>${u.preset_count}</td>
     <td>
-      <form method="POST" action="/admin/user-delete" style="margin:0">
+      <form method="POST" action="/admin/user-delete">
         <input type="hidden" name="handle" value="${escHtml(u.user_handle)}">
         <button type="submit" class="btn btn-danger btn-sm">Delete…</button>
       </form>

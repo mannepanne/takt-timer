@@ -28,7 +28,7 @@ function makeD1(purgeHandles: string[] = [], users = USERS) {
       first: vi.fn(async () => null),
       run: vi.fn(async () => ({ success: true, meta: { changes: 1 } })),
       all: vi.fn(async () => {
-        if (sql.includes('ORDER BY u.created_at')) {
+        if (sql.includes('session_count')) {
           return { results: users };
         }
         return { results: purgeHandles.map((h) => ({ user_handle: h })) };
