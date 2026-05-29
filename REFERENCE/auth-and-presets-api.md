@@ -27,6 +27,14 @@ Generates WebAuthn registration options and a short-lived challenge token.
 
 The `_token` references the KV challenge entry (TTL: 5 min). It must be passed back to `/registration/verify`.
 
+**Error responses**
+
+| Status | `error` field  | Meaning                                                              |
+| ------ | -------------- | -------------------------------------------------------------------- |
+| 429    | `rate-limited` | IP hourly limit exceeded. `retryAfterSec` field gives the wait time. |
+
+The client reads `body.error` and propagates it to the UI; if the body is unparseable, it falls back to the internal sentinel `options-failed` (mapped to generic copy).
+
 ---
 
 ### POST /api/auth/registration/verify
@@ -76,6 +84,14 @@ Generates WebAuthn authentication options and a short-lived challenge token.
   "allowCredentials": []
 }
 ```
+
+**Error responses**
+
+| Status | `error` field  | Meaning                                                              |
+| ------ | -------------- | -------------------------------------------------------------------- |
+| 429    | `rate-limited` | IP hourly limit exceeded. `retryAfterSec` field gives the wait time. |
+
+The client reads `body.error` and propagates it to the UI; if the body is unparseable, it falls back to the internal sentinel `options-failed` (mapped to generic copy).
 
 ---
 

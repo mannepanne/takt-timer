@@ -106,6 +106,13 @@ describe('PasskeyPrompt', () => {
     );
   });
 
+  it('maps counter-regression to friendly copy', async () => {
+    vi.mocked(signIn).mockRejectedValueOnce(new Error('counter-regression'));
+    renderPrompt('signin');
+    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
+    await waitFor(() => expect(screen.getByText(/hardware key/i)).toBeTruthy());
+  });
+
   it('calls onClose when Cancel is clicked', () => {
     const { onClose } = renderPrompt('register');
     fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
