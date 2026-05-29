@@ -43,7 +43,7 @@ Users with any session or preset history — regardless of how long ago — are 
 
 ## Admin dry-run
 
-Before the cron fires, you can preview eligible users via `GET /admin/purge`. This calls `pruneInactiveUsers` with `dryRun = true`, which returns the list without making any changes. A "Run purge" button then posts to `POST /admin/purge/run` to execute immediately. See `REFERENCE/admin-api.md`.
+Before the cron fires, you can preview eligible users on the admin Users page (`/admin/user`). The page calls `pruneInactiveUsers` with `dryRun = true`, which returns the list without making any changes. A "Run purge" button posts to `POST /admin/purge/run` to execute immediately. See `REFERENCE/admin-api.md`.
 
 ---
 

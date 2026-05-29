@@ -42,9 +42,10 @@ describe('handleUserLookup', () => {
     expect(res.status).toBe(200);
     expect(res.headers.get('Cache-Control')).toBe('no-store');
     const text = await res.text();
-    expect(text).toContain('User lookup');
+    expect(text).toContain('Users');
     expect(text).toContain('<form');
-    expect(db.prepare).not.toHaveBeenCalled();
+    expect(text).toContain('Retention purge');
+    expect(text).toContain('Nothing to purge');
   });
 
   it('returns 200 with user details when handle is found', async () => {

@@ -70,7 +70,7 @@ function renderDashboard(m: DashboardMetrics): string {
     <div class="metric-sub">${m.voiceCalls30d} (30d)</div>
   </div>
 </div>
-<p style="margin-top:1.5rem"><a href="/admin/purge" class="btn btn-secondary">Retention purge</a></p>`;
+`;
 }
 
 export async function handleDashboard(request: Request, env: Env): Promise<Response> {
