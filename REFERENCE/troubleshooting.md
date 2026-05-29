@@ -15,6 +15,14 @@ Append new entries here as you encounter and solve issues. Each entry: symptom, 
 
 ## Local development
 
+### curl probes against write endpoints return 403
+
+State-changing methods (POST/PUT/PATCH/DELETE) require an `Origin` header. Add it to curl commands:
+
+```bash
+curl -X POST https://takt.hultberg.org/api/... -H "Origin: https://takt.hultberg.org" ...
+```
+
 ### Wrangler not authenticated
 
 **Symptom:** `pnpm dev` fails with "not authenticated" or cannot find the account.

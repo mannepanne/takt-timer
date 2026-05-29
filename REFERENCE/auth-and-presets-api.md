@@ -2,7 +2,7 @@
 
 HTTP contract for the Phase 4 `/api/auth/*`, `/api/presets/*`, and `/api/sessions` endpoints.
 
-All endpoints require the `Origin` header to match the configured `WEBAUTHN_ORIGIN` (or have no `Origin` at all, which integration tests rely on). Requests with a disallowed `Origin` receive `403 Forbidden`.
+Endpoints accept requests whose `Origin` header matches the allowlist. State-changing methods (POST/PUT/PATCH/DELETE) **require** the `Origin` header. Safe methods (GET/HEAD/OPTIONS) may omit `Origin` (same-origin browser reads, integration tests). Disallowed or missing-when-required `Origin` returns `403 Forbidden`.
 
 ---
 
@@ -349,12 +349,15 @@ All fields are required. Missing or invalid fields return `400` with `{ "error":
 
 ---
 
-## `isAllowedOrigin` guard
+## `isAllowedRequest` guard
 
-All `/api/*` routes (auth, presets, sessions, me) enforce `isAllowedOrigin(request)`. The rule:
+All `/api/*` routes (auth, presets, sessions, me) pass through a single `isAllowedRequest(request)` gate in `worker/index.ts`. The guard is applied after `/api/health` (no state) and `/api/voice/parse` (self-handles its own origin check with a structured error envelope). The rule:
 
-- No `Origin` header → **allow** (integration tests, curl, Wrangler local dev)
-- `Origin` matches `WEBAUTHN_ORIGIN` → **allow**
+- No `Origin` + GET/HEAD/OPTIONS → **allow** (same-origin browser reads, integration tests)
+- No `Origin` + POST/PUT/PATCH/DELETE → **403 Forbidden** (closes proxy-strip bypass — issue #56)
+- `Origin` in allowlist → **allow**
 - Any other `Origin` → **403 Forbidden**
 
 The guard prevents cross-origin write abuse. It is not a full CORS implementation — `OPTIONS` preflight is not handled (not required for same-origin PWA calls).
+
+**Admin surface is stricter:** `worker/admin/auth.ts` independently requires `Origin` on all methods, including GETs, because admin reads expose aggregate-sensitive data (user list, retention dry-run results). See [decisions/2026-05-29-origin-guard-stratified-by-surface.md](./decisions/2026-05-29-origin-guard-stratified-by-surface.md).

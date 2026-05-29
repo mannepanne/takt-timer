@@ -86,8 +86,19 @@ function ctx() {
   return {} as ExecutionContext;
 }
 
+const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+
 function req(path: string, method = 'GET', headers: Record<string, string> = {}) {
-  return new Request(`https://takt.hultberg.org${path}`, { method, headers });
+  // State-changing methods require an Origin header — include the production origin by default
+  // so routing tests aren't blocked by the isAllowedRequest guard. Tests that want to assert
+  // on a specific (e.g. disallowed) origin pass it explicitly and it overrides the default.
+  const defaultHeaders: Record<string, string> = SAFE_METHODS.has(method.toUpperCase())
+    ? {}
+    : { origin: 'https://takt.hultberg.org' };
+  return new Request(`https://takt.hultberg.org${path}`, {
+    method,
+    headers: { ...defaultHeaders, ...headers },
+  });
 }
 
 describe('Auth routes', () => {
@@ -187,6 +198,15 @@ describe('Sessions routes', () => {
 });
 
 describe('Origin guard', () => {
+  it('rejects POST with no Origin header (proxy-stripped or non-browser client)', async () => {
+    // req() adds a default origin for POST — build the request manually without one.
+    const bare = new Request('https://takt.hultberg.org/api/auth/registration/options', {
+      method: 'POST',
+    });
+    const res = await worker.fetch(bare, makeEnv(), ctx());
+    expect(res.status).toBe(403);
+  });
+
   it('returns 403 for /api/presets with disallowed origin', async () => {
     const res = await worker.fetch(
       req('/api/presets', 'GET', { origin: 'https://evil.example.com' }),
