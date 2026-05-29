@@ -1,81 +1,113 @@
-// ABOUT: Tests for admin user lookup handler — form render, found user, not-found case.
+// ABOUT: Tests for admin users page — all-user list, retention section, delete actions.
 
 import { describe, expect, it, vi } from 'vitest';
 import { handleUserLookup } from './user-lookup';
 import type { Env } from '../index';
 
-function makeStmt(returnVal?: unknown) {
-  return {
-    bind: vi.fn().mockReturnThis(),
-    first: vi.fn(async () => returnVal ?? null),
-    run: vi.fn(async () => ({ success: true, meta: { changes: 1 } })),
-    all: vi.fn(async () => ({ results: [] })),
-  };
-}
+const USERS = [
+  {
+    user_handle: 'aabb1122',
+    created_at: 1700000000000,
+    session_count: 5,
+    last_session_at: 1700500000000,
+    preset_count: 2,
+  },
+  {
+    user_handle: 'ccdd3344',
+    created_at: 1699000000000,
+    session_count: 0,
+    last_session_at: null,
+    preset_count: 0,
+  },
+];
 
-function makeD1(returnVal?: unknown) {
-  const stmt = makeStmt(returnVal);
+function makeD1(purgeHandles: string[] = [], users = USERS) {
   const db = {
-    prepare: vi.fn(() => stmt),
+    prepare: vi.fn((sql: string) => ({
+      bind: vi.fn().mockReturnThis(),
+      first: vi.fn(async () => null),
+      run: vi.fn(async () => ({ success: true, meta: { changes: 1 } })),
+      all: vi.fn(async () => {
+        if (sql.includes('session_count')) {
+          return { results: users };
+        }
+        return { results: purgeHandles.map((h) => ({ user_handle: h })) };
+      }),
+    })),
     batch: vi.fn(async () => []),
   } as unknown as D1Database;
-  return { db, stmt };
+  return db;
 }
 
-function makeEnv(db: D1Database): Pick<Env, 'DB' | 'ALLOW_ADMIN_BYPASS'> {
-  return { DB: db, ALLOW_ADMIN_BYPASS: '1' };
+function makeEnv(db: D1Database): Env {
+  return { DB: db, ALLOW_ADMIN_BYPASS: '1' } as unknown as Env;
 }
-
-const ADMIN_USER = {
-  user_handle: 'aabb1122',
-  created_at: 1700000000000,
-  session_count: 5,
-  last_session_at: 1700500000000,
-  preset_count: 2,
-};
 
 describe('handleUserLookup', () => {
-  it('renders the lookup form with no results when no handle is provided', async () => {
-    const { db } = makeD1();
+  it('renders retention section above user table', async () => {
+    const db = makeD1();
     const req = new Request('https://takt.hultberg.org/admin/user');
-    const res = await handleUserLookup(req, makeEnv(db) as unknown as Env);
+    const res = await handleUserLookup(req, makeEnv(db));
     expect(res.status).toBe(200);
     expect(res.headers.get('Cache-Control')).toBe('no-store');
     const text = await res.text();
     expect(text).toContain('Users');
-    expect(text).toContain('<form');
     expect(text).toContain('Retention purge');
     expect(text).toContain('Nothing to purge');
+    expect(text).toContain('All users');
+    // Retention section appears before user table
+    expect(text.indexOf('Retention purge')).toBeLessThan(text.indexOf('All users'));
   });
 
-  it('returns 200 with user details when handle is found', async () => {
-    const { db } = makeD1(ADMIN_USER);
-    const req = new Request('https://takt.hultberg.org/admin/user?handle=aabb1122');
-    const res = await handleUserLookup(req, makeEnv(db) as unknown as Env);
-    expect(res.status).toBe(200);
+  it('lists all users with handle, dates, session count, and preset count', async () => {
+    const db = makeD1();
+    const req = new Request('https://takt.hultberg.org/admin/user');
+    const res = await handleUserLookup(req, makeEnv(db));
     const text = await res.text();
     expect(text).toContain('aabb1122');
-    expect(text).toContain('Sessions');
-    expect(text).toContain('5');
-    expect(text).toContain('Delete user');
-    // Delete button form points to /admin/user-delete
-    expect(text).toContain('/admin/user-delete');
+    expect(text).toContain('ccdd3344');
+    expect(text).toContain('All users (2)');
   });
 
-  it('shows not-found message and re-renders form when handle is unknown', async () => {
-    const { db } = makeD1(null);
-    const req = new Request('https://takt.hultberg.org/admin/user?handle=unknown');
-    const res = await handleUserLookup(req, makeEnv(db) as unknown as Env);
-    expect(res.status).toBe(200);
+  it('renders a delete form for each user', async () => {
+    const db = makeD1();
+    const req = new Request('https://takt.hultberg.org/admin/user');
+    const res = await handleUserLookup(req, makeEnv(db));
     const text = await res.text();
-    expect(text).toContain('No user found');
-    expect(text).toContain('unknown');
-    // Should not show delete button
-    expect(text).not.toContain('/admin/user-delete');
+    const deleteFormCount = (text.match(/\/admin\/user-delete/g) ?? []).length;
+    expect(deleteFormCount).toBe(USERS.length);
+  });
+
+  it('shows purge-eligible handles and run button when candidates exist', async () => {
+    const db = makeD1(['stale1', 'stale2']);
+    const req = new Request('https://takt.hultberg.org/admin/user');
+    const res = await handleUserLookup(req, makeEnv(db));
+    const text = await res.text();
+    expect(text).toContain('stale1');
+    expect(text).toContain('stale2');
+    expect(text).toContain('Run purge (2 users)');
+  });
+
+  it('shows no search form', async () => {
+    const db = makeD1();
+    const req = new Request('https://takt.hultberg.org/admin/user');
+    const res = await handleUserLookup(req, makeEnv(db));
+    const text = await res.text();
+    expect(text).not.toContain('User handle');
+    expect(text).not.toContain('type="text"');
+  });
+
+  it('shows "No users yet" when there are no users', async () => {
+    const db = makeD1([], []);
+    const req = new Request('https://takt.hultberg.org/admin/user');
+    const res = await handleUserLookup(req, makeEnv(db));
+    const text = await res.text();
+    expect(text).toContain('No users yet');
+    expect(text).toContain('All users (0)');
   });
 
   it('returns 403 when not authenticated', async () => {
-    const { db } = makeD1();
+    const db = makeD1();
     const req = new Request('https://takt.herrings.workers.dev/admin/user');
     const res = await handleUserLookup(req, {
       DB: db,

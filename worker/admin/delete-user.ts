@@ -20,7 +20,7 @@ function renderConfirmPage(handle: string, sessionCount: number, presetCount: nu
   <tr><th>Presets</th><td>${presetCount}</td></tr>
 </table>
 <p>
-  <a href="/admin/user?handle=${encodeURIComponent(handle)}" class="btn btn-secondary">Cancel</a>
+  <a href="/admin/user" class="btn btn-secondary">Cancel</a>
   &nbsp;
   <form method="POST" action="/admin/user-delete/confirm">
     <input type="hidden" name="handle" value="${escHtml(handle)}">

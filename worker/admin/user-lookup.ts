@@ -1,9 +1,9 @@
-// ABOUT: Admin users page — user lookup by handle and retention purge dry-run.
+// ABOUT: Admin users page — all users list with delete actions and retention purge dry-run.
 
 import type { Env } from '../index';
 import { requireAdminAuth } from './auth';
 import { adminLayout, escHtml } from './views/layout';
-import { getUserByHandleAdmin, pruneInactiveUsers } from '../db/queries';
+import { listAllUsersAdmin, pruneInactiveUsers } from '../db/queries';
 import type { AdminUserRow } from '../db/schema';
 import { RETENTION_DAYS } from '../cron/purge';
 
@@ -12,21 +12,11 @@ function formatDate(ms: number | null): string {
   return new Date(ms).toISOString().slice(0, 10);
 }
 
-function renderLookupForm(handle: string, detail: string): string {
-  return `
-<h1>Users</h1>
-<form method="GET" action="/admin/user">
-  <input type="text" name="handle" value="${escHtml(handle)}" placeholder="User handle…" size="44">
-  &nbsp;<button type="submit" class="btn btn-primary">Search</button>
-</form>
-${detail}`;
-}
-
 function renderPurgeSection(handles: string[]): string {
   const count = handles.length;
   const listItems = handles.map((h) => `<li><code>${escHtml(h)}</code></li>`).join('\n');
   return `
-<h2 style="margin-top:2rem;font-size:1.2rem">Retention purge</h2>
+<h2 style="font-size:1.2rem">Retention purge</h2>
 <p>Users inactive for more than <strong>${RETENTION_DAYS} days</strong> with no sessions and no presets.</p>
 <div class="alert alert-warning">
   <strong>${count} user${count === 1 ? '' : 's'} eligible for purge.</strong>
@@ -41,44 +31,58 @@ ${
 }`;
 }
 
-function renderUserDetail(user: AdminUserRow): string {
-  // Delete form uses POST so the handle stays out of URL history and server access logs.
+function renderUserTable(users: AdminUserRow[]): string {
+  if (users.length === 0) {
+    return '<p>No users yet.</p>';
+  }
+  const rows = users
+    .map(
+      (u) => `
+  <tr>
+    <td><code>${escHtml(u.user_handle)}</code></td>
+    <td>${formatDate(u.created_at)}</td>
+    <td>${u.session_count} (last: ${formatDate(u.last_session_at)})</td>
+    <td>${u.preset_count}</td>
+    <td>
+      <form method="POST" action="/admin/user-delete">
+        <input type="hidden" name="handle" value="${escHtml(u.user_handle)}">
+        <button type="submit" class="btn btn-danger btn-sm">Delete…</button>
+      </form>
+    </td>
+  </tr>`,
+    )
+    .join('');
   return `
 <table>
-  <tr><th>Handle</th><td><code>${escHtml(user.user_handle)}</code></td></tr>
-  <tr><th>Created</th><td>${formatDate(user.created_at)}</td></tr>
-  <tr><th>Sessions</th><td>${user.session_count} (last: ${formatDate(user.last_session_at)})</td></tr>
-  <tr><th>Presets</th><td>${user.preset_count}</td></tr>
-</table>
-<form method="POST" action="/admin/user-delete">
-  <input type="hidden" name="handle" value="${escHtml(user.user_handle)}">
-  <button type="submit" class="btn btn-danger">Delete user…</button>
-</form>`;
+  <thead>
+    <tr>
+      <th>Handle</th>
+      <th>Created</th>
+      <th>Sessions</th>
+      <th>Presets</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>${rows}
+  </tbody>
+</table>`;
 }
 
 export async function handleUserLookup(request: Request, env: Env): Promise<Response> {
   const auth = requireAdminAuth(request, env);
   if (auth instanceof Response) return auth;
 
-  const handle = new URL(request.url).searchParams.get('handle') ?? '';
   const thresholdMs = Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000;
-  const { userHandles } = await pruneInactiveUsers(env.DB, thresholdMs, true);
-  const purgeSection = renderPurgeSection(userHandles);
+  const [{ userHandles }, { results: users }] = await Promise.all([
+    pruneInactiveUsers(env.DB, thresholdMs, true),
+    listAllUsersAdmin(env.DB),
+  ]);
 
-  if (!handle) {
-    return adminLayout('Users', renderLookupForm('', '') + purgeSection);
-  }
+  const html = `
+<h1>Users</h1>
+${renderPurgeSection(userHandles)}
+<h2 style="margin-top:2rem;font-size:1.2rem">All users (${users.length})</h2>
+${renderUserTable(users)}`;
 
-  const user = await getUserByHandleAdmin(env.DB, handle);
-  if (!user) {
-    return adminLayout(
-      'Users',
-      renderLookupForm(
-        handle,
-        `<p style="margin-top:1rem"><strong>No user found</strong> for handle: <code>${escHtml(handle)}</code></p>`,
-      ) + purgeSection,
-    );
-  }
-
-  return adminLayout('Users', renderLookupForm(handle, renderUserDetail(user)) + purgeSection);
+  return adminLayout('Users', html);
 }
