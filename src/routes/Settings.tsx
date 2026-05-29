@@ -190,8 +190,8 @@ export function Settings() {
               )}
             </div>
           ) : (
-            <div className="settings-row" style={{ marginTop: 8 }}>
-              <button type="button" className="settings-link" onClick={() => setPromptOpen(true)}>
+            <div className="settings-account-actions">
+              <button type="button" className="btn btn-primary" onClick={() => setPromptOpen(true)}>
                 {t('settings.signInCta')}
               </button>
             </div>
