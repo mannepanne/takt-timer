@@ -24,14 +24,14 @@ ${
 </form>`
     : '<p>Nothing to purge.</p>'
 }
-<p style="margin-top:1rem"><a href="/admin" class="btn btn-secondary">Back to dashboard</a></p>`;
+<p style="margin-top:1rem"><a href="/admin/user" class="btn btn-secondary">Back to users</a></p>`;
 }
 
 function renderResult(deleted: number): string {
   return `
 <h1>Purge complete</h1>
 <p><strong>${deleted}</strong> user${deleted === 1 ? '' : 's'} purged. Audit row recorded.</p>
-<p><a href="/admin" class="btn btn-secondary">Back to dashboard</a></p>`;
+<p><a href="/admin/user" class="btn btn-secondary">Back to users</a></p>`;
 }
 
 export async function handlePurgeDryRun(request: Request, env: Env): Promise<Response> {
