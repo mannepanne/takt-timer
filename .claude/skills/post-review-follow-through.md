@@ -48,7 +48,7 @@ Use this exact format. **Skip any bucket that has nothing in it — don't emit e
 
 Plain English throughout. No technical jargon in the "Your call" or "Tracking" sections unless it genuinely aids clarity.
 
-**Partial confirmation.** If the operator confirms some items and rejects or skips others (e.g. _"yes to 1 and 3, no on 2"_, or _"yes, no ADR, yes"_), treat the unconfirmed items as deferred — no action, no issue created, no follow-up nag in this turn. Before applying any changes, state explicitly which items you're acting on and which you're dropping, so the operator can correct you if you parsed wrong.
+**Partial confirmation.** If the operator confirms some items and rejects or skips others (e.g. _"yes to 1 and 3, no on 2"_, or _"yes to 1, skip 2, yes to 3"_), treat the unconfirmed items as deferred — no action, no issue created, no follow-up nag in this turn. Before applying any changes, state explicitly which items you're acting on and which you're dropping, so the operator can correct you if you parsed wrong.
 
 ---
 
