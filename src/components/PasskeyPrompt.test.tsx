@@ -59,11 +59,51 @@ describe('PasskeyPrompt', () => {
     await waitFor(() => expect(onSuccess).toHaveBeenCalledWith(USER));
   });
 
-  it('displays error message on failure', async () => {
+  it('displays generic error for unknown error codes', async () => {
     vi.mocked(register).mockRejectedValueOnce(new Error('Passkey cancelled'));
     renderPrompt('register');
     fireEvent.click(screen.getByRole('button', { name: /create account/i }));
-    await waitFor(() => expect(screen.getByText('Passkey cancelled')).toBeTruthy());
+    await waitFor(() =>
+      expect(screen.getByText('Something went wrong. Please try again.')).toBeTruthy(),
+    );
+  });
+
+  it('maps challenge-expired to friendly copy', async () => {
+    vi.mocked(register).mockRejectedValueOnce(new Error('challenge-expired'));
+    renderPrompt('register');
+    fireEvent.click(screen.getByRole('button', { name: /create account/i }));
+    await waitFor(() =>
+      expect(screen.getByText('The request timed out. Please try again.')).toBeTruthy(),
+    );
+  });
+
+  it('maps verification-failed to friendly copy', async () => {
+    vi.mocked(signIn).mockRejectedValueOnce(new Error('verification-failed'));
+    renderPrompt('signin');
+    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
+    await waitFor(() =>
+      expect(
+        screen.getByText("Your device couldn't verify your identity. Please try again."),
+      ).toBeTruthy(),
+    );
+  });
+
+  it('maps user-not-found to friendly copy', async () => {
+    vi.mocked(signIn).mockRejectedValueOnce(new Error('user-not-found'));
+    renderPrompt('signin');
+    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
+    await waitFor(() =>
+      expect(screen.getByText('No account found. Create an account to get started.')).toBeTruthy(),
+    );
+  });
+
+  it('maps rate-limited to friendly copy', async () => {
+    vi.mocked(signIn).mockRejectedValueOnce(new Error('rate-limited'));
+    renderPrompt('signin');
+    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
+    await waitFor(() =>
+      expect(screen.getByText('Too many attempts. Try again later.')).toBeTruthy(),
+    );
   });
 
   it('calls onClose when Cancel is clicked', () => {

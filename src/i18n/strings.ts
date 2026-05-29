@@ -214,6 +214,32 @@ const strings = {
     sv: 'Har du redan ett konto? Logga in istället',
   },
 
+  // ── Passkey error messages ────────────────────────────────────────────
+  'passkey.error.challengeExpired': {
+    en: 'The request timed out. Please try again.',
+    sv: 'Begäran tog för lång tid. Försök igen.',
+  },
+  'passkey.error.verificationFailed': {
+    en: "Your device couldn't verify your identity. Please try again.",
+    sv: 'Din enhet kunde inte verifiera din identitet. Försök igen.',
+  },
+  'passkey.error.userNotFound': {
+    en: 'No account found. Create an account to get started.',
+    sv: 'Inget konto hittades. Skapa ett konto för att komma igång.',
+  },
+  'passkey.error.counterRegression': {
+    en: "Sign-in failed. If you're using a hardware key, it may be cloned.",
+    sv: 'Inloggningen misslyckades. Om du använder en hårdvarunyckel kan den ha klonats.',
+  },
+  'passkey.error.rateLimited': {
+    en: 'Too many attempts. Try again later.',
+    sv: 'För många försök. Försök igen senare.',
+  },
+  'passkey.error.generic': {
+    en: 'Something went wrong. Please try again.',
+    sv: 'Något gick fel. Försök igen.',
+  },
+
   // ── Presets drawer ───────────────────────────────────────────────────
   'presets.title': { en: 'Presets', sv: 'Förinställningar' },
   'presets.close': { en: 'Close presets', sv: 'Stäng förinställningar' },

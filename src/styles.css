@@ -1743,6 +1743,11 @@ button.settings-link {
 .accent-swatch:active {
   transform: scale(0.95);
 }
+.accent-picker-label {
+  margin-top: 6px;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
 
 /* Settings toggle switch */
 .settings-toggle {

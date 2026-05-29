@@ -12,26 +12,30 @@ type Props = {
 
 export function AccentPicker({ value, onChange }: Props) {
   const { t } = useI18n();
+  const selectedLabel = t(`settings.accent.${value}` as StringKey);
 
   return (
-    <div className="accent-picker" role="radiogroup" aria-label={t('settings.accent')}>
-      {ACCENTS.map((accent) => {
-        const labelKey = `settings.accent.${accent.id}` as StringKey;
-        const label = t(labelKey);
-        return (
-          <button
-            key={accent.id}
-            type="button"
-            role="radio"
-            aria-checked={value === accent.id}
-            aria-label={label}
-            title={label}
-            className={`accent-swatch${value === accent.id ? ' selected' : ''}`}
-            style={{ '--swatch-color': accent.main } as React.CSSProperties}
-            onClick={() => onChange(accent.id)}
-          />
-        );
-      })}
+    <div className="accent-picker-wrap">
+      <div className="accent-picker" role="radiogroup" aria-label={t('settings.accent')}>
+        {ACCENTS.map((accent) => {
+          const labelKey = `settings.accent.${accent.id}` as StringKey;
+          const label = t(labelKey);
+          return (
+            <button
+              key={accent.id}
+              type="button"
+              role="radio"
+              aria-checked={value === accent.id}
+              aria-label={label}
+              title={label}
+              className={`accent-swatch${value === accent.id ? ' selected' : ''}`}
+              style={{ '--swatch-color': accent.main } as React.CSSProperties}
+              onClick={() => onChange(accent.id)}
+            />
+          );
+        })}
+      </div>
+      <p className="accent-picker-label">{selectedLabel}</p>
     </div>
   );
 }
