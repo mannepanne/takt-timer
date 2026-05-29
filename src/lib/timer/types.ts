@@ -1,10 +1,13 @@
 // ABOUT: Timer state machine — type definitions.
 // ABOUT: Session shape, machine states, events, and the effects the reducer returns.
 
+export const DEFAULT_COUNT_IN_SEC = 3;
+
 export type Session = {
   sets: number;
   workSec: number;
   restSec: number;
+  countInSec?: number; // defaults to DEFAULT_COUNT_IN_SEC when absent
   name?: string;
 };
 
@@ -88,7 +91,7 @@ export function phaseTotalSec(state: ActiveState | PausedState): number {
   const phase = state.phase === 'paused' ? state.resumePhase : state.phase;
   switch (phase) {
     case 'countIn':
-      return 3;
+      return state.session.countInSec ?? DEFAULT_COUNT_IN_SEC;
     case 'work':
       return state.session.workSec;
     case 'rest':
