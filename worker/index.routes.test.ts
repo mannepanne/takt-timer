@@ -90,7 +90,7 @@ const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 function req(path: string, method = 'GET', headers: Record<string, string> = {}) {
   // State-changing methods require an Origin header — include the production origin by default
-  // so routing tests aren't blocked by the isAllowedOrigin guard. Tests that want to assert
+  // so routing tests aren't blocked by the isAllowedRequest guard. Tests that want to assert
   // on a specific (e.g. disallowed) origin pass it explicitly and it overrides the default.
   const defaultHeaders: Record<string, string> = SAFE_METHODS.has(method.toUpperCase())
     ? {}

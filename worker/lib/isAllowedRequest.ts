@@ -1,4 +1,4 @@
-// ABOUT: Origin allowlist helper for same-origin-only API routes.
+// ABOUT: Request allowlist guard for same-origin-only API routes.
 // ABOUT: Blocks third-party sites from calling paid-inference endpoints via a visitor's browser.
 
 const PRODUCTION_ORIGINS = ['https://takt.hultberg.org', 'https://takt.herrings.workers.dev'];
@@ -20,10 +20,11 @@ const DEV_ORIGINS = [
   'http://127.0.0.1:8787',
 ];
 
-// Read-only methods omit Origin in same-origin requests — safe to allow without it.
+// Safe methods may omit Origin (same-origin browser reads). They MUST remain side-effect-free
+// at the dispatcher level — mutating state under GET/HEAD/OPTIONS would reopen a CSRF hole.
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
-export function isAllowedOrigin(request: Request): boolean {
+export function isAllowedRequest(request: Request): boolean {
   const origin = request.headers.get('origin');
   if (!origin) {
     // Safe (read-only) methods legitimately omit Origin for same-origin requests.

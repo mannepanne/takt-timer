@@ -17,7 +17,7 @@ import { sessionsAppend } from './api/sessions/append';
 import { sessionsList } from './api/sessions/list';
 import { parseVoice } from './api/voice/parse';
 import { applySecurityHeaders } from './lib/securityHeaders';
-import { isAllowedOrigin } from './lib/isAllowedOrigin';
+import { isAllowedRequest } from './lib/isAllowedRequest';
 import { logRequest } from './lib/logger';
 import { handleAdmin } from './admin/router';
 import { runPurge } from './cron/purge';
@@ -57,44 +57,42 @@ async function routeRequest(
     return applySecurityHeaders(await health());
   }
 
-  // ── Voice (self-logs with accurate AI latency) ───────────────────────────
+  // ── Voice (self-logs with accurate AI latency; self-handles its own origin check) ─────────
   if (path === '/api/voice/parse') {
     return applySecurityHeaders(await parseVoice(request, env, ctx));
   }
 
+  // ── Origin guard for all remaining /api/* routes ──────────────────────────────────────────
+  // Health and voice are already handled above. Admin has its own stricter guard.
+  if (path.startsWith('/api/') && !isAllowedRequest(request)) {
+    return new Response('Forbidden', { status: 403 });
+  }
+
   // ── Auth ─────────────────────────────────────────────────────────────────
   if (path === '/api/auth/registration/options' && method === 'POST') {
-    if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
     return applySecurityHeaders(await registrationOptions(request, env));
   }
   if (path === '/api/auth/registration/verify' && method === 'POST') {
-    if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
     return applySecurityHeaders(await registrationVerify(request, env));
   }
   if (path === '/api/auth/signin/options' && method === 'POST') {
-    if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
     return applySecurityHeaders(await signinOptions(request, env));
   }
   if (path === '/api/auth/signin/verify' && method === 'POST') {
-    if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
     return applySecurityHeaders(await signinVerify(request, env));
   }
   if (path === '/api/auth/signout' && method === 'POST') {
-    if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
     return applySecurityHeaders(await signout(request, env));
   }
   if (path === '/api/auth/me' && method === 'GET') {
-    if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
     return applySecurityHeaders(await me(request, env));
   }
   if (path === '/api/auth/delete' && method === 'DELETE') {
-    if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
     return applySecurityHeaders(await deleteAccount(request, env));
   }
 
   // ── User settings ─────────────────────────────────────────────────────────
   if (path === '/api/me/settings') {
-    if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
     if (method === 'GET') return applySecurityHeaders(await getSettings(request, env));
     if (method === 'PUT') return applySecurityHeaders(await putSettings(request, env));
     return methodNotAllowed();
@@ -102,19 +100,16 @@ async function routeRequest(
 
   // ── Presets ───────────────────────────────────────────────────────────────
   if (path === '/api/presets') {
-    if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
     if (method === 'GET') return applySecurityHeaders(await presetsList(request, env));
     if (method === 'POST') return applySecurityHeaders(await presetsCreate(request, env));
     return methodNotAllowed();
   }
   if (path === '/api/presets/reorder') {
-    if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
     if (method === 'PATCH') return applySecurityHeaders(await presetsReorder(request, env));
     return methodNotAllowed();
   }
   const presetMatch = path.match(/^\/api\/presets\/([^/]+)$/);
   if (presetMatch) {
-    if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
     const id = presetMatch[1];
     if (method === 'PATCH') return applySecurityHeaders(await presetsUpdate(request, env, id));
     if (method === 'DELETE') return applySecurityHeaders(await presetsDelete(request, env, id));
@@ -123,7 +118,6 @@ async function routeRequest(
 
   // ── Sessions ──────────────────────────────────────────────────────────────
   if (path === '/api/sessions') {
-    if (!isAllowedOrigin(request)) return new Response('Forbidden', { status: 403 });
     if (method === 'GET') return applySecurityHeaders(await sessionsList(request, env));
     if (method === 'POST') return applySecurityHeaders(await sessionsAppend(request, env));
     return methodNotAllowed();

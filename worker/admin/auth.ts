@@ -2,7 +2,7 @@
 // ABOUT: Hostname guard prevents workers.dev spoofing; ALLOW_ADMIN_BYPASS enables local dev.
 
 import type { Env } from '../index';
-import { isAllowedOrigin } from '../lib/isAllowedOrigin';
+import { isAllowedRequest } from '../lib/isAllowedRequest';
 
 const PRODUCTION_HOSTNAME = 'takt.hultberg.org';
 const DEV_ACTOR = 'dev@local';
@@ -38,7 +38,7 @@ export function requireAdminAuthWithCsrf(
     return new Response('Forbidden', { status: 403, headers: { 'Cache-Control': 'no-store' } });
   // State-mutating routes require an explicit Origin header. Browsers always include Origin on
   // form POSTs; an absent Origin indicates a non-browser client bypassing the CSRF guard.
-  if (!request.headers.get('origin') || !isAllowedOrigin(request))
+  if (!request.headers.get('origin') || !isAllowedRequest(request))
     return new Response('Forbidden', { status: 403, headers: { 'Cache-Control': 'no-store' } });
   return { actor };
 }

@@ -12,7 +12,7 @@ How-it-works reference for the voice parse endpoint. Complements the implementat
 | Status | Reason               | When                                                                                                                                              |
 | ------ | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `400`  | `upload-empty`       | Body is absent or smaller than `MIN_AUDIO_BYTES` (500 bytes).                                                                                     |
-| `403`  | `origin-not-allowed` | `Origin` header is not in the allowed-origins set.                                                                                                |
+| `403`  | `origin-not-allowed` | `Origin` header absent on POST, or present but not in the allowed-origins set.                                                                    |
 | `405`  | `method-not-allowed` | Request method is not `POST`.                                                                                                                     |
 | `413`  | `upload-too-large`   | Body exceeds the 3 MB upload cap.                                                                                                                 |
 | `429`  | `rate-limited`       | Anonymous caller has exceeded 3 calls for the UTC day. Body is a single NDJSON line `{"kind":"error","reason":"rate-limited","retryAfterSec":N}`. |

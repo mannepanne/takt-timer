@@ -6,7 +6,7 @@
 // ABOUT: once the second event arrives.
 
 import type { Env } from '../../index';
-import { isAllowedOrigin } from '../../lib/isAllowedOrigin';
+import { isAllowedRequest } from '../../lib/isAllowedRequest';
 import { logRequest } from '../../lib/logger';
 import { toSafeErrorMessage } from '../../lib/toSafeErrorMessage';
 import { getSession } from '../../lib/sessionStore';
@@ -108,7 +108,7 @@ export async function parseVoice(
     return errorResponse({ kind: 'error', reason: 'method-not-allowed' }, 405);
   }
 
-  if (!isAllowedOrigin(request)) {
+  if (!isAllowedRequest(request)) {
     logVoice({ status: 403, latencyMs: Math.round(performance.now() - t0) });
     return errorResponse({ kind: 'error', reason: 'origin-not-allowed' }, 403);
   }
