@@ -53,6 +53,7 @@ function makeRequest(body: BodyInit = new Uint8Array(2048), method: string = 'PO
   return new Request('https://takt.hultberg.org/api/voice/parse', {
     method,
     body: method === 'POST' ? body : undefined,
+    headers: method === 'POST' ? { origin: 'https://takt.hultberg.org' } : {},
   });
 }
 
@@ -127,7 +128,7 @@ describe('POST /api/voice/parse (streaming)', () => {
     const req = new Request('https://takt.hultberg.org/api/voice/parse', {
       method: 'POST',
       body: new Uint8Array(2048),
-      headers: { 'content-length': String(10 * 1024 * 1024) },
+      headers: { 'content-length': String(10 * 1024 * 1024), origin: 'https://takt.hultberg.org' },
     });
     const res = await parseVoice(req, env);
     expect(res.status).toBe(413);
@@ -266,7 +267,7 @@ describe('POST /api/voice/parse (streaming)', () => {
       new Request('https://takt.hultberg.org/api/voice/parse', {
         method: 'POST',
         body: new Uint8Array(2048),
-        headers: { 'cf-connecting-ip': '203.0.113.99' },
+        headers: { 'cf-connecting-ip': '203.0.113.99', origin: 'https://takt.hultberg.org' },
       });
     for (let i = 0; i < 3; i++) {
       await parseVoice(req(), env);
@@ -294,7 +295,7 @@ describe('POST /api/voice/parse (streaming)', () => {
       new Request('https://takt.hultberg.org/api/voice/parse', {
         method: 'POST',
         body: new Uint8Array(2048),
-        headers: { 'cf-connecting-ip': '203.0.113.99' },
+        headers: { 'cf-connecting-ip': '203.0.113.99', origin: 'https://takt.hultberg.org' },
       });
     // 10 calls — well past the 3/day cap. None should be rate-limited.
     for (let i = 0; i < 10; i++) {

@@ -20,10 +20,17 @@ const DEV_ORIGINS = [
   'http://127.0.0.1:8787',
 ];
 
+// Read-only methods omit Origin in same-origin requests — safe to allow without it.
+const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+
 export function isAllowedOrigin(request: Request): boolean {
   const origin = request.headers.get('origin');
-  // Same-origin requests in some browsers (notably direct navigations and certain fetches) omit
-  // the Origin header entirely. Treat as allowed — the request cannot have been cross-site.
-  if (!origin) return true;
+  if (!origin) {
+    // Safe (read-only) methods legitimately omit Origin for same-origin requests.
+    // State-changing methods always include Origin for cross-origin requests; a missing
+    // Origin on these means a proxy stripped it or a non-browser client — reject to
+    // close the bypass window described in issue #56.
+    return SAFE_METHODS.has(request.method.toUpperCase());
+  }
   return PRODUCTION_ORIGINS.includes(origin) || DEV_ORIGINS.includes(origin);
 }
