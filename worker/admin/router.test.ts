@@ -10,12 +10,12 @@ vi.mock('./delete-user', () => ({
   handleDeleteUserConfirmPage: vi.fn(),
   handleDeleteUserExecute: vi.fn(),
 }));
-vi.mock('./purge', () => ({ handlePurgeDryRun: vi.fn(), handlePurgeRun: vi.fn() }));
+vi.mock('./purge', () => ({ handlePurgeRun: vi.fn() }));
 
 import { handleDashboard } from './dashboard';
 import { handleUserLookup } from './user-lookup';
 import { handleDeleteUserConfirmPage, handleDeleteUserExecute } from './delete-user';
-import { handlePurgeDryRun, handlePurgeRun } from './purge';
+import { handlePurgeRun } from './purge';
 
 const ok = new Response('ok', { status: 200 });
 const env = {} as unknown as Env;
@@ -25,7 +25,6 @@ beforeEach(() => {
   vi.mocked(handleUserLookup).mockResolvedValue(ok);
   vi.mocked(handleDeleteUserConfirmPage).mockResolvedValue(ok);
   vi.mocked(handleDeleteUserExecute).mockResolvedValue(ok);
-  vi.mocked(handlePurgeDryRun).mockResolvedValue(ok);
   vi.mocked(handlePurgeRun).mockResolvedValue(ok);
 });
 
@@ -62,10 +61,10 @@ describe('handleAdmin', () => {
     expect(handleDeleteUserExecute).toHaveBeenCalledWith(req, env);
   });
 
-  it('routes GET /admin/purge to handlePurgeDryRun', async () => {
+  it('returns 404 for GET /admin/purge (standalone page removed)', async () => {
     const req = new Request('https://takt.hultberg.org/admin/purge', { method: 'GET' });
-    await handleAdmin(req, env);
-    expect(handlePurgeDryRun).toHaveBeenCalledWith(req, env);
+    const res = await handleAdmin(req, env);
+    expect(res.status).toBe(404);
   });
 
   it('routes POST /admin/purge/run to handlePurgeRun', async () => {

@@ -30,8 +30,6 @@ Renders the admin dashboard with aggregate metrics from D1.
 
 All eight queries run in a single `db.batch()` call.
 
-The dashboard also displays a link to `GET /admin/purge`.
-
 **Auth:** `requireAdminAuth`
 
 ---
@@ -40,7 +38,11 @@ The dashboard also displays a link to `GET /admin/purge`.
 
 **Handler:** `handleUserLookup`
 
-Renders the user-lookup form. If a `?handle=` query parameter is present, queries `users` and aggregates sessions/presets for that handle.
+Renders the Users page. Two sections are always rendered on every request.
+
+**Section 1 — User lookup**
+
+If a `?handle=` query parameter is present, queries `users` and aggregates sessions/presets for that handle.
 
 **Query parameter:** `handle` — the 32-character hex user handle.
 
@@ -51,6 +53,10 @@ Renders the user-lookup form. If a `?handle=` query parameter is present, querie
 - Handle not found → renders "No user found" message + empty form.
 
 **User stats table:** handle, registration date, session count + last session date, preset count.
+
+**Section 2 — Retention purge**
+
+Calls `pruneInactiveUsers(db, thresholdMs, dryRun=true)` on every request and renders the result below the lookup form. Lists handles eligible for deletion (inactive >90 days, no sessions, no presets) and shows a "Run purge" button if any are found. The "Run purge" button posts to `POST /admin/purge/run`.
 
 **Auth:** `requireAdminAuth`
 
@@ -101,18 +107,6 @@ Executes a hard delete of the user and all associated data. The sequence is:
 - Success → confirmation page with "User deleted" message and link back to dashboard
 
 **Auth:** `requireAdminAuthWithCsrf`
-
----
-
-## GET /admin/purge
-
-**Handler:** `handlePurgeDryRun`
-
-Renders a dry-run preview of the retention purge — lists all user handles eligible for deletion (inactive >90 days, no sessions, no presets) and shows a "Run purge" button if any are found.
-
-This is a read-only page; no data is modified.
-
-**Auth:** `requireAdminAuth`
 
 ---
 
