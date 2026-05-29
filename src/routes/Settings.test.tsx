@@ -19,6 +19,10 @@ vi.mock('@/lib/auth/local-hint', () => ({
 }));
 vi.mock('@/lib/history', () => ({ clearHistory: vi.fn() }));
 vi.mock('@/lib/history-sync', () => ({ importLocalHistory: vi.fn().mockResolvedValue(0) }));
+vi.mock('@/routes/Onboarding', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/routes/Onboarding')>();
+  return { ...actual, clearOnboardingSeen: vi.fn() };
+});
 vi.mock('@/lib/auth/session', () => ({
   useSession: vi.fn(() => ({
     session: { status: 'unauthenticated' },
@@ -49,6 +53,7 @@ import { apiFetch } from '@/lib/apiFetch';
 import { signOut } from '@/lib/auth/client';
 import { hasRegisteredBefore } from '@/lib/auth/local-hint';
 import { useSession } from '@/lib/auth/session';
+import { clearOnboardingSeen } from '@/routes/Onboarding';
 
 function HomeMarker() {
   return <div data-testid="home">Home</div>;
@@ -304,5 +309,19 @@ describe('Settings — admin link', () => {
     renderSettings();
     const link = screen.getByRole('link', { name: /admin/i });
     expect(link).toHaveAttribute('href', '/admin');
+  });
+});
+
+describe('Settings — replay onboarding', () => {
+  it('shows "Show intro" button in the about section', () => {
+    renderSettings();
+    expect(screen.getByRole('button', { name: /show intro/i })).toBeInTheDocument();
+  });
+
+  it('clicking Show intro clears the onboarding key and navigates to /', async () => {
+    renderSettings();
+    await userEvent.click(screen.getByRole('button', { name: /show intro/i }));
+    expect(vi.mocked(clearOnboardingSeen)).toHaveBeenCalled();
+    expect(screen.getByTestId('home')).toBeInTheDocument();
   });
 });

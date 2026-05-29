@@ -13,6 +13,7 @@ import { useI18n } from '@/i18n/context';
 import type { Lang } from '@/i18n/strings';
 import { type AuthUser, signOut } from '@/lib/auth/client';
 import { hasRegisteredBefore, markUnregistered } from '@/lib/auth/local-hint';
+import { clearOnboardingSeen } from '@/routes/Onboarding';
 import { useSession } from '@/lib/auth/session';
 import { apiFetch } from '@/lib/apiFetch';
 import { clearHistory } from '@/lib/history';
@@ -97,6 +98,11 @@ export function Settings() {
   function handleSoundToggle() {
     setSoundOn(!soundOn);
     triggerSaved();
+  }
+
+  function handleReplayOnboarding() {
+    clearOnboardingSeen();
+    navigate('/');
   }
 
   return (
@@ -209,6 +215,11 @@ export function Settings() {
             <Link to="/privacy" className="settings-link">
               {t('settings.privacyPolicy')}
             </Link>
+          </div>
+          <div className="settings-row" style={{ marginTop: 8 }}>
+            <button type="button" className="settings-link" onClick={handleReplayOnboarding}>
+              {t('settings.replayOnboarding')}
+            </button>
           </div>
           <div className="settings-row" style={{ marginTop: 8 }}>
             <span className="settings-value">

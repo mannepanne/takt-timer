@@ -1,5 +1,5 @@
 // ABOUT: Onboarding flow — 4-slide intro shown on first visit.
-// ABOUT: Exports hasSeenOnboarding() and markOnboardingSeen() localStorage helpers.
+// ABOUT: Exports hasSeenOnboarding(), markOnboardingSeen(), and clearOnboardingSeen() localStorage helpers.
 
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
@@ -20,6 +20,14 @@ export function hasSeenOnboarding(): boolean {
 export function markOnboardingSeen(): void {
   try {
     localStorage.setItem(ONBOARDING_KEY, '1');
+  } catch {
+    // ignore
+  }
+}
+
+export function clearOnboardingSeen(): void {
+  try {
+    localStorage.removeItem(ONBOARDING_KEY);
   } catch {
     // ignore
   }
