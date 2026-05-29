@@ -208,7 +208,7 @@ admin_logs  — id · action · actor · target · logged_at
 
 ### What is deliberately absent
 
-No email address. No phone number. No display name. No location. No device fingerprint. The `actor` field in `admin_logs` is Magnus's Cloudflare Access Google account email — not a user field.
+No email address. No phone number. No display name. No location. No device fingerprint.
 
 The account model is the privacy story. A user exists as a passkey and a UUID. If you lose your passkey, the account is gone. There is no recovery path, because every recovery path requires a contact method, and a contact method ends the privacy guarantee.
 
