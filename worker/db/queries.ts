@@ -202,6 +202,21 @@ export function pruneVoiceCalls(db: D1Database, olderThanMs: number) {
 }
 
 // Correlated subqueries avoid cartesian product from JOIN-ing sessions and presets simultaneously.
+export function listAllUsersAdmin(db: D1Database) {
+  return db
+    .prepare(
+      `SELECT
+         u.user_handle,
+         u.created_at,
+         (SELECT COUNT(*) FROM sessions WHERE sessions.user_handle = u.user_handle) AS session_count,
+         (SELECT MAX(completed_at) FROM sessions WHERE sessions.user_handle = u.user_handle) AS last_session_at,
+         (SELECT COUNT(*) FROM presets WHERE presets.user_handle = u.user_handle) AS preset_count
+       FROM users u
+       ORDER BY u.created_at DESC`,
+    )
+    .all<AdminUserRow>();
+}
+
 export function getUserByHandleAdmin(db: D1Database, userHandle: string) {
   return db
     .prepare(
