@@ -29,9 +29,14 @@ vi.mock('../../lib/sessionStore', () => ({
   makeCookieValue: vi.fn((s: string) => `session=${s}; HttpOnly`),
 }));
 
+vi.mock('../../lib/rate-limit', () => ({
+  checkAndIncrementIpHourly: vi.fn(async () => ({ allowed: true, remaining: 19 })),
+}));
+
 import { verifyAuthenticationResponse } from '@simplewebauthn/server';
 import { getUserByHandle, updateUserCounter } from '../../db/queries';
 import { createSession } from '../../lib/sessionStore';
+import { checkAndIncrementIpHourly } from '../../lib/rate-limit';
 
 const USER_ROW = {
   user_handle: 'aabb1122334455667788aabbccddeeff',
@@ -87,6 +92,21 @@ describe('signinOptions', () => {
     expect((env.SESSIONS.put as ReturnType<typeof vi.fn>).mock.calls[0][0]).toMatch(
       /^challenge:auth:/,
     );
+  });
+
+  it('returns 429 with Retry-After when rate limit is exceeded', async () => {
+    vi.mocked(checkAndIncrementIpHourly).mockResolvedValueOnce({
+      allowed: false,
+      retryAfterSec: 900,
+    });
+    const req = new Request('https://takt.hultberg.org/api/auth/signin/options', {
+      method: 'POST',
+    });
+    const res = await signinOptions(req, makeEnv());
+    expect(res.status).toBe(429);
+    expect(res.headers.get('Retry-After')).toBe('900');
+    const body = (await res.json()) as any;
+    expect(body.error).toBe('rate-limited');
   });
 });
 

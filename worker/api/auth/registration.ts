@@ -11,6 +11,7 @@ import { z } from 'zod';
 import type { Env } from '../../index';
 import { insertUser, getUserByHandle } from '../../db/queries';
 import { createSession, makeCookieValue } from '../../lib/sessionStore';
+import { checkAndIncrementIpHourly } from '../../lib/rate-limit';
 
 const CHALLENGE_TTL = 300; // 5 minutes
 
@@ -27,7 +28,19 @@ function generateUserHandle(): { hex: string; bytes: Uint8Array<ArrayBuffer> } {
   return { hex, bytes };
 }
 
-export async function registrationOptions(_request: Request, env: Env): Promise<Response> {
+export async function registrationOptions(request: Request, env: Env): Promise<Response> {
+  const rateCheck = await checkAndIncrementIpHourly(env.RATE_LIMITS, request, {
+    namespace: 'auth',
+    cap: 20,
+    bypass: env.ALLOW_RATE_LIMIT_BYPASS === '1',
+  });
+  if (!rateCheck.allowed) {
+    return Response.json(
+      { error: 'rate-limited', retryAfterSec: rateCheck.retryAfterSec },
+      { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfterSec) } },
+    );
+  }
+
   const { hex: userHandleHex, bytes: userHandleBytes } = generateUserHandle();
 
   const options = await generateRegistrationOptions({
