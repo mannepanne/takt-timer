@@ -4,7 +4,25 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { useI18n } from '@/i18n/context';
+import type { StringKey } from '@/i18n/strings';
 import { register, signIn, type AuthUser } from '@/lib/auth/client';
+
+function mapPasskeyError(code: string, t: (k: StringKey) => string): string {
+  switch (code) {
+    case 'challenge-expired':
+      return t('passkey.error.challengeExpired');
+    case 'verification-failed':
+      return t('passkey.error.verificationFailed');
+    case 'user-not-found':
+      return t('passkey.error.userNotFound');
+    case 'counter-regression':
+      return t('passkey.error.counterRegression');
+    case 'rate-limited':
+      return t('passkey.error.rateLimited');
+    default:
+      return t('passkey.error.generic');
+  }
+}
 
 type Props = {
   open: boolean;
@@ -48,10 +66,11 @@ export function PasskeyPrompt({ open, mode, onSuccess, onClose }: Props) {
     } catch (err) {
       if (gen !== genRef.current) return;
       if (isDiscovering) {
-        // No passkey found on this device — offer registration instead
+        // Any failure during discover-initial means no passkey on this device — fall back to register.
         setEffectiveMode('register');
       } else {
-        setError(err instanceof Error ? err.message : t('voice.error.generic'));
+        const code = err instanceof Error ? err.message : '';
+        setError(mapPasskeyError(code, t));
       }
     } finally {
       if (gen === genRef.current) setLoading(false);

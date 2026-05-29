@@ -62,7 +62,7 @@ describe('register', () => {
 
   it('throws on options fetch failure', async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce(mockJson({}, 500) as never);
-    await expect(register()).rejects.toThrow('Failed to get registration options');
+    await expect(register()).rejects.toThrow('options-failed');
   });
 
   it('throws with server error message on verify failure', async () => {

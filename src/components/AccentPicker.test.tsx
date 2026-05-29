@@ -35,4 +35,21 @@ describe('AccentPicker', () => {
     render(<AccentPicker value="lichen" onChange={vi.fn()} />, { wrapper });
     expect(screen.getByRole('radiogroup')).toBeInTheDocument();
   });
+
+  it('shows the selected colour name as visible text', () => {
+    render(<AccentPicker value="coral" onChange={vi.fn()} />, { wrapper });
+    expect(screen.getByText('Coral')).toBeInTheDocument();
+  });
+
+  it('updates the visible label when the selection changes', async () => {
+    const onChange = vi.fn();
+    const { rerender } = render(<AccentPicker value="lichen" onChange={onChange} />, { wrapper });
+    expect(screen.getByText('Lichen')).toBeInTheDocument();
+    rerender(
+      <I18nProvider>
+        <AccentPicker value="iris" onChange={onChange} />
+      </I18nProvider>,
+    );
+    expect(screen.getByText('Iris')).toBeInTheDocument();
+  });
 });
