@@ -22,7 +22,7 @@ type MockAudioSession = { type: string };
 
 function installMediaRecorderMock(isSupported = (_: string) => true) {
   const constructed: MockRecorder[] = [];
-  const MockMediaRecorder = vi.fn((_stream: MediaStream, _opts: { mimeType: string }) => {
+  const MockMediaRecorder = vi.fn(function (_stream: MediaStream, _opts: { mimeType: string }) {
     const recorder: MockRecorder = {
       state: 'inactive',
       ondataavailable: null,

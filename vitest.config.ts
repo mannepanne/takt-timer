@@ -1,15 +1,12 @@
 // ABOUT: Vitest configuration for SPA unit and component tests.
 // ABOUT: Worker-runtime tests (with @cloudflare/vitest-pool-workers) arrive in Phase 3.
 
-import { defineConfig, type UserConfig } from 'vitest/config';
+import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
 
-// Cast works around a transient vite@6 / vitest@2 plugin-type mismatch.
-const plugins = [react()] as UserConfig['plugins'];
-
 export default defineConfig({
-  plugins,
+  plugins: [react()],
   define: {
     __APP_VERSION__: JSON.stringify('0.0.0-test'),
   },
