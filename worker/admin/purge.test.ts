@@ -131,7 +131,9 @@ describe('handlePurgeRun (POST /admin/purge/run)', () => {
   it('writes an admin_log row recording the actor', async () => {
     const { db } = makeDb(['user-a'], ['user-a']);
     const adminLogSqls: string[] = [];
-    const origPrepare = (db.prepare as ReturnType<typeof vi.fn>).getMockImplementation();
+    const origPrepare = (db.prepare as ReturnType<typeof vi.fn>).getMockImplementation() as
+      | ((sql: string) => unknown)
+      | undefined;
     (db.prepare as ReturnType<typeof vi.fn>).mockImplementation((sql: string) => {
       if (sql.includes('admin_log')) adminLogSqls.push(sql);
       return origPrepare!(sql);

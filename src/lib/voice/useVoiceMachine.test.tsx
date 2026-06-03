@@ -19,7 +19,7 @@ let currentRecorder: MockRecorder | null = null;
 function installBrowserMocks(
   options: { getUserMediaThrows?: Error; isTypeSupported?: boolean } = {},
 ) {
-  const MockMediaRecorder = vi.fn((_stream: MediaStream, _opts: { mimeType: string }) => {
+  const MockMediaRecorder = vi.fn(function (_stream: MediaStream, _opts: { mimeType: string }) {
     const recorder: MockRecorder = {
       state: 'recording',
       ondataavailable: null,
@@ -205,7 +205,7 @@ describe('useVoiceMachine', () => {
     });
     const tracks = [{ stop: vi.fn() }];
     const discardSpy = vi.fn();
-    const MockMediaRecorder = vi.fn(() => {
+    const MockMediaRecorder = vi.fn(function () {
       const recorder: MockRecorder = {
         state: 'recording',
         ondataavailable: null,

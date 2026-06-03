@@ -69,7 +69,9 @@ describe('prepareAudio', () => {
 
   it('creates an AudioContext on first call, reuses on subsequent calls', () => {
     const { ctx } = createFakeContext();
-    const Ctor = vi.fn(() => ctx) as unknown as typeof AudioContext;
+    const Ctor = vi.fn(function () {
+      return ctx;
+    }) as unknown as typeof AudioContext;
     window.AudioContext = Ctor;
     prepareAudio();
     prepareAudio();
@@ -78,14 +80,18 @@ describe('prepareAudio', () => {
 
   it('calls resume() when context is suspended', () => {
     const { ctx } = createFakeContext('suspended');
-    window.AudioContext = vi.fn(() => ctx) as unknown as typeof AudioContext;
+    window.AudioContext = vi.fn(function () {
+      return ctx;
+    }) as unknown as typeof AudioContext;
     prepareAudio();
     expect(ctx.resume).toHaveBeenCalled();
   });
 
   it('sets navigator.audioSession.type to ambient when present', () => {
     const { ctx } = createFakeContext();
-    window.AudioContext = vi.fn(() => ctx) as unknown as typeof AudioContext;
+    window.AudioContext = vi.fn(function () {
+      return ctx;
+    }) as unknown as typeof AudioContext;
     const audioSession = { type: 'auto' as const };
     // Augment the existing navigator rather than replacing it — jsdom's Navigator is not constructable.
     Object.defineProperty(navigator, 'audioSession', {
@@ -114,7 +120,9 @@ describe('beep', () => {
 
   it('schedules an oscillator with the expected frequency for each kind', () => {
     const { ctx, osc } = createFakeContext();
-    const Ctor = vi.fn(() => ctx) as unknown as typeof AudioContext;
+    const Ctor = vi.fn(function () {
+      return ctx;
+    }) as unknown as typeof AudioContext;
     window.AudioContext = Ctor;
     prepareAudio();
 
