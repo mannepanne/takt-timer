@@ -9,22 +9,22 @@ const strings = {
   'nav.backToHome': { en: 'Back to Home', sv: 'Tillbaka till start' },
 
   // ── Home ─────────────────────────────────────────────────────────────
-  'home.openPresets': { en: 'Open presets', sv: 'Öppna förinställningar' },
-  'home.ready': { en: 'Ready', sv: 'Redo' },
+  'home.openPresets': { en: 'Open presets', sv: 'Förinställningar' },
+  'home.ready': { en: 'Ready', sv: 'Alltid redo' },
   'home.prompt': { en: 'What cadence do you need?', sv: 'Vad är takten idag?' },
   'home.example': {
     en: '"Three sets of one minute, thirty seconds rest"',
     sv: '"Tre set om en minut, tretti sekunders vila"',
   },
-  'home.configure': { en: "Can't use voice?", sv: 'Funkar inte rösten?' },
-  'home.privacy': { en: 'Privacy', sv: 'Integritetspolicy' },
+  'home.configure': { en: "Can't use voice?", sv: 'Groda i halsen?' },
+  'home.privacy': { en: 'On privacy', sv: 'Om personuppgifter' },
   'home.sessions.one': { en: '1 session so far', sv: '1 pass hittills' },
   'home.sessions.many': { en: '{count} sessions so far', sv: '{count} pass hittills' },
 
   // ── Configure ────────────────────────────────────────────────────────
   'configure.title': { en: 'Configure', sv: 'Konfigurera' },
   'configure.heading': { en: 'Build a session', sv: 'Bygg ett pass' },
-  'configure.hint': { en: 'Tap any chip to edit it.', sv: 'Tryck på en bricka för att redigera.' },
+  'configure.hint': { en: 'Tap any chip to edit.', sv: 'Tryck på ett nummer för att redigera.' },
   'configure.start': { en: 'Start', sv: 'Starta' },
 
   // ── Interpretation ───────────────────────────────────────────────────
@@ -42,7 +42,7 @@ const strings = {
   'run.repeatSet': { en: 'Repeat set', sv: 'Upprepa set' },
   'run.pause': { en: 'Pause', sv: 'Paus' },
   'run.resume': { en: 'Resume', sv: 'Fortsätt' },
-  'run.skipPhase': { en: 'Skip phase', sv: 'Hoppa över fas' },
+  'run.skipPhase': { en: 'Skip phase', sv: 'Hoppa över' },
   'run.paused': { en: 'Session paused', sv: 'Pass pausat' },
   'run.pauseBody': {
     en: 'Your phone was locked or the tab went to the background. Ready to pick up where you left off?',
@@ -62,7 +62,7 @@ const strings = {
   },
   'complete.totalTime': { en: 'Total time', sv: 'Total tid' },
   'complete.workTime': { en: 'Work time', sv: 'Arbetstid' },
-  'complete.runAgain': { en: 'Run it again', sv: 'Kör igen' },
+  'complete.runAgain': { en: 'Run it again', sv: 'En gång till' },
   'complete.savePreset': { en: 'Save as preset', sv: 'Spara som förinställning' },
   'complete.signInToSave': { en: 'Sign in to save', sv: 'Logga in för att spara' },
   'complete.done': { en: 'Done', sv: 'Klar' },
@@ -221,7 +221,7 @@ const strings = {
   },
   'passkey.error.verificationFailed': {
     en: "Your device couldn't verify your identity. Please try again.",
-    sv: 'Din enhet kunde inte verifiera din identitet. Försök igen.',
+    sv: 'Din identitet kunde inte verifieras. Försök igen.',
   },
   'passkey.error.userNotFound': {
     en: 'No account found. Create an account to get started.',
@@ -363,7 +363,7 @@ const strings = {
     sv: 'Logga in eller skapa konto',
   },
   'settings.about': { en: 'About', sv: 'Om' },
-  'settings.privacyPolicy': { en: 'Privacy policy', sv: 'Integritetspolicy' },
+  'settings.privacyPolicy': { en: 'Privacy policy', sv: 'Om personuppgifter' },
   'settings.version': { en: 'Version', sv: 'Version' },
   'settings.admin': { en: 'Admin', sv: 'Admin' },
   'settings.replayOnboarding': { en: 'Show intro', sv: 'Visa intro' },
