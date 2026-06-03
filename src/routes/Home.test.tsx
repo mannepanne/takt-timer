@@ -69,7 +69,7 @@ describe('Home', () => {
 
   it('Configure CTA navigates to /configure', async () => {
     renderHome();
-    await userEvent.click(screen.getByRole('link', { name: /enter it manually/i }));
+    await userEvent.click(screen.getByRole('link', { name: /can't use voice/i }));
     expect(screen.getByTestId('config')).toBeInTheDocument();
   });
 

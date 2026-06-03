@@ -31,7 +31,7 @@ describe('Integration — Configure → Run → Complete', () => {
 
     // Home → Configure
     expect(screen.getByRole('heading', { name: /what cadence do you need/i })).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('link', { name: /enter it manually/i }));
+    await userEvent.click(screen.getByRole('link', { name: /can't use voice/i }));
 
     // Configure → Start (with default 3 × 1:00 / 0:30)
     expect(await screen.findByRole('heading', { name: /build a session/i })).toBeInTheDocument();
