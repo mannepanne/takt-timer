@@ -16,7 +16,7 @@ const strings = {
     en: '"Three sets of one minute, thirty seconds rest"',
     sv: '"Tre set om en minut, tretti sekunders vila"',
   },
-  'home.configure': { en: 'Configure a session', sv: 'Konfigurera ett pass' },
+  'home.configure': { en: '…or enter it manually', sv: '…eller fyll i manuellt' },
   'home.privacy': { en: 'Privacy', sv: 'Integritetspolicy' },
   'home.sessions.one': { en: '1 session so far', sv: '1 pass hittills' },
   'home.sessions.many': { en: '{count} sessions so far', sv: '{count} pass hittills' },

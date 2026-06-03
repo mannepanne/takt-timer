@@ -126,8 +126,7 @@ export function Home() {
       <div className="home-spacer" />
 
       <div className="home-cta-row">
-        <Link to="/configure" className="btn btn-primary">
-          <Icon.Play size={18} color="var(--paper)" />
+        <Link to="/configure" className="btn btn-ghost">
           {t('home.configure')}
         </Link>
       </div>
