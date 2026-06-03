@@ -148,7 +148,7 @@ pnpm test:coverage       # Coverage report
 pnpm typecheck           # TypeScript type checking
 ```
 
-**Coverage targets:** ≥95% lines/functions/statements, ≥90% branches.
+**Coverage targets:** aim ≥95% lines/functions/statements, ≥90% branches. Enforced CI floors are currently lines 95, statements 94, functions 92, branches 88 (recalibrated for vitest 4's stricter v8 measurement; aim to restore 95/90 — tracked in issue #101). See [testing-strategy.md](./REFERENCE/testing-strategy.md).
 
 **See:** [testing-strategy.md](./REFERENCE/testing-strategy.md) for full details.
 

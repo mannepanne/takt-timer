@@ -24,7 +24,7 @@ This matters because Takt is built with AI assistance at every step. Tests are t
 ## Principles
 
 1. **Tests define expected behaviour.** Write them before the code when the shape of the API is clear; right after the code when exploring. Either way, every non-trivial branch has a test.
-2. **Coverage targets:** ≥95% lines / functions / statements, ≥90% branches. Targets are for the whole project; individual files may dip lower if justified in PR.
+2. **Coverage targets:** aim for ≥95% lines / functions / statements, ≥90% branches. The enforced CI floors are currently recalibrated lower (lines 95, statements 94, functions 92, branches 88) because vitest 4's AST-aware v8 coverage measures the identical suite a few points lower than vitest 2 did; the aim is to climb back to 95/90 (tracked in issue #101). Floors are for the whole project; individual files may dip lower if justified in PR.
 3. **Fail loudly, helpfully.** A failing assertion should name the expected and actual values, and the test's `describe`/`it` names should read like a sentence (_"parses 'three sets of one minute' into 3 × 60"_).
 4. **Tests are self-contained.** Each test sets up its own fixtures and cleans up after itself. No cross-test dependencies; tests pass in isolation and in any order.
 5. **Mirror code structure.** `src/lib/timer/machine.ts` → `src/lib/timer/machine.test.ts`. Integration tests live alongside the thing they integrate (e.g. `worker/api/voice/parse.test.ts`).
@@ -170,7 +170,7 @@ export function mockWorkersAI(overrides?: { whisper?: string; llama?: unknown })
 | API routes                             | 95%+                           | 90%+     | Include rate-limit, auth, and error paths.             |
 | Service worker                         | 85%+                           | 80%+     | Hard to fully exercise; compensate with manual checks. |
 
-Whole-project floors: ≥95% lines/functions/statements, ≥90% branches. Phase specs may set phase-specific overrides.
+Whole-project floors (the `pnpm test:coverage` gate): lines 95, statements 94, functions 92, branches 88 — recalibrated for vitest 4's stricter v8 measurement, with the aim of restoring 95/90 (tracked in issue #101). The per-area figures above remain the aspiration. Phase specs may set phase-specific overrides.
 
 ---
 

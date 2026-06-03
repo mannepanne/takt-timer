@@ -33,11 +33,14 @@ export default defineConfig({
         'src/components/icons.tsx',
         'src/routes/Spike.tsx',
       ],
+      // Recalibrated for vitest 4's AST-aware v8 coverage, which measures the
+      // identical suite a few points lower than vitest 2 did. Goal is to climb
+      // back to 95/90 — see GitHub issue #101 (technical-debt: restore coverage).
       thresholds: {
         lines: 95,
-        functions: 95,
-        statements: 95,
-        branches: 90,
+        functions: 92,
+        statements: 94,
+        branches: 88,
       },
     },
   },
