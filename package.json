@@ -29,7 +29,7 @@
     "@simplewebauthn/server": "^13.3.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^7.0.2",
+    "react-router-dom": "^7.18.1",
     "zod": "^4.3.6"
   },
   "devDependencies": {
