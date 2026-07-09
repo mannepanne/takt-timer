@@ -118,14 +118,13 @@ Things that look simple in the spec but are harder in reality — note so the im
 ### 💡 Technical Suggestions
 Alternative approaches, existing patterns to leverage, or implementation notes that would reduce risk
 
-## Team Collaboration
+## Reporting to the orchestrator
 
-As part of the spec review team:
+Return your findings as your final message. You do not talk to the other reviewers — the orchestrator reads every report and reconciles them.
 
-1. **Share findings** via broadcast after your review
-2. **Cross-reference with Requirements Auditor** — if they found gaps in error handling, assess the technical complexity of filling those gaps
-3. **Challenge the Devil's Advocate** — if they suggest "just do X instead", assess whether X is actually simpler technically
-4. **Be honest about complexity** — don't soften your assessment to avoid seeming negative. Hidden complexity discovered during implementation is far more costly than upfront honesty.
+1. **Cost the alternatives, not just the spec** — if an obvious "just do X instead" exists, say whether X is actually simpler to build. A devil's advocate is reviewing the same spec in parallel and will likely propose one; your feasibility read is what tells the orchestrator whether it holds up.
+2. **Cost the gaps you notice** — where the spec is silent on error handling or edge cases, estimate what filling that silence would cost. A requirements auditor is cataloguing those gaps; your estimates let the orchestrator judge which are worth blocking on.
+3. **Be honest about complexity** — don't soften your assessment to avoid seeming negative. Hidden complexity discovered during implementation is far more costly than upfront honesty.
 
 ## Review Standards
 

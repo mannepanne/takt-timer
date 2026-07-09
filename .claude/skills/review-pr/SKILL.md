@@ -17,7 +17,7 @@ This skill reviews a PR at the right level of depth — not too shallow, not tok
 | ------------ | ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------ |
 | **light**    | `light-reviewer` (narrow sanity check) + `technical-writer` (temporal-language + REFERENCE/ currency) | Docs, tests, styling, comment-only changes                             | ~1–2 min     |
 | **standard** | `code-reviewer` (full default prompt) + `technical-writer`                                            | Typical feature work, core logic, utilities                            | ~2–4 min     |
-| **team**     | Multi-perspective team (security, product, architect, docs) with debate                               | Data layer (Supabase migrations, RLS), auth, CI, dependencies, secrets | ~2–7 min     |
+| **team**     | Four independent specialists (security, product, architect, docs), findings synthesised               | Data layer (Supabase migrations, RLS), auth, CI, dependencies, secrets | ~2–4 min     |
 
 Team is auto-selected when the change touches high-blast-radius paths. You can always force team directly with `/review-pr-team N`.
 
@@ -150,7 +150,7 @@ Follow the two-reviewer flow:
 1. Emit one user-facing line in chat:
 
    ```
-   Auto-escalating to team review. This takes 2–7 minutes. If you want to
+   Auto-escalating to team review. This takes 2–4 minutes. If you want to
    abort, press ESC; if that doesn't land cleanly, wait for the team review
    to finish (it posts to the PR regardless).
    ```
@@ -173,7 +173,7 @@ Follow the two-reviewer flow:
 
    Same reasoning as light/standard tier: `--body-file` avoids the brittle heredoc-quoting pattern.
 
-3. Invoke the `review-pr-team` skill using the Skill tool, passing the same PR number as `args`. That skill owns its own orchestration, team setup, discussion phase, and clean-up. Its review posts as a second, larger comment.
+3. Invoke the `review-pr-team` skill using the Skill tool, passing the same PR number as `args`. That skill owns its own orchestration: it spawns the four specialists in parallel and synthesises their reports. Its review posts as a second, larger comment.
 
 (The team skill is user-invocable on its own, so if you prefer to skip the dispatcher entirely, just run `/review-pr-team N` directly — no triage runs and no marker comment is posted.)
 

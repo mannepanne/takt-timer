@@ -7,9 +7,9 @@
 
 **Skills Available:**
 
-- `/review-spec` - Pre-implementation spec review (2-7 min) ← run before writing code
+- `/review-spec` - Pre-implementation spec review (2-4 min) ← run before writing code
 - `/review-pr` - Smart PR review dispatcher — triages the change and routes to light / standard / team (1-5 min end-to-end; longer when auto-escalated to team tier)
-- `/review-pr-team` - Forces full multi-perspective team review, skipping triage (2-7 min)
+- `/review-pr-team` - Forces full four-perspective review, skipping triage (2-4 min)
 
 ---
 
@@ -45,7 +45,7 @@ The canonical gate logic (read order, branch rules, persist semantics, malformed
 
 ## Overview
 
-This project uses automated review skills powered by agent teams. Reviews use fresh context (not biased by main session) and provide comprehensive, actionable feedback.
+This project uses automated review skills powered by specialist subagents. Each reviewer runs in parallel with fresh context (not biased by the main session, nor by what the other reviewers found), and Claude synthesises their reports into a single verdict.
 
 There are two review phases in the workflow:
 
@@ -63,8 +63,8 @@ There are two review phases in the workflow:
 ✅ When you want to catch wrong assumptions before writing code
 ✅ When the approach feels uncertain or under-specified
 
-**Time:** 2-7 minutes
-**Reviewers:** Requirements Auditor, Technical Skeptic, Devil's Advocate (agent team)
+**Time:** 2-4 minutes
+**Reviewers:** Requirements Auditor, Technical Skeptic, Devil's Advocate — each reviewing independently, in parallel
 **Outputs to:** Conversation (not a PR comment)
 
 ### Use `/review-pr` for:
@@ -85,7 +85,7 @@ It then routes to one of three tiers:
 | ------------ | --------------------------------------------------------------------------- | --------------------------------------------------------------- | -------- |
 | **light**    | 2 reviewers, narrow scope (light-reviewer + technical-writer in light-mode) | Docs, tests, styling, comment-only diffs                        | ~1 min   |
 | **standard** | Code review + doc review                                                    | Typical feature work, business logic, utilities                 | ~2-4 min |
-| **team**     | Multi-perspective team with debate                                          | Data-layer / Supabase migrations / RLS, auth, CI, deps, secrets | ~2-7 min |
+| **team**     | 4 independent specialists, findings synthesised                             | Data-layer / Supabase migrations / RLS, auth, CI, deps, secrets | ~2-4 min |
 
 If the triage decision looks wrong, you can interrupt and force a deeper tier with `/review-pr-team N`.
 
@@ -95,8 +95,8 @@ If the triage decision looks wrong, you can interrupt and force a deeper tier wi
 ✅ Re-running deeper analysis after a `light` or `standard` pass surfaced concerns
 ✅ Situations where you want all four specialist perspectives (security, product, architect, docs) regardless of what the rubric says
 
-**Time:** 2-7 minutes
-**Reviewers:** Security Specialist, Product Manager, Senior Architect, Technical Writer (agent team with collaborative discussion)
+**Time:** 2-4 minutes
+**Reviewers:** Security Specialist, Product Manager, Senior Architect, Technical Writer — each reviewing independently, in parallel
 **Model:** Opus for all reviewers (more thorough reasoning)
 
 _Note: `/review-pr` will auto-escalate to the team tier when triage flags high-risk paths. You don't need to invoke `/review-pr-team` just to "be safe" — the dispatcher handles that._
@@ -105,15 +105,16 @@ _Note: `/review-pr` will auto-escalate to the team tier when triage flags high-r
 
 ## How `/review-spec` Works
 
-**Three reviewers analyse the spec independently, then debate:**
+**Three reviewers analyse the spec independently; Claude synthesises their reports:**
 
 1. **Requirements Auditor** — completeness: edge cases, error states, missing flows, undefined behaviour
 2. **Technical Skeptic** — feasibility: DB implications, blast radius, hidden complexity, integration risks
 3. **Devil's Advocate** — strategy: is this the right thing to build? Simpler alternatives? Wrong assumptions?
 
-**Phase 1:** Independent review — each reviewer reads the spec and relevant codebase context simultaneously
-**Phase 2:** Collaborative discussion — reviewers share findings, challenge each other's conclusions, reach consensus
-**Phase 3:** Synthesis — unified output with overall recommendation (APPROVED / APPROVED WITH CONDITIONS / NEEDS REVISION)
+**Phase 1:** Independent review — each reviewer reads the spec and relevant codebase context simultaneously. They do not communicate with each other.
+**Phase 2:** Synthesis — Claude holds all three reports at once, deduplicates, reconciles disagreements, and produces a unified output with an overall recommendation (APPROVED / APPROVED WITH CONDITIONS / NEEDS REVISION)
+
+The synthesis pairs the lenses deliberately: an alternative the Devil's Advocate proposes is checked against whether the Technical Skeptic costed it as actually simpler; a gap the Requirements Auditor found is weighed against what the Skeptic says filling it costs. Where the reports disagree and nothing settles it, both positions are shown rather than a false consensus.
 
 **Output goes to conversation** (not a PR comment) so you can act on it before writing any code.
 
@@ -134,11 +135,12 @@ _Note: `/review-pr` will auto-escalate to the team tier when triage flags high-r
 
 `/review-pr` is a **dispatcher**. It does not review the PR itself — it classifies risk first, then hands off to the reviewer (or team) best suited to the change. The goal: use the cheapest review that's still safe.
 
-**The three phases:**
+**The four phases:**
 
 1. **Triage** — a lightweight classifier reads the PR's changed paths, size, and a couple of targeted greps (for secret-shaped strings and Supabase RLS keywords). It does not read file contents in depth. ~30 seconds on its own; adds ~30 seconds of overhead to the total review time quoted in the tier table above.
 2. **Announce** — the dispatcher tells you the tier and rationale in plain language _before_ spawning the reviewer, so you can intervene if it got it wrong.
-3. **Review** — the appropriate reviewer runs, posts to the PR with the triage decision visible in the comment header, and a summary appears in chat.
+3. **Review** — the appropriate reviewer runs and posts to the PR with the triage decision visible in the comment header.
+4. **Follow-through** — every finding is re-bucketed into one of three action tiers: handle in this PR (Claude applies the fix after you confirm), your call (a UX or scope tradeoff you decide), or track as GitHub issue (out-of-scope — created via `gh issue create`, the only allowed form of deferral). Nothing is left as a verbal "we'll do that later".
 
 ### The triage rubric (summary)
 
@@ -204,12 +206,12 @@ Output format:
 
 ## How `/review-pr-team` Works
 
-**Agent team collaboration:**
+**Parallel fan-out, then synthesis:**
 
-1. Creates agent team with 4 specialised reviewers
-2. **Phase 1: Independent Review** - Each reviews from their perspective
-3. **Phase 2: Collaborative Discussion** - Reviewers debate, challenge, reach consensus
-4. Posts synthesised findings with discussion highlights
+1. Spawns 4 specialised reviewers in parallel — they run concurrently and do not communicate
+2. **Phase 1: Independent review** — each reviews from its own perspective, with fresh context
+3. **Phase 2: Synthesis** — Claude holds all four reports, deduplicates by `file:line`, and reconciles severity
+4. Posts the unified review to the PR
 
 **The four reviewers:**
 
@@ -240,17 +242,17 @@ Output format:
 
 **Key difference from `/review-pr`:**
 
-- Reviewers **actually discuss** findings with each other
-- They **challenge** each other's severity assessments
-- They **debate** tradeoffs and propose solutions together
-- Lead synthesises collaborative insights (not just four independent reports)
+- Four specialist lenses instead of one generalist reviewer plus docs
+- Each reviewer has fresh context and no knowledge of the others' findings, so they don't anchor on each other
+- The synthesis step reconciles them — a 🔴 raised on an assumption that another reviewer's report disproves gets demoted, and the reasoning is shown
 
 **Output includes:**
 
-- Team consensus on critical issues
-- Documented disagreements (valuable signal)
-- Discussion highlights (how debate changed ratings)
-- Collaborative solutions that emerged
+- Findings corroborated by more than one reviewer (the strongest signal in the review)
+- Severity disagreements, either reconciled with the evidence that settled them or recorded as unresolved
+- A single recommendation: BLOCK MERGE / APPROVE WITH CHANGES / APPROVE
+
+**Why reviewers don't debate each other.** They did until July 2026. The discussion phase ran long for diminishing returns; its one real product — recalibrating a severity when one reviewer lacked context another had — is something the orchestrator does directly from the reports. See [`decisions/2026-07-09-fan-out-review-synthesis.md`](./decisions/2026-07-09-fan-out-review-synthesis.md).
 
 **Two-comment audit pattern (team tier only):** when team tier runs via the dispatcher, you'll see _two_ PR comments — first a short triage marker (`Triage: team (auto-escalated)` + flagged paths), then a second larger comment containing the full team review. This is by design: the marker preserves the dispatcher's audit trail even if the team review later fails or is amended. Running `/review-pr-team N` directly skips the marker and posts only the full review.
 
@@ -281,14 +283,12 @@ The skill will:
 
 The skill will:
 
-1. Fetch PR #42 details
-2. Gather project context
-3. Create agent team (4 reviewers)
-4. Reviewers independently analyse
-5. Reviewers discuss and debate findings
-6. Lead synthesises collaborative analysis
-7. Post unified review with discussion highlights
-8. Clean up team
+1. Spawn 4 specialist reviewers in parallel
+2. Each fetches PR #42 details and gathers its own project context
+3. Each analyses independently, from its own perspective
+4. Claude synthesises the four reports — dedupe, reconcile severity, resolve or record disagreements
+5. Post the unified review to the PR
+6. Run post-review follow-through
 
 ---
 
@@ -336,22 +336,15 @@ git diff                 # Review your own changes first
 
 **If reviewers disagree:**
 
-- Both perspectives are valuable
-- Understand the tradeoffs
-- Make informed decision
-- Document your choice in PR
+- Read the "unresolved" items first — that's where your judgement is actually needed
+- The synthesis shows both positions and what evidence was missing to settle it
+- Make the call and document your reasoning in the PR
 
-**If discussion seems shallow:**
+**Reading corroboration:**
 
-- Reviewers might be too polite
-- You can ask them to "challenge each other more directly"
-- The debate phase surfaces better insights
-
-**Team consensus vs split:**
-
-- Unanimous agreement = high confidence
-- 2/3 agreement = strong signal
-- Split opinions = requires judgment call
+- Several reviewers independently flagging the same `file:line` = high confidence, since they never saw each other's findings
+- One reviewer flagging something outside its own specialism = a signal worth checking, not a verdict
+- A severity that was reconciled during synthesis will say so, and show the evidence that moved it
 
 ---
 
@@ -372,16 +365,15 @@ git diff                 # Review your own changes first
 
 1. Create feature branch
 2. Review specs and architectural guidelines
-3. **Run `/review-spec`** — debate assumptions before writing a line of code
+3. **Run `/review-spec`** — challenge assumptions before writing a line of code
 4. Consider using EnterPlanMode for complex features
 5. Implement with comprehensive tests
 6. Self-review: `git diff`, verify no secrets/debug code
 7. Create PR with detailed description
 8. **Run `/review-pr`** — for most critical changes the dispatcher will auto-route to team tier (Supabase, auth, deps, CI, secrets all trigger team). Use `/review-pr-team` directly only if you want to skip triage entirely.
-9. Reviewers discuss findings collaboratively
-10. Address critical issues and consensus concerns
-11. Document decisions on split opinions
-12. Merge when approved
+9. Address critical issues, starting with findings more than one reviewer raised
+10. Decide the unresolved disagreements the synthesis flagged, and document your choice
+11. Merge when approved
 
 ---
 
@@ -393,11 +385,15 @@ git diff                 # Review your own changes first
 - If context seems wrong, check that relevant specs are in SPECIFICATIONS/
 - Skills auto-discover specs by keywords from PR
 
-### Team reviewers not discussing
+### A reviewer returned nothing
 
-- Tell them: "Share findings via broadcast and debate severity"
-- Check Phase 1 is complete before expecting Phase 2
-- If too polite: "Challenge each other's assumptions more directly"
+- The synthesis will say which perspective is missing — it does not silently ship a three-perspective review labelled as four
+- Re-running the whole skill is the fix; the skills deliberately don't re-spawn a failed reviewer
+
+### The review reads like four documents stapled together
+
+- Findings sharing a `file:line` should have been merged, and differing severities explicitly reconciled or recorded as unresolved
+- If they weren't, the synthesis step was skipped — re-run
 
 ### Review posted but nothing seems wrong
 

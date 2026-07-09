@@ -5,4 +5,7 @@ coverage
 SPECIFICATIONS/prototype-design-files
 migrations
 pnpm-lock.yaml
-.claude # Claude-managed files — Prettier inflates blank lines around list items
+# Claude-managed files — Prettier inflates blank lines around list items.
+# A trailing comment would be read as part of the pattern (gitignore syntax
+# only treats # as a comment at the start of a line), so keep it on its own.
+.claude
