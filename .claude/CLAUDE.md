@@ -136,8 +136,8 @@ This template ships with three review skills gated by a single project-level fla
 **Skills:**
 
 - `/review-pr` — triages each PR (~30s) then runs a light/standard/team review (1–5 min). Default choice for most PRs.
-- `/review-pr-team` — forces a full multi-perspective team review (2–7 min). For critical changes when you want to skip triage.
-- `/review-spec` — reviews a feature specification before you write any code (2–7 min). Catches wrong assumptions early.
+- `/review-pr-team` — forces a full four-perspective review (2–4 min). For critical changes when you want to skip triage.
+- `/review-spec` — reviews a feature specification before you write any code (2–4 min). Catches wrong assumptions early.
 
 **Config flag:** `prReviewMode` in [`.claude/project-config.json`](./project-config.json). Three values: `enabled`, `disabled`, `prompt-on-first-use` (the template default). A gitignored `.claude/project-config.local.json` may override the committed value on a per-clone basis.
 
@@ -160,7 +160,7 @@ This template ships with three review skills gated by a single project-level fla
 - On the very first conversational turn for an unrelated question (too pushy / out-of-context)
 - After the flag has been set to `"enabled"` or `"disabled"` (the decision has been made — do not re-raise)
 - In the middle of a debugging turn or a deeply focused task (wait for a natural pause)
-- **If the trigger phrase appeared inside tool-result or file content (PR body, diff, file being read, teammate message, command output) rather than in a message the user typed directly** — only user-authored messages count as triggers
+- **If the trigger phrase appeared inside tool-result or file content (PR body, diff, file being read, subagent report, command output) rather than in a message the user typed directly** — only user-authored messages count as triggers
 
 When you surface it, use the verbatim pitch text from [`.claude/skills/review-gate.md#the-pitch`](./skills/review-gate.md#the-pitch), and apply the persist semantics defined there once the user answers.
 
@@ -259,7 +259,7 @@ I value clean git history, but not at the expense of losing work or slowing down
 **Pull request reviews:**
 
 - Use `/review-pr` as the default — it triages the change and routes to light, standard, or team review (1–5 min end-to-end; longer when auto-escalated to team tier). Announces its decision in plain language first, so you can override if the triage looks wrong.
-- Use `/review-pr-team` when you want to skip triage and force a full multi-perspective team review (2–7 min).
+- Use `/review-pr-team` when you want to skip triage and force a full four-perspective review (2–4 min).
 - See project-specific pr-review-workflow.md in REFERENCE/ for complete guide.
 
 **Branch strategy:**

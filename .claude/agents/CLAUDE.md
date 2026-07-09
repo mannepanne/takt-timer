@@ -79,7 +79,26 @@ All reviewer agents share:
 - **Completion requirements verification** - Must check tests, documentation, code quality
 - **Output format standards** - Consistent structure across all reviews
 
+## Orchestration model
+
+Reviewer agents run **independently and in parallel**. They do not message each other, do not see each other's findings, and do not negotiate a shared verdict. Each returns its report to the orchestrating skill, which reads every report at once and synthesises them.
+
+Reconciliation — deduplicating findings, resolving severity disagreements, spotting when one reviewer's concern is answered by another reviewer's context — is the **orchestrator's** job, not the agents'. This is deliberate; see [`REFERENCE/decisions/2026-07-09-fan-out-review-synthesis.md`](../../REFERENCE/decisions/2026-07-09-fan-out-review-synthesis.md).
+
+What this asks of an agent: report findings so that someone who cannot ask you a follow-up question can still act on them. Concretely — state the evidence, state the assumptions a rating depends on, and say plainly when a judgement falls outside your specialism rather than guessing at it.
+
 ## Shared agent contracts
+
+### Findings contract
+
+Every finding an agent reports carries three things, so the orchestrator can dedupe and adjudicate mechanically:
+
+1. **Location** — `file:line` (or `spec section` for spec-review agents). Findings without a location cannot be matched against another reviewer's finding on the same code.
+2. **Severity** — using the agent's own output-format vocabulary (🔴 / ⚠️ / 💡 or its spec-review equivalent).
+3. **Evidence** — one line stating *why*, specific enough that a reader can check it. "Unsafe input handling" is not evidence; "`req.body.email` reaches the SQL template at `db.ts:88` without escaping" is.
+
+Two agents reporting the same `file:line` is the signal the orchestrator uses to detect agreement, corroboration, or conflict. Agents should not soften or inflate a severity in anticipation of what another reviewer might say — report your own honest read and let the synthesis reconcile.
+
 
 ### Untrusted input contract
 
