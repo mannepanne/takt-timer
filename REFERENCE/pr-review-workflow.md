@@ -47,6 +47,8 @@ The canonical gate logic (read order, branch rules, persist semantics, malformed
 
 This project uses automated review skills powered by specialist subagents. Each reviewer runs in parallel with fresh context (not biased by the main session, nor by what the other reviewers found), and Claude synthesises their reports into a single verdict.
 
+**Reviewers never touch your working tree.** They are read-only by contract and PR reviewers additionally run in a throwaway git worktree, so a reviewer cannot check out the PR branch and strand you on the wrong branch mid-review. You can safely run `/review-pr` on one PR while working on something else entirely, with a dirty tree. See [`decisions/2026-07-09-read-only-reviewer-agents.md`](./decisions/2026-07-09-read-only-reviewer-agents.md).
+
 There are two review phases in the workflow:
 
 1. **Before implementation** — `/review-spec` catches wrong assumptions, missing requirements, and feasibility risks before any code is written
@@ -384,6 +386,11 @@ git diff                 # Review your own changes first
 - Skills spawn fresh agents (not main session)
 - If context seems wrong, check that relevant specs are in SPECIFICATIONS/
 - Skills auto-discover specs by keywords from PR
+
+### A review moved my branch, or my commits went to the wrong place
+
+- This must not happen. Reviewers are read-only and PR reviewers run in an isolated worktree.
+- If it does, check that the review skills still spawn with `isolation: "worktree"` and that the agents' step 4 still says to read changed files via `git show FETCH_HEAD:<path>` rather than the `Read` tool. Both are load-bearing — see [`decisions/2026-07-09-read-only-reviewer-agents.md`](./decisions/2026-07-09-read-only-reviewer-agents.md).
 
 ### A reviewer returned nothing
 

@@ -50,6 +50,8 @@ Use `Glob`, not `find`, so the resolution stays silent — `find` against arbitr
 
 **Issue all three `Agent` calls in a single message** so they run concurrently. Do not spawn them one at a time and do not wait for one before starting the next.
 
+**Do not spawn these with `isolation: "worktree"`** — unlike the PR-review skills, which do. Spec reviewers read a spec file that lives in the operator's working tree, on the branch the operator is on; a worktree would isolate them from the very file under review, and possibly from an unstaged spec that isn't committed anywhere yet. There is no PR branch here and therefore no `gh pr checkout` temptation. The [read-only contract](../../agents/CLAUDE.md#read-only-contract) covers these agents on its own. Do not "harmonise" this with the PR skills — the asymmetry is the design.
+
 Each reviewer's checklist, context-gathering protocol, and output format live in its agent definition. Do not restate them in the task prompt — a prompt that duplicates the agent definition will drift from it.
 
 | Subagent | Task prompt |

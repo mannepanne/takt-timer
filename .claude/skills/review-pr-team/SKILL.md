@@ -37,6 +37,8 @@ Run the gate defined in [`.claude/skills/review-gate.md`](../review-gate.md) →
 
 **Issue all four `Agent` calls in a single message** so they run concurrently. Do not spawn them one at a time and do not wait for one before starting the next.
 
+**Spawn every reviewer with `isolation: "worktree"`.** Reviewers are read-only by contract, but a reviewer that runs `git checkout` or `gh pr checkout` in the shared working tree silently moves the operator off their branch, and commits they make afterwards miss the PR. The worktree makes that impossible rather than merely forbidden. Cost is sub-second per agent and the worktree is auto-removed, since reviewers change nothing. Do not drop this flag to save time.
+
 Each reviewer's checklist, context-gathering protocol, and output format live in its agent definition. Do not restate them in the task prompt — a prompt that duplicates the agent definition will drift from it.
 
 | Subagent | Task prompt |
