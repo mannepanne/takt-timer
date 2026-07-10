@@ -39,9 +39,17 @@ Run the gate defined in [`.claude/skills/review-gate.md`](../review-gate.md) →
 
 **Applies to every subsequent step**: `gh pr view/diff/comment $ARGUMENTS` shell commands AND any `SCRATCH/review-pr-$ARGUMENTS-*.md` Write-tool path. Do not proceed past this step if validation fails. This validation is load-bearing — do not remove or relax it without reading the ADR at `REFERENCE/decisions/2026-04-22-tiered-pr-review-dispatcher.md`.
 
+### Reviewer isolation (applies to every spawn in this skill)
+
+Every subagent this skill spawns — triage, light, standard — runs with `isolation: "worktree"`.
+
+Reviewers are read-only by contract (see [`.claude/agents/CLAUDE.md`](../../agents/CLAUDE.md#read-only-contract)), but a reviewer that runs `git checkout` or `gh pr checkout` in the shared working tree silently moves the operator off their branch, and commits they make afterwards miss the PR. The worktree makes that impossible rather than merely forbidden. Cost is sub-second per agent and the worktree is auto-removed, since reviewers change nothing. Do not drop this flag to save time.
+
+The team tier does the same — `review-pr-team` spawns its own four reviewers with the flag.
+
 ### Step 1: Triage
 
-Spawn the **`triage-reviewer`** subagent:
+Spawn the **`triage-reviewer`** subagent with `isolation: "worktree"`:
 
 **Task:** `Classify PR #$ARGUMENTS for review tier. Follow your rubric and output format exactly. Return only the classification block.`
 
@@ -85,7 +93,7 @@ Running light review now. If this looks wrong, stop me and run
 
 **If `TIER: light`:**
 
-Spawn two reviewers in parallel (the narrowed scope is built into the `light-reviewer` agent definition — you do not need to pass override instructions):
+Spawn two reviewers in parallel, both with `isolation: "worktree"` (the narrowed scope is built into the `light-reviewer` agent definition — you do not need to pass override instructions):
 
 1. **`light-reviewer`** with task: `Light-tier review of PR #$ARGUMENTS. Follow your agent definition. Post nothing — return your findings.`
 2. **`technical-writer`** with task: `Light-mode documentation pass for PR #$ARGUMENTS. Operate in light-mode (see your agent definition). Post nothing — return your findings.`
@@ -124,7 +132,7 @@ Why two agents in light tier: the triage routes docs-only PRs to `light`, and do
 
 **If `TIER: standard`:**
 
-Follow the two-reviewer flow:
+Follow the two-reviewer flow. Spawn both with `isolation: "worktree"`:
 
 1. Spawn **`code-reviewer`** with its default task: `Conduct a comprehensive code review of PR #$ARGUMENTS. Follow your review checklist and output format. Post nothing — return your findings.`
 2. Spawn **`technical-writer`** with: `Conduct a documentation review of PR #$ARGUMENTS. Follow your review checklist and output format. Post nothing — return your findings.`
