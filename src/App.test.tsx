@@ -20,6 +20,16 @@ describe('App', () => {
     ).toBeInTheDocument();
   });
 
+  it('renders the Timer route at /timer', () => {
+    render(
+      <MemoryRouter initialEntries={['/timer']}>
+        <App />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole('button', { name: 'Start' })).toBeInTheDocument();
+    expect(screen.getByText('0:00')).toBeInTheDocument();
+  });
+
   it('renders the NotFound route for unknown paths', () => {
     render(
       <MemoryRouter initialEntries={['/some/unknown/path']}>

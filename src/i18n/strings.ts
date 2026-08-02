@@ -20,6 +20,8 @@ const strings = {
   'home.privacy': { en: 'On privacy', sv: 'Om personuppgifter' },
   'home.sessions.one': { en: '1 session so far', sv: '1 pass hittills' },
   'home.sessions.many': { en: '{count} sessions so far', sv: '{count} pass hittills' },
+  'home.timer': { en: 'Timer', sv: 'Tidtagning' },
+  'home.timerRunning': { en: 'Timer · {time}', sv: 'Tidtagning · {time}' },
 
   // ── Configure ────────────────────────────────────────────────────────
   'configure.title': { en: 'Configure', sv: 'Konfigurera' },
@@ -367,6 +369,12 @@ const strings = {
   'settings.version': { en: 'Version', sv: 'Version' },
   'settings.admin': { en: 'Admin', sv: 'Admin' },
   'settings.replayOnboarding': { en: 'Show intro', sv: 'Visa intro' },
+
+  // ── Timer (count-up stopwatch) ─────────────────────────────────────────
+  'timer.start': { en: 'Start', sv: 'Starta' },
+  'timer.pause': { en: 'Pause', sv: 'Paus' },
+  'timer.resume': { en: 'Resume', sv: 'Fortsätt' },
+  'timer.reset': { en: 'Reset', sv: 'Nollställ' },
 } as const satisfies Record<string, Translation>;
 
 export type StringKey = keyof typeof strings;

@@ -1,7 +1,8 @@
 // ABOUT: Tests for the Home screen — mic button, Configure CTA, sparkline, last-session card, presets.
 
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { useEffect } from 'react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -22,6 +23,7 @@ import { useSession } from '@/lib/auth/session';
 import { apiFetch } from '@/lib/apiFetch';
 import { Home } from './Home';
 import { I18nProvider } from '@/i18n/context';
+import { StopwatchProvider, useStopwatch } from '@/lib/stopwatch/context';
 
 function LocProbe() {
   const loc = useLocation();
@@ -36,13 +38,16 @@ function LocProbe() {
 function renderHome() {
   return render(
     <I18nProvider>
-      <MemoryRouter initialEntries={['/']}>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/configure" element={<div data-testid="config">configure</div>} />
-          <Route path="/run" element={<LocProbe />} />
-        </Routes>
-      </MemoryRouter>
+      <StopwatchProvider>
+        <MemoryRouter initialEntries={['/']}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/configure" element={<div data-testid="config">configure</div>} />
+            <Route path="/timer" element={<div data-testid="timer">timer</div>} />
+            <Route path="/run" element={<LocProbe />} />
+          </Routes>
+        </MemoryRouter>
+      </StopwatchProvider>
     </I18nProvider>,
   );
 }
@@ -59,6 +64,7 @@ describe('Home', () => {
 
   afterEach(() => {
     localStorage.clear();
+    vi.useRealTimers();
   });
 
   it('renders the prompt and mic button', () => {
@@ -71,6 +77,43 @@ describe('Home', () => {
     renderHome();
     await userEvent.click(screen.getByRole('link', { name: /can't use voice/i }));
     expect(screen.getByTestId('config')).toBeInTheDocument();
+  });
+
+  it('Timer link navigates to /timer and shows the plain label while idle', async () => {
+    renderHome();
+    const link = screen.getByRole('link', { name: 'Timer' });
+    expect(link).toBeInTheDocument();
+    await userEvent.click(link);
+    expect(screen.getByTestId('timer')).toBeInTheDocument();
+  });
+
+  it('Timer link shows and advances the running elapsed time while non-idle', () => {
+    function StartsStopwatch() {
+      const { start } = useStopwatch();
+      useEffect(() => start(), [start]);
+      return null;
+    }
+
+    vi.useFakeTimers();
+    render(
+      <I18nProvider>
+        <StopwatchProvider>
+          <StartsStopwatch />
+          <MemoryRouter initialEntries={['/']}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+            </Routes>
+          </MemoryRouter>
+        </StopwatchProvider>
+      </I18nProvider>,
+    );
+
+    expect(screen.getByRole('link', { name: 'Timer · 0:00' })).toBeInTheDocument();
+
+    act(() => vi.advanceTimersByTime(4000));
+    expect(screen.getByRole('link', { name: 'Timer · 0:04' })).toBeInTheDocument();
+
+    vi.useRealTimers();
   });
 
   it('without any history, does not render the last-session card or sparkline', () => {

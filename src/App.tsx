@@ -8,6 +8,7 @@ import { PhoneFrame } from '@/components/PhoneFrame';
 import { I18nProvider } from '@/i18n/context';
 import { SessionProvider } from '@/lib/auth/session';
 import { SettingsProvider } from '@/lib/settings/context';
+import { StopwatchProvider } from '@/lib/stopwatch/context';
 import { Complete } from '@/routes/Complete';
 import { Configure } from '@/routes/Configure';
 import { Home } from '@/routes/Home';
@@ -16,6 +17,7 @@ import { Onboarding, hasSeenOnboarding, markOnboardingSeen } from '@/routes/Onbo
 import { Privacy } from '@/routes/Privacy';
 import { Run } from '@/routes/Run';
 import { Settings } from '@/routes/Settings';
+import { Timer } from '@/routes/Timer';
 
 function HomeOrOnboarding() {
   const [seen, setSeen] = useState(() => hasSeenOnboarding());
@@ -33,17 +35,20 @@ export function App() {
     <I18nProvider>
       <SessionProvider>
         <SettingsProvider>
-          <PhoneFrame>
-            <Routes>
-              <Route path="/" element={<HomeOrOnboarding />} />
-              <Route path="/configure" element={<Configure />} />
-              <Route path="/run" element={<Run />} />
-              <Route path="/complete" element={<Complete />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </PhoneFrame>
+          <StopwatchProvider>
+            <PhoneFrame>
+              <Routes>
+                <Route path="/" element={<HomeOrOnboarding />} />
+                <Route path="/configure" element={<Configure />} />
+                <Route path="/run" element={<Run />} />
+                <Route path="/complete" element={<Complete />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/timer" element={<Timer />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </PhoneFrame>
+          </StopwatchProvider>
         </SettingsProvider>
       </SessionProvider>
     </I18nProvider>

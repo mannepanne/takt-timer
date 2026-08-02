@@ -24,10 +24,10 @@ function runEffects(effects: Effect[]): void {
         prepareAudio();
         break;
       case 'acquireWakeLock':
-        void acquire();
+        void acquire('interval');
         break;
       case 'releaseWakeLock':
-        void release();
+        void release('interval');
         break;
       case 'appendHistory':
         appendHistory(effect.entry);
@@ -122,7 +122,7 @@ export function useTimerMachine(session: Session): TimerApi {
   // Release the wake lock on unmount.
   useEffect(
     () => () => {
-      void release();
+      void release('interval');
     },
     [],
   );
