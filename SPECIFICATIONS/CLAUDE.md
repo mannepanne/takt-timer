@@ -8,7 +8,15 @@ Auto-loaded when working with files in this directory. Forward-looking plans for
 
 - **Numbered phase files** (`01-…md` through `06-…md`) are completed specs, archived in [ARCHIVE/](./ARCHIVE/). All six original web-app phases shipped. Each phase is sequential and self-contained: scope, acceptance criteria, technical approach, testing, PR workflow, risks.
 - **Unnumbered feature specs** sit at the root of this folder while in progress — small post-launch features that don't belong to the original phase sequence. Same "When a phase ships" archiving rule applies once merged and verified in production, e.g. [timer-mode.md](./ARCHIVE/timer-mode.md), shipped and archived.
-- **[07-android-app.md](./07-android-app.md)** is active — a Capacitor-wrapped Android release, sold on Google Play. Independent of the original six web-app phases; does not affect the live web app.
+- **[07-android-app.md](./07-android-app.md)** is active — a Capacitor-wrapped Android release, sold on Google Play. Independent of the original six web-app phases; does not affect the live web app. It's the **umbrella spec** (north star, architecture decisions, cross-cutting criteria, risk register); the implementable detail is split across eight child specs delivered as a sequence of PRs:
+  - [07a-spikes.md](./07a-spikes.md) — keep-awake / lifecycle / speech-recognition go/no-go (runs first)
+  - [07b-capacitor-scaffold.md](./07b-capacitor-scaffold.md) — Capacitor + native build variant
+  - [07c-auth-network-noop.md](./07c-auth-network-noop.md) — auth/network no-op on native
+  - [07d-local-presets.md](./07d-local-presets.md) — device-scoped presets + native creation
+  - [07e-wake-lock-native.md](./07e-wake-lock-native.md) — native keep-awake backing (gated on 07a)
+  - [07f-voice-pipeline.md](./07f-voice-pipeline.md) — on-device recogniser + English parser (gated on 07a)
+  - [07g-back-button-copy.md](./07g-back-button-copy.md) — back button, lifecycle, copy forks
+  - [07h-publishing.md](./07h-publishing.md) — signing, store listing, Play Store publishing (admin track starts day one)
 - **[ORIGINAL_IDEA/project-outline.md](./ORIGINAL_IDEA/project-outline.md)** is the source of truth for _what_ Takt is and _why_. Phase specs reference it but don't duplicate it.
 - **[prototype-design-files/](./prototype-design-files/)** holds the Claude Design prototype — the visual and interaction reference for v1.
 - **[ARCHIVE/](./ARCHIVE/)** receives phase files after they ship. Move them here once the PR is merged and the features are verified in production.
@@ -22,7 +30,7 @@ Before making an architectural decision that outlasts today's PR, consult [../RE
 
 Full product vision: [ORIGINAL_IDEA/project-outline.md](./ORIGINAL_IDEA/project-outline.md).
 
-**Current phase:** The original six web-app phases are complete and live, with small post-launch features (e.g. [timer-mode.md](./ARCHIVE/timer-mode.md)) shipping as unnumbered specs. [Phase 7](./07-android-app.md) — an Android app sold on Google Play — is in spec review.
+**Current phase:** The original six web-app phases are complete and live, with small post-launch features (e.g. [timer-mode.md](./ARCHIVE/timer-mode.md)) shipping as unnumbered specs. [Phase 7](./07-android-app.md) — an Android app sold on Google Play — is spec-approved and broken into eight child deliverables (`07a`–`07h`), ready to implement starting with the `07a` spikes.
 
 **Live deployment:** https://takt.hultberg.org — all six web-app phases live.
 
