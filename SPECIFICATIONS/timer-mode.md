@@ -8,7 +8,7 @@ Takt's interval timer assumes every phase has a known duration set in advance. T
 
 A second, independent mode: **Timer** — a simple count-up stopwatch, reachable from Home and back. Large digits (readable from across a room — phone face-up on the floor), a circular ring showing progress towards a full hour (wrapping every 3600s), and three controls: Start, Pause/Resume, Reset.
 
-It deliberately does not track, save, or sync anything — no history entry, no preset, no accounts tie-in, no voice. It's the simplest possible implementation of a basic timer, on purpose.
+It deliberately does not track exercise data or sync anything — no history entry, no preset, no accounts tie-in, no voice. The one thing it does keep is its own phase and elapsed time, on-device, so it survives a reload (see Behaviour and Architecture, below). Beyond that, it's the simplest possible implementation of a basic timer, on purpose.
 
 ### Out of scope
 
@@ -27,7 +27,8 @@ It deliberately does not track, save, or sync anything — no history entry, no 
 - **Ring:** one full revolution = 3600 seconds. Past 60:00 the ring wraps and starts a new revolution while the digit display keeps counting up normally (61:15, 62:00, …). At typical rehab set lengths (well under a minute) the ring will barely move on any single set — that's accepted as-is; it's meant to give a sense of accumulated time across a longer session, not per-set progress, and matches the reference design this was based on.
 - **Navigating away and back:** the timer keeps running (or stays paused, exactly as left) while you're on another screen, and picks up correctly when you return to `/timer`. Confirmed as an intentional requirement, not an assumption: navigating away mid-count (or mid-pause) and having it still be correct on return is the point of lifting this above the route — see Architecture, below.
 - **Home indicator:** the Home screen's "Timer" link shows the running elapsed time once the stopwatch is non-idle (e.g. "Timer · 4:32"), so there's a visible reason the screen is staying awake even while you're not on `/timer`. Reverts to plain "Timer" once reset back to idle.
-- **Reload / app restart:** the stopwatch resumes exactly where it was left — running, paused, or idle — with elapsed computed from real wall-clock time, the same way it already handles the app being backgrounded and foregrounded. This is persisted to `localStorage` (see Architecture, below), added after production use showed a silent reset on reload was a real, felt gap rather than a theoretical one. No staleness cutoff: a stopwatch left running or paused for hours resumes correctly, consistent with how it already behaves across a background/foreground cycle.
+- **Reload / app restart:** the stopwatch resumes exactly where it was left — running, paused, or idle — with elapsed computed from real wall-clock time, the same way it already handles the app being backgrounded and foregrounded. Persisted to `localStorage` (see Architecture, below). No staleness cutoff: a stopwatch left running or paused for hours resumes correctly, consistent with how it already behaves across a background/foreground cycle.
+- **No cross-tab sync:** two tabs both on `/timer` don't see each other's transitions until a reload — the last tab to persist wins. Not a stated requirement; consistent with this feature's overall minimalism.
 - **Concurrency with the interval timer:** the two are fully independent. Starting or running an interval session on `/run` while the stopwatch is running (or vice versa) has no effect on the other — both may be active at once, and each holds/releases the shared wake lock correctly regardless of what the other is doing (see Architecture).
 
 ## Architecture
@@ -62,7 +63,7 @@ New module, `src/lib/stopwatch/` (named distinctly from `src/lib/timer/`, which 
 
 ### State lives above the route, not inside it
 
-`useTimerMachine` (interval) is only ever called from `Run.tsx` — its state dies when you navigate away, which is fine because the product has always assumed you stay on that screen for the whole session. This feature needs the opposite behaviour, confirmed as an explicit requirement (see Behaviour, above), so the machine can't live inside `Timer.tsx`; it lives at the same level as `SessionProvider` / `SettingsProvider` / `I18nProvider` in `src/App.tsx`, so it survives route changes and only resets on a real reload.
+`useTimerMachine` (interval) is only ever called from `Run.tsx` — its state dies when you navigate away, which is fine because the product has always assumed you stay on that screen for the whole session. This feature needs the opposite behaviour, confirmed as an explicit requirement (see Behaviour, above), so the machine can't live inside `Timer.tsx`; it lives at the same level as `SessionProvider` / `SettingsProvider` / `I18nProvider` in `src/App.tsx`, so it survives route changes. It also survives a full reload or browser restart — see "Persistence," below.
 
 `StopwatchProvider` is mounted in `App.tsx` alongside the existing providers.
 

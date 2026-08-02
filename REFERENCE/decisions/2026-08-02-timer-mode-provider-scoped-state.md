@@ -24,7 +24,7 @@ Rep-based exercises don't have a fixed work duration — you do reps until you'r
 
 ## Reasoning
 
-The requirement is specifically "outlives a route change, not a page reload." That's precisely what mounting a provider above `<Routes>` gives for free: React keeps the provider (and everything in its state) alive across any navigation handled by the router, and the browser discards it on an actual reload — same lifetime as `SessionProvider` already has today. No new persistence layer, no rehydration logic, no risk of a timer silently surviving longer than intended.
+As scoped at the time, the requirement was specifically "outlives a route change, not a page reload." That's precisely what mounting a provider above `<Routes>` gives for free: React keeps the provider (and everything in its state) alive across any navigation handled by the router, and the browser discards it on an actual reload — same lifetime as `SessionProvider` already has today. No new persistence layer, no rehydration logic, no risk of a timer silently surviving longer than intended, as scoped at the time — see the Addendum for how that scope changed.
 
 ## Trade-offs accepted
 
@@ -63,6 +63,8 @@ This turned out not to be free: `src/lib/wakeLock.ts` was a single-owner singlet
 **No staleness cutoff.** A stopwatch left running or paused for hours or days resumes exactly as it was, with elapsed computed from real wall-clock time — consistent with how a background/foreground cycle already behaves, and simpler than adding an arbitrary cutoff with no product requirement behind it.
 
 **On rehydrating a `running` state:** the wake lock isn't restored automatically — a reload is a fresh JS context, so no lock is held even though the rehydrated phase says `running`. `useStopwatchMachine` re-acquires it explicitly on mount when the rehydrated phase is `running`.
+
+**This combines with "no staleness cutoff" in a way worth stating explicitly, not leaving implicit.** `StopwatchProvider` mounts in `App.tsx`, so the rehydrate-and-reacquire above runs on every app load, on any route — not only when the user opens `/timer`. A stopwatch left `running` and forgotten days ago will silently re-request the screen wake lock the next time the app is opened at all, even for something unrelated like Settings. Accepted: the Home "Timer · 4:32" indicator already exists for exactly this reason (see the spec's Behaviour section), so the stale state isn't invisible, and reset always clears it. But this is a deliberate combination of two separate decisions, not an accident, and a future reader should know that.
 
 **This does put timer state in `localStorage`**, unlike everything else this feature deliberately keeps in-memory-only (no history entry, no preset, no accounts tie-in). It remains consistent with the project's "no personal data stored" rule — a phase, a duration, and a timestamp identify nothing about the user — but it is now genuinely persisted data, not merely provider-scoped React state, and a future reader should not assume otherwise.
 

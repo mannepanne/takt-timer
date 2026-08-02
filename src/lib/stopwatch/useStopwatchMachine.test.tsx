@@ -163,9 +163,16 @@ describe('useStopwatchMachine', () => {
       expect(acquireSpy).toHaveBeenCalledWith('stopwatch');
     });
 
-    it('does not acquire the wake lock on mount when the rehydrated phase is paused or idle', () => {
+    it('does not acquire the wake lock on mount when the rehydrated phase is paused', () => {
       const acquireSpy = vi.spyOn(wakeLock, 'acquire').mockResolvedValue();
       persistState({ phase: 'paused', accumulatedMs: 1000, startedAtMs: null });
+      renderHook(() => useStopwatchMachine());
+      expect(acquireSpy).not.toHaveBeenCalled();
+    });
+
+    it('does not acquire the wake lock on mount when the rehydrated phase is idle', () => {
+      const acquireSpy = vi.spyOn(wakeLock, 'acquire').mockResolvedValue();
+      persistState({ phase: 'idle', accumulatedMs: 0, startedAtMs: null });
       renderHook(() => useStopwatchMachine());
       expect(acquireSpy).not.toHaveBeenCalled();
     });
