@@ -73,4 +73,4 @@ This turned out not to be free: `src/lib/wakeLock.ts` was a single-owner singlet
 ## References
 
 - Related ADRs: [2026-04-19-reducer-plus-effects-pattern.md](./2026-04-19-reducer-plus-effects-pattern.md) — the reducer/effects shape this new machine still follows, even though its lifetime tier differs.
-- Phase spec: [SPECIFICATIONS/timer-mode.md](../../SPECIFICATIONS/timer-mode.md)
+- Phase spec: [SPECIFICATIONS/ARCHIVE/timer-mode.md](../../SPECIFICATIONS/ARCHIVE/timer-mode.md)

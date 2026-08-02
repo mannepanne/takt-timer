@@ -56,7 +56,7 @@ Development is organised into six sequential phases. Each phase has its own spec
 5. ~~[05-i18n-settings-onboarding.md](./SPECIFICATIONS/ARCHIVE/05-i18n-settings-onboarding.md)~~ — ✅ complete, archived
 6. ~~[06-admin-and-launch.md](./SPECIFICATIONS/ARCHIVE/06-admin-and-launch.md)~~ — ✅ complete, archived
 
-**Post-launch feature work:** once all six phases are live, further features get their own spec in [SPECIFICATIONS/](./SPECIFICATIONS/), outside the numbered sequence — e.g. [timer-mode.md](./SPECIFICATIONS/timer-mode.md) (count-up stopwatch for rep-based exercises; see [ADR 2026-08-02](./REFERENCE/decisions/2026-08-02-timer-mode-provider-scoped-state.md)).
+**Post-launch feature work:** once all six phases are live, further features get their own spec in [SPECIFICATIONS/](./SPECIFICATIONS/), outside the numbered sequence — e.g. [timer-mode.md](./SPECIFICATIONS/ARCHIVE/timer-mode.md) (count-up stopwatch for rep-based exercises, shipped and archived; see [ADR 2026-08-02](./REFERENCE/decisions/2026-08-02-timer-mode-provider-scoped-state.md)).
 
 **Current phase:** All six numbered phases complete; Takt is live and now receives post-launch feature work (see above).
 
