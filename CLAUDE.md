@@ -55,10 +55,11 @@ Development is organised into six sequential phases. Each phase has its own spec
 4. ~~[04-accounts-and-presets.md](./SPECIFICATIONS/ARCHIVE/04-accounts-and-presets.md)~~ — ✅ complete, archived
 5. ~~[05-i18n-settings-onboarding.md](./SPECIFICATIONS/ARCHIVE/05-i18n-settings-onboarding.md)~~ — ✅ complete, archived
 6. ~~[06-admin-and-launch.md](./SPECIFICATIONS/ARCHIVE/06-admin-and-launch.md)~~ — ✅ complete, archived
+7. [07-android-app.md](./SPECIFICATIONS/07-android-app.md) — 🚧 in spec review — Android app via Capacitor, sold on Google Play, device-scoped presets/usage, no accounts
 
 **Post-launch feature work:** once all six phases are live, further features get their own spec in [SPECIFICATIONS/](./SPECIFICATIONS/), outside the numbered sequence, while in progress. Once shipped and verified, it's archived like any other spec — e.g. [timer-mode.md](./SPECIFICATIONS/ARCHIVE/timer-mode.md) (count-up stopwatch for rep-based exercises; see [ADR 2026-08-02](./REFERENCE/decisions/2026-08-02-timer-mode-provider-scoped-state.md)).
 
-**Current phase:** All six numbered phases complete; Takt is live and now receives post-launch feature work (see above).
+**Current phase:** The original six web-app phases are complete and live, and small post-launch features ship as unnumbered specs (see above). The next larger effort — Phase 7, an Android app via Capacitor — is in spec review.
 
 **Live at:** https://takt.hultberg.org — beta version launched.
 
