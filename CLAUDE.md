@@ -43,7 +43,7 @@ Built for Magnus's rehab training, released to the world because the problem —
 - Cloudflare Access with Magnus's existing Google IdP policy — admin gate.
 - Cloudflare Web Analytics — traffic visibility.
 
-**Current status:** All phases complete. Takt is live at https://takt.hultberg.org.
+**Current status:** All six numbered phases complete; Takt is live at https://takt.hultberg.org and now receives post-launch feature work on top (see "Implementation phases" below).
 
 ## Implementation phases
 
@@ -56,7 +56,9 @@ Development is organised into six sequential phases. Each phase has its own spec
 5. ~~[05-i18n-settings-onboarding.md](./SPECIFICATIONS/ARCHIVE/05-i18n-settings-onboarding.md)~~ — ✅ complete, archived
 6. ~~[06-admin-and-launch.md](./SPECIFICATIONS/ARCHIVE/06-admin-and-launch.md)~~ — ✅ complete, archived
 
-**Current phase:** All phases complete. Takt is live.
+**Post-launch feature work:** once all six phases are live, further features get their own spec in [SPECIFICATIONS/](./SPECIFICATIONS/), outside the numbered sequence — e.g. [timer-mode.md](./SPECIFICATIONS/timer-mode.md) (count-up stopwatch for rep-based exercises; see [ADR 2026-08-02](./REFERENCE/decisions/2026-08-02-timer-mode-provider-scoped-state.md)).
+
+**Current phase:** All six numbered phases complete; Takt is live and now receives post-launch feature work (see above).
 
 **Live at:** https://takt.hultberg.org — beta version launched.
 

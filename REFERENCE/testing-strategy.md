@@ -159,6 +159,8 @@ export function mockWorkersAI(overrides?: { whisper?: string; llama?: unknown })
 }
 ```
 
+`src/test-utils/setup.ts` also runs a global `beforeEach(() => __resetWakeLockForTest())`, since `wakeLock.ts`'s owner-keyed module state otherwise leaks across tests within the same file. No per-file setup needed — it applies to the whole suite.
+
 ---
 
 ## Coverage expectations per area

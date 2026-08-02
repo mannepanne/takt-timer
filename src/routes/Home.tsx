@@ -13,7 +13,9 @@ import { TopBar } from '@/components/TopBar';
 import { useI18n } from '@/i18n/context';
 import { useSession } from '@/lib/auth/session';
 import { apiFetch } from '@/lib/apiFetch';
+import { fmtTime } from '@/lib/format';
 import { readHistory } from '@/lib/history';
+import { useElapsedMs, useStopwatch } from '@/lib/stopwatch/context';
 import type { CompletedSession } from '@/lib/timer/types';
 
 type SessionRow = {
@@ -41,6 +43,8 @@ export function Home() {
   const [presetsOpen, setPresetsOpen] = useState(false);
   const navigate = useNavigate();
   const { session: authSession } = useSession();
+  const { phase: stopwatchPhase } = useStopwatch();
+  const stopwatchElapsedMs = useElapsedMs(1000);
 
   const isAuthenticated = authSession.status === 'authenticated';
 
@@ -77,6 +81,11 @@ export function Home() {
 
   const sessionCountLabel =
     sessionCount === 1 ? t('home.sessions.one') : t('home.sessions.many', { count: sessionCount });
+
+  const timerLabel =
+    stopwatchPhase === 'idle'
+      ? t('home.timer')
+      : t('home.timerRunning', { time: fmtTime(stopwatchElapsedMs / 1000) });
 
   return (
     <div className="screen">
@@ -128,6 +137,9 @@ export function Home() {
       <div className="home-cta-row">
         <Link to="/configure" className="btn btn-ghost">
           {t('home.configure')}
+        </Link>
+        <Link to="/timer" className="btn btn-ghost">
+          {timerLabel}
         </Link>
       </div>
 

@@ -902,9 +902,13 @@ button.settings-link {
   letter-spacing: 0.2px;
 }
 .home-cta-row {
-  display: flex;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
   padding: 0 24px 12px;
+}
+.home-cta-row .btn {
+  width: 100%;
 }
 
 /* ───────── Mic button ───────── */
@@ -1888,6 +1892,39 @@ button.settings-link {
   color: var(--accent);
 }
 
+/* ───────── Timer (count-up stopwatch) ───────── */
+.timer-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.timer-ring-wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+.progress-ring-track {
+  stroke: var(--paper-2);
+}
+.progress-ring-fill {
+  stroke: var(--accent);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 200ms linear;
+}
+.timer-digits {
+  position: absolute;
+  font-size: 44px;
+  font-weight: 300;
+}
+.timer-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 0 28px 40px;
+}
+
 /* ───────── Reduced motion ───────── */
 @media (prefers-reduced-motion: reduce) {
   .mic-pulse-ring,
@@ -1902,6 +1939,9 @@ button.settings-link {
   .fade-enter-active,
   .timer-display.fade-enter-active {
     animation: none !important;
+    transition: none !important;
+  }
+  .progress-ring-fill {
     transition: none !important;
   }
 }
