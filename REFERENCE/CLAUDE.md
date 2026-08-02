@@ -16,6 +16,12 @@ Complete testing philosophy, framework setup (Vitest), test categories, coverage
 
 Cloudflare account setup, Wrangler commands, resource bindings (Worker, D1, KV, Workers AI, Access, Web Analytics), and the small set of application secrets (WebAuthn config, session cookie secret).
 
+### [android-app.md](./android-app.md)
+
+**When to read:** Starting the Phase 7 Play Store admin track (developer account, merchant profile, testers), setting up the local Android toolchain (JDK, Android Studio, SDK, `adb`, phone USB debugging), or — later — the signed-AAB build/release process.
+
+Living doc. Currently: the Play Console admin track (the 14-day closed-testing critical path) and the macOS Android dev-environment setup that unblocks the `07a` spikes. Build/release and the local voice parser grammar get added as the `07a`–`07h` deliverables land.
+
 ### [troubleshooting.md](./troubleshooting.md)
 
 **When to read:** Debugging issues, fixing deployment problems, or resolving API integration errors.
