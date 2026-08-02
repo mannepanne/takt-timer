@@ -14,7 +14,7 @@ It deliberately does not track, save, or sync anything — no history entry, no 
 
 - Any chaining into a rest countdown, set counting, or anything resembling the interval timer's session model — see Problem, above.
 - Voice-driven start ("start a stopwatch") — manual controls only.
-- Any persistence beyond the current in-memory session (no localStorage, no D1, no history list entry).
+- Any persistence beyond `localStorage` for the stopwatch's own phase/elapsed state (see Behaviour and Architecture, below) — no D1, no history list entry, no accounts tie-in.
 - Sound or haptic feedback — this screen is silent, unlike Run's beeps/haptics.
 - Platform-specific packaging concerns (e.g. a future native wrapper). This feature makes no network calls and needs no special-casing for any platform it might run on — nothing here depends on how the app happens to be packaged.
 
@@ -25,9 +25,9 @@ It deliberately does not track, save, or sync anything — no history entry, no 
 - **Resume:** continues from exactly where it paused (not from 0).
 - **Reset:** stops and zeroes, from any state (running, paused, or idle) — always available, always means "start over." Uses `Icon.Refresh`, not `Icon.Stop`, so it doesn't read as a record/stop button.
 - **Ring:** one full revolution = 3600 seconds. Past 60:00 the ring wraps and starts a new revolution while the digit display keeps counting up normally (61:15, 62:00, …). At typical rehab set lengths (well under a minute) the ring will barely move on any single set — that's accepted as-is; it's meant to give a sense of accumulated time across a longer session, not per-set progress, and matches the reference design this was based on.
-- **Navigating away and back:** the timer keeps running (or stays paused, exactly as left) while you're on another screen, and picks up correctly when you return to `/timer`. This is the one place this feature deviates from "tracks nothing" — it's not persisted to storage, just kept alive in memory for the length of the app session, the same way Settings or auth state already is. Confirmed as an intentional requirement, not an assumption: navigating away mid-count (or mid-pause) and having it still be correct on return is the point of lifting this above the route — see Architecture, below.
+- **Navigating away and back:** the timer keeps running (or stays paused, exactly as left) while you're on another screen, and picks up correctly when you return to `/timer`. Confirmed as an intentional requirement, not an assumption: navigating away mid-count (or mid-pause) and having it still be correct on return is the point of lifting this above the route — see Architecture, below.
 - **Home indicator:** the Home screen's "Timer" link shows the running elapsed time once the stopwatch is non-idle (e.g. "Timer · 4:32"), so there's a visible reason the screen is staying awake even while you're not on `/timer`. Reverts to plain "Timer" once reset back to idle.
-- **Reload / app restart:** state is gone, same as any other in-memory state in this app. Not handled as a special case — nothing here is meant to be durable.
+- **Reload / app restart:** the stopwatch resumes exactly where it was left — running, paused, or idle — with elapsed computed from real wall-clock time, the same way it already handles the app being backgrounded and foregrounded. This is persisted to `localStorage` (see Architecture, below), added after production use showed a silent reset on reload was a real, felt gap rather than a theoretical one. No staleness cutoff: a stopwatch left running or paused for hours resumes correctly, consistent with how it already behaves across a background/foreground cycle.
 - **Concurrency with the interval timer:** the two are fully independent. Starting or running an interval session on `/run` while the stopwatch is running (or vice versa) has no effect on the other — both may be active at once, and each holds/releases the shared wake lock correctly regardless of what the other is doing (see Architecture).
 
 ## Architecture
@@ -54,7 +54,8 @@ New module, `src/lib/stopwatch/` (named distinctly from `src/lib/timer/`, which 
 
   - **Does not mirror `useTimerMachine`'s `visibilitychange`/bfcache handling as _state_ transitions.** That hook dispatches `visibilityHidden` (pausing the machine) and hard-stops on bfcache restore — both correct for a session you're expected to stay on-screen for, both wrong here, since this machine is explicitly meant to keep running while backgrounded. It has no visibility-driven _state_ logic at all. It does, however, need a visibility-driven **wake-lock** reacquire — see "Wake lock: shared and owner-keyed," below; that listener calls `reacquireIfNeeded()` only and dispatches nothing to the reducer.
 
-- `useStopwatchMachine.ts` — internal hook (not exported outside this module) wrapping the reducer: runs the effect runner (wake-lock acquire/release, owner-keyed — see below) and owns the visibility-reacquire listener. No rAF loop here; nothing at this tier needs to force a render on a timer, because reducer-driven phase transitions already trigger React's own re-render.
+- `persistence.ts` — `readPersistedState()` / `persistState(state)`, a `localStorage`-backed pair matching `src/lib/history.ts`'s defensive-parsing shape (missing key, malformed JSON, or a shape that doesn't type-check as `MachineState` all fall back to `null`, never a thrown error). Key: `takt.stopwatch.v1`. See "Persistence: survives a reload, not just navigation," below.
+- `useStopwatchMachine.ts` — internal hook (not exported outside this module) wrapping the reducer: runs the effect runner (wake-lock acquire/release, owner-keyed — see below) and owns the visibility-reacquire listener. No rAF loop here; nothing at this tier needs to force a render on a timer, because reducer-driven phase transitions already trigger React's own re-render. Initialises state from `readPersistedState() ?? initial()`, and calls `persistState()` after every transition.
 - `context.tsx` — `StopwatchProvider` mounts `useStopwatchMachine` once; exports two public hooks:
   - `useStopwatch()` — `{ phase, start, pause, resume, reset, getElapsedMs }`. `getElapsedMs()` is a plain function, not a reactive value — it computes the current elapsed on demand from the machine's internal timestamps. The provider itself never re-renders on a clock tick (see "Render cadence lives in the route," below).
   - `useElapsedMs(intervalMs: number)` — a small polling hook built on top of `getElapsedMs()`: holds a local `useState<number>`, re-reads and updates it every `intervalMs` while `phase === 'running'`, and returns the current value reactively. Both `Timer.tsx` (at ~200ms, since the ring needs smoother motion) and the Home indicator (at ~1000ms, since it only displays whole seconds) use this rather than each hand-rolling their own polling loop — one written-once implementation instead of two, so neither consumer can forget to poll and ship a label frozen at mount time.
@@ -66,6 +67,16 @@ New module, `src/lib/stopwatch/` (named distinctly from `src/lib/timer/`, which 
 `StopwatchProvider` is mounted in `App.tsx` alongside the existing providers.
 
 **This is a new pattern for this codebase** — every existing state machine here is route-scoped; this is the first one lifted above the router specifically so it outlives navigation. Documented in [ADR 2026-08-02](../REFERENCE/decisions/2026-08-02-timer-mode-provider-scoped-state.md).
+
+### Persistence: survives a reload, not just navigation
+
+Provider-scoped state alone only survives navigation — an actual page reload creates a fresh React tree, so `StopwatchProvider` would otherwise always mount `idle`. `persistState()` writes `{ phase, accumulatedMs, startedAtMs }` to `localStorage` after every reducer transition; `useStopwatchMachine` reads it back on mount instead of always calling `initial()`.
+
+This needs no new derivation logic and carries no drift risk: `accumulatedMs`/`startedAtMs` are the same wall-clock values the reducer already treats elapsed as being derived from (see `elapsedMs()` above), so reading them back after a reload computes elapsed exactly the same way it already does after the app being backgrounded and foregrounded.
+
+**Wake lock on rehydrate.** A reload is a fresh JS context — no platform wake lock is held even if the rehydrated phase is `running`. `useStopwatchMachine` re-acquires it explicitly on mount when the rehydrated phase is `running`, rather than waiting for a phase transition that won't happen until the user next interacts with the controls.
+
+Full reasoning and alternatives: [ADR 2026-08-02, Addendum](../REFERENCE/decisions/2026-08-02-timer-mode-provider-scoped-state.md#addendum-localstorage-persistence-for-reloadrestart-survival).
 
 ### Render cadence lives in the route, not the provider
 
@@ -119,8 +130,10 @@ No new code needed — verified, not assumed. Cloudflare Web Analytics [document
 | `src/lib/stopwatch/types.ts`                        | New — state/event/effect types                                                                                                                                                                                                                    |
 | `src/lib/stopwatch/machine.ts`                      | New — pure reducer (clamped, no `tick`)                                                                                                                                                                                                           |
 | `src/lib/stopwatch/machine.test.ts`                 | New — full event×state matrix, wrap-at-3600s, clamp-at-zero on a simulated backwards clock step                                                                                                                                                   |
-| `src/lib/stopwatch/useStopwatchMachine.ts`          | New — internal hook (effect runner, visibility-reacquire listener)                                                                                                                                                                                |
-| `src/lib/stopwatch/useStopwatchMachine.test.tsx`    | New — incl. simulated backgrounding gap via `vi.useFakeTimers()`/`vi.setSystemTime()`                                                                                                                                                             |
+| `src/lib/stopwatch/persistence.ts`                  | New — `readPersistedState()`/`persistState()`, `localStorage`-backed, `takt.stopwatch.v1`                                                                                                                                                         |
+| `src/lib/stopwatch/persistence.test.ts`             | New — round-trips each phase, missing key, malformed JSON, and a shape that fails validation all fall back to `null`                                                                                                                              |
+| `src/lib/stopwatch/useStopwatchMachine.ts`          | New — internal hook (effect runner, visibility-reacquire listener, rehydrate on mount, persist on transition, wake-lock re-acquire when rehydrated `running`)                                                                                     |
+| `src/lib/stopwatch/useStopwatchMachine.test.tsx`    | New — incl. simulated backgrounding gap via `vi.useFakeTimers()`/`vi.setSystemTime()`, and rehydrating each phase from `localStorage`                                                                                                             |
 | `src/lib/stopwatch/context.tsx`                     | New — `StopwatchProvider` / `useStopwatch()` / `useElapsedMs(intervalMs)`                                                                                                                                                                         |
 | `src/lib/wakeLock.ts`                               | Owner-keyed `acquire`/`release` (`Set<string>` of owners) instead of a single `wantsLock` boolean; `reacquireIfNeeded()` gains an in-flight guard; `__resetWakeLockForTest()` updated to clear the owner set too, not just `sentinel`/`wantsLock` |
 | `src/lib/wakeLock.test.ts`                          | Update — cover multiple concurrent owners, one releasing while another still holds, and concurrent `reacquireIfNeeded()` calls not double-requesting                                                                                              |
@@ -151,7 +164,10 @@ No new code needed — verified, not assumed. Cloudflare Web Analytics [document
 - [ ] Real device check, same scenario: the screen is still held awake after unlocking (wake lock was correctly reacquired on visibility-visible).
 - [ ] Starting and completing (or leaving) an interval session on `/run` while the stopwatch is running does not release the stopwatch's wake lock, and the stopwatch keeps running correctly throughout.
 - [ ] Past 60:00 the ring wraps to a new revolution; digits keep counting normally past 60:00.
-- [ ] A full page reload resets to 0:00 idle (no persistence).
+- [ ] A full page reload while running resumes counting from the correct elapsed time (not reset to 0:00), and the wake lock is held again after reload.
+- [ ] A full page reload while paused resumes frozen at the correct paused elapsed time.
+- [ ] A full page reload while idle stays idle at 0:00.
+- [ ] Resetting, then reloading, stays idle at 0:00 (a stale running/paused state doesn't resurrect after an explicit reset).
 - [ ] All new UI strings exist in English and Swedish.
 - [ ] The existing interval timer's behaviour is unchanged (an interval session run on its own, without ever starting the stopwatch, is indistinguishable from today).
 - [ ] New modules (`src/lib/stopwatch/`, `ProgressRing`, `Timer.tsx`) are covered by tests exercising more than the happy path — the full event×state matrix, the wrap boundary, and the clock-goes-backwards clamp are not optional given the project's coverage floors.

@@ -13,6 +13,7 @@ describe('useStopwatch', () => {
   afterEach(() => {
     vi.restoreAllMocks();
     vi.useRealTimers();
+    localStorage.clear();
   });
 
   it('throws when used outside StopwatchProvider', () => {
@@ -37,6 +38,7 @@ describe('useElapsedMs', () => {
   afterEach(() => {
     vi.restoreAllMocks();
     vi.useRealTimers();
+    localStorage.clear();
   });
 
   it('is 0 before the stopwatch starts', () => {

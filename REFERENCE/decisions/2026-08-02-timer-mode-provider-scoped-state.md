@@ -7,7 +7,7 @@
 
 ## Decision
 
-The Timer feature's count-up state machine (`src/lib/stopwatch/`) is instantiated in a `StopwatchProvider` mounted in `src/App.tsx` alongside `SessionProvider` / `SettingsProvider` / `I18nProvider` — not inside `src/routes/Timer.tsx`. This means its state (running, paused, elapsed time) survives navigating away from `/timer` and back, for the lifetime of the app session (reset only on a full reload). Every other timer-like state machine in this codebase (`useTimerMachine`, backing the interval timer in `Run.tsx`) is instantiated inside its own route and dies when that route unmounts.
+The Timer feature's count-up state machine (`src/lib/stopwatch/`) is instantiated in a `StopwatchProvider` mounted in `src/App.tsx` alongside `SessionProvider` / `SettingsProvider` / `I18nProvider` — not inside `src/routes/Timer.tsx`. This means its state (running, paused, elapsed time) survives navigating away from `/timer` and back. It also survives a full page reload or browser restart, via a `localStorage` persistence layer added after production use — see "Addendum," below. Every other timer-like state machine in this codebase (`useTimerMachine`, backing the interval timer in `Run.tsx`) is instantiated inside its own route and dies when that route unmounts.
 
 ## Context
 
@@ -18,8 +18,9 @@ Rep-based exercises don't have a fixed work duration — you do reps until you'r
 - **Keep it route-scoped, like the interval timer.** Instantiate the machine inside `Timer.tsx` with `useState`/a local reducer, same shape as `useTimerMachine` inside `Run.tsx`.
   - Why not: fails the actual requirement outright. The state is destroyed the moment `Timer.tsx` unmounts on navigation, so "keep running while I check something on Home" simply doesn't work.
 - **Persist to `localStorage` / `sessionStorage` on every tick, rehydrate on mount.** Survives navigation and even a reload.
-  - Why not: over-solves the problem and reintroduces exactly the kind of persistence this feature deliberately avoids everywhere else (no history entry, no saved state, nothing durable). It would also need explicit clearing logic to avoid a stale "still running" timer resurrecting itself after the user meant to be done with it. The product requirement is "survives navigation," not "survives closing the app."
-  - **Chosen: Lift the machine into an app-level context provider**, same tier as the existing auth/settings/i18n providers, so it lives exactly as long as the page does — no more, no less.
+  - Why not, at the time: over-solves the problem and reintroduces exactly the kind of persistence this feature deliberately avoids everywhere else (no history entry, no saved state, nothing durable). It would also need explicit clearing logic to avoid a stale "still running" timer resurrecting itself after the user meant to be done with it. The product requirement as scoped was "survives navigation," not "survives closing the app."
+  - **Revisited after production use — see "Addendum," below.** Reload silently resetting a running or paused stopwatch turned out to be a real, felt gap once someone actually used the feature, not merely a theoretical one. The provider-scoped decision below still stands; only this rejection is superseded.
+  - **Chosen (at the time): Lift the machine into an app-level context provider**, same tier as the existing auth/settings/i18n providers, so it lives exactly as long as the page does — no more, no less.
 
 ## Reasoning
 
@@ -46,6 +47,24 @@ This turned out not to be free: `src/lib/wakeLock.ts` was a single-owner singlet
 
 - Doesn't change how the interval timer _behaves_, but does require a small, real change to `useTimerMachine.ts`'s two wake-lock call sites (passing an owner key) as part of making `wakeLock.ts` support more than one concurrent caller — see the wake-lock trade-off above. `Run.tsx` itself is untouched.
 - Two lifetime patterns now coexist (route-scoped and provider-scoped state), so precedent-searching (per this repo's ADR process) matters more than usual before adding a third state machine anywhere in the app.
+
+---
+
+## Addendum: localStorage persistence for reload/restart survival
+
+**Decision:** `src/lib/stopwatch/persistence.ts` writes `{ phase, accumulatedMs, startedAtMs }` to `localStorage` (`takt.stopwatch.v1`) on every reducer transition (start/pause/resume/reset), and `StopwatchProvider` rehydrates from it on mount instead of always starting `idle`. This survives not just navigation but a full page reload and closing/reopening the browser entirely.
+
+**Context:** the provider-scoped design above solved "survives navigation" as scoped. In production use, a full reload while the stopwatch was running or paused silently reset it to `0:00` — surprising and unwelcome in practice, not merely a theoretical gap.
+
+**Why this doesn't conflict with the reducer's timestamp-derived design:** `accumulatedMs`/`startedAtMs` are the same values the reducer already holds and already treats as wall-clock timestamps (see `elapsedMs()` in `src/lib/stopwatch/types.ts`). Persisting and rehydrating them verbatim needs no new derivation logic and carries no drift risk — elapsed after a reload is computed exactly the same way elapsed after a background/foreground cycle already is.
+
+**`localStorage` over `sessionStorage`:** chosen deliberately over the narrower option (survives reload, not closing the browser) — the product now wants the stopwatch to resume exactly where left even after fully restarting the browser, not just across a same-tab reload.
+
+**No staleness cutoff.** A stopwatch left running or paused for hours or days resumes exactly as it was, with elapsed computed from real wall-clock time — consistent with how a background/foreground cycle already behaves, and simpler than adding an arbitrary cutoff with no product requirement behind it.
+
+**On rehydrating a `running` state:** the wake lock isn't restored automatically — a reload is a fresh JS context, so no lock is held even though the rehydrated phase says `running`. `useStopwatchMachine` re-acquires it explicitly on mount when the rehydrated phase is `running`.
+
+**This does put timer state in `localStorage`**, unlike everything else this feature deliberately keeps in-memory-only (no history entry, no preset, no accounts tie-in). It remains consistent with the project's "no personal data stored" rule — a phase, a duration, and a timestamp identify nothing about the user — but it is now genuinely persisted data, not merely provider-scoped React state, and a future reader should not assume otherwise.
 
 ---
 
