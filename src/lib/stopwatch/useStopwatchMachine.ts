@@ -1,13 +1,15 @@
 // ABOUT: React hook wrapping the pure stopwatch reducer with an effect runner.
 // ABOUT: No rAF loop here — reducer-driven phase transitions already trigger React's
 // ABOUT: own re-render; live elapsed reads happen via useElapsedMs, at whichever
-// ABOUT: cadence the consuming screen needs.
+// ABOUT: cadence the consuming screen needs. Rehydrates from localStorage on mount so
+// ABOUT: the stopwatch survives a page reload, not just navigating within the app.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { acquire, reacquireIfNeeded, release } from '@/lib/wakeLock';
 
 import { elapsedMs, initial, step } from './machine';
+import { persistState, readPersistedState } from './persistence';
 import type { Effect, MachineEvent, MachineState } from './types';
 
 const WAKE_LOCK_OWNER = 'stopwatch';
@@ -35,7 +37,7 @@ export type StopwatchMachineApi = {
 };
 
 export function useStopwatchMachine(): StopwatchMachineApi {
-  const [state, setState] = useState<MachineState>(() => initial());
+  const [state, setState] = useState<MachineState>(() => readPersistedState() ?? initial());
   const stateRef = useRef<MachineState>(state);
   stateRef.current = state;
 
@@ -46,7 +48,18 @@ export function useStopwatchMachine(): StopwatchMachineApi {
     if (next !== current) {
       stateRef.current = next;
       setState(next);
+      persistState(next);
     }
+  }, []);
+
+  // A reload is a fresh JS context — no platform wake lock is held yet even though the
+  // rehydrated phase may say `running`. Re-acquire once on mount; further transitions
+  // are already covered by runEffects() above.
+  useEffect(() => {
+    if (state.phase === 'running') {
+      void acquire(WAKE_LOCK_OWNER);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const start = useCallback(() => send({ type: 'start', now: Date.now() }), [send]);

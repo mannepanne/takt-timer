@@ -6,12 +6,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import * as wakeLock from '@/lib/wakeLock';
 
+import { persistState } from './persistence';
 import { useStopwatchMachine } from './useStopwatchMachine';
 
 describe('useStopwatchMachine', () => {
   afterEach(() => {
     vi.restoreAllMocks();
     vi.useRealTimers();
+    localStorage.clear();
     Object.defineProperty(document, 'visibilityState', {
       configurable: true,
       value: 'visible',
@@ -122,5 +124,68 @@ describe('useStopwatchMachine', () => {
     act(() => result.current.start());
     expect(() => unmount()).not.toThrow();
     expect(releaseSpy).toHaveBeenCalledWith('stopwatch');
+  });
+
+  describe('rehydrating from localStorage (simulates a page reload)', () => {
+    it('rehydrates a running state and resumes counting from the correct elapsed time', () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(10_000);
+      persistState({ phase: 'running', accumulatedMs: 3000, startedAtMs: 5000 });
+      const { result } = renderHook(() => useStopwatchMachine());
+      expect(result.current.state.phase).toBe('running');
+      // accumulatedMs(3000) + (now(10_000) - startedAtMs(5000)) = 8000
+      expect(result.current.getElapsedMs()).toBe(8000);
+    });
+
+    it('rehydrates a paused state frozen at the correct elapsed time', () => {
+      persistState({ phase: 'paused', accumulatedMs: 42_000, startedAtMs: null });
+      const { result } = renderHook(() => useStopwatchMachine());
+      expect(result.current.state.phase).toBe('paused');
+      expect(result.current.getElapsedMs()).toBe(42_000);
+    });
+
+    it('rehydrates an idle state as idle', () => {
+      persistState({ phase: 'idle', accumulatedMs: 0, startedAtMs: null });
+      const { result } = renderHook(() => useStopwatchMachine());
+      expect(result.current.state.phase).toBe('idle');
+      expect(result.current.getElapsedMs()).toBe(0);
+    });
+
+    it('falls back to a fresh idle state when nothing is persisted', () => {
+      const { result } = renderHook(() => useStopwatchMachine());
+      expect(result.current.state.phase).toBe('idle');
+    });
+
+    it('re-acquires the wake lock on mount when the rehydrated phase is running', () => {
+      const acquireSpy = vi.spyOn(wakeLock, 'acquire').mockResolvedValue();
+      persistState({ phase: 'running', accumulatedMs: 0, startedAtMs: 0 });
+      renderHook(() => useStopwatchMachine());
+      expect(acquireSpy).toHaveBeenCalledWith('stopwatch');
+    });
+
+    it('does not acquire the wake lock on mount when the rehydrated phase is paused', () => {
+      const acquireSpy = vi.spyOn(wakeLock, 'acquire').mockResolvedValue();
+      persistState({ phase: 'paused', accumulatedMs: 1000, startedAtMs: null });
+      renderHook(() => useStopwatchMachine());
+      expect(acquireSpy).not.toHaveBeenCalled();
+    });
+
+    it('does not acquire the wake lock on mount when the rehydrated phase is idle', () => {
+      const acquireSpy = vi.spyOn(wakeLock, 'acquire').mockResolvedValue();
+      persistState({ phase: 'idle', accumulatedMs: 0, startedAtMs: null });
+      renderHook(() => useStopwatchMachine());
+      expect(acquireSpy).not.toHaveBeenCalled();
+    });
+
+    it('resetting then reloading stays idle — a stale running/paused state does not resurrect', () => {
+      const { result, unmount } = renderHook(() => useStopwatchMachine());
+      act(() => result.current.start());
+      act(() => result.current.reset());
+      unmount();
+
+      const { result: reloaded } = renderHook(() => useStopwatchMachine());
+      expect(reloaded.current.state.phase).toBe('idle');
+      expect(reloaded.current.getElapsedMs()).toBe(0);
+    });
   });
 });

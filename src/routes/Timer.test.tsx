@@ -38,6 +38,7 @@ function renderTimer() {
 describe('Timer route', () => {
   afterEach(() => {
     vi.useRealTimers();
+    localStorage.clear();
   });
 
   it('shows 0:00 and a Start button when idle', () => {

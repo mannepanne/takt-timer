@@ -82,7 +82,7 @@ Five context providers wrap every route:
 - **`I18nProvider`** — English/Swedish, runtime language detection, persisted to `localStorage`.
 - **`SessionProvider`** — WebAuthn passkey auth state, session token management.
 - **`SettingsProvider`** — language preference, accent colour, sound on/off.
-- **`StopwatchProvider`** — the count-up stopwatch's state (phase, elapsed time), lifted above the router so it survives navigating away from `/timer` and back. See [ADR: Timer mode's state machine lives above the router](./REFERENCE/decisions/2026-08-02-timer-mode-provider-scoped-state.md).
+- **`StopwatchProvider`** — the count-up stopwatch's state (phase, elapsed time), lifted above the router so it survives navigating away from `/timer` and back. Also persisted to `localStorage`, so it survives a full page reload or browser restart too. See [ADR: Timer mode's state machine lives above the router](./REFERENCE/decisions/2026-08-02-timer-mode-provider-scoped-state.md).
 - **`PhoneFrame`** — the desktop-browser phone mockup. Invisible on a real phone.
 
 ### The three state machines
@@ -115,7 +115,7 @@ Effects the machine returns: `beep(kind)`, `haptic(kind)`, `acquireWakeLock`, `r
 
 #### Stopwatch machine (`src/lib/stopwatch/`)
 
-Backs the `/timer` screen — a manual count-up stopwatch for rep-based exercises with no fixed duration. Unlike the interval machine, its instance lives in `StopwatchProvider` (app-level, not route-scoped — see the providers list above), and elapsed time is always derived from a `Date.now()` timestamp rather than an accumulated tick count, so it stays correct across the app being backgrounded.
+Backs the `/timer` screen — a manual count-up stopwatch for rep-based exercises with no fixed duration. Unlike the interval machine, its instance lives in `StopwatchProvider` (app-level, not route-scoped — see the providers list above), and elapsed time is always derived from a `Date.now()` timestamp rather than an accumulated tick count, so it stays correct across the app being backgrounded. `src/lib/stopwatch/persistence.ts` writes its state to `localStorage` on every transition, so the same timestamp-derived design also survives a full reload or browser restart with no extra derivation logic.
 
 ```mermaid
 stateDiagram-v2
@@ -243,15 +243,15 @@ Passkey sign-in issues a session token: an HMAC-SHA256 signed value stored in KV
 
 The [REFERENCE/decisions/](./REFERENCE/decisions/) ADRs capture the full reasoning. These are the ones that most shape the codebase:
 
-| Decision                                                                                                          | One-line summary                                                                                                                         |
-| ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| [Vite SPA over Next.js](./REFERENCE/decisions/2026-04-19-vite-spa-over-nextjs.md)                                 | Every meaningful action is client-side; SSR buys nothing. One Worker serves both SPA and API with no adapter layer.                      |
-| [Reducer + effects pattern](./REFERENCE/decisions/2026-04-19-reducer-plus-effects-pattern.md)                     | Timer and Voice logic are pure TypeScript functions, fully testable without a browser.                                                   |
-| [Port prototype CSS over Tailwind](./REFERENCE/decisions/2026-04-19-port-prototype-css.md)                        | The Claude Design prototype is the v1 visual contract; rewriting to utility classes would break the design for no gain.                  |
-| [Llama-primary voice pipeline](./REFERENCE/decisions/2026-04-20-llama-primary-ndjson-streaming.md)                | Deterministic parser was built and killed; Whisper transcription variance on iOS makes a grammar-based parser unmaintainable.            |
-| [KV rate limiter](./REFERENCE/decisions/2026-05-12-kv-rate-limiter.md)                                            | Caps Workers AI spend at 3 voice calls/day per anonymous IP. Race window is accepted and documented.                                     |
-| [HMAC-SHA256 sessions over JWT](./REFERENCE/decisions/2026-05-26-phase-4-auth-architecture.md)                    | Simpler than JWT, immediately revocable via KV delete, no JWT library dependency.                                                        |
-| [Timer mode's state lives above the router](./REFERENCE/decisions/2026-08-02-timer-mode-provider-scoped-state.md) | The stopwatch is the first state machine lifted to a provider instead of a route, so it survives navigating away from `/timer` and back. |
+| Decision                                                                                                          | One-line summary                                                                                                                                                                                       |
+| ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [Vite SPA over Next.js](./REFERENCE/decisions/2026-04-19-vite-spa-over-nextjs.md)                                 | Every meaningful action is client-side; SSR buys nothing. One Worker serves both SPA and API with no adapter layer.                                                                                    |
+| [Reducer + effects pattern](./REFERENCE/decisions/2026-04-19-reducer-plus-effects-pattern.md)                     | Timer and Voice logic are pure TypeScript functions, fully testable without a browser.                                                                                                                 |
+| [Port prototype CSS over Tailwind](./REFERENCE/decisions/2026-04-19-port-prototype-css.md)                        | The Claude Design prototype is the v1 visual contract; rewriting to utility classes would break the design for no gain.                                                                                |
+| [Llama-primary voice pipeline](./REFERENCE/decisions/2026-04-20-llama-primary-ndjson-streaming.md)                | Deterministic parser was built and killed; Whisper transcription variance on iOS makes a grammar-based parser unmaintainable.                                                                          |
+| [KV rate limiter](./REFERENCE/decisions/2026-05-12-kv-rate-limiter.md)                                            | Caps Workers AI spend at 3 voice calls/day per anonymous IP. Race window is accepted and documented.                                                                                                   |
+| [HMAC-SHA256 sessions over JWT](./REFERENCE/decisions/2026-05-26-phase-4-auth-architecture.md)                    | Simpler than JWT, immediately revocable via KV delete, no JWT library dependency.                                                                                                                      |
+| [Timer mode's state lives above the router](./REFERENCE/decisions/2026-08-02-timer-mode-provider-scoped-state.md) | The stopwatch is the first state machine lifted to a provider instead of a route, so it survives navigating away from `/timer` and back — and, per its addendum, a full reload or browser restart too. |
 
 ---
 
