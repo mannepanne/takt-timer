@@ -1,6 +1,6 @@
 // ABOUT: Timer route — a count-up stopwatch for rep-based exercises with no fixed duration.
 // ABOUT: Reachable from Home and back; state lives in StopwatchProvider so it survives
-// ABOUT: navigating away and returning, per SPECIFICATIONS/timer-mode.md.
+// ABOUT: navigating away and returning, per SPECIFICATIONS/ARCHIVE/timer-mode.md.
 
 import { Link } from 'react-router-dom';
 

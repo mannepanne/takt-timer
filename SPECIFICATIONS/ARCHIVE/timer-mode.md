@@ -35,7 +35,7 @@ It deliberately does not track exercise data or sync anything — no history ent
 
 ### A new state machine, following the existing pattern — with one deliberate omission
 
-[ADR 2026-04-19](../REFERENCE/decisions/2026-04-19-reducer-plus-effects-pattern.md) locks in reducer-plus-effects as the shape for every timer-like state machine in the app (`src/lib/timer/machine.ts` is the existing example). This feature is simple enough that it doesn't strictly need it, but staying consistent is worth more here than the few lines it would save to hand-roll a one-off component — anyone touching timer logic in this codebase should find one pattern, not two.
+[ADR 2026-04-19](../../REFERENCE/decisions/2026-04-19-reducer-plus-effects-pattern.md) locks in reducer-plus-effects as the shape for every timer-like state machine in the app (`src/lib/timer/machine.ts` is the existing example). This feature is simple enough that it doesn't strictly need it, but staying consistent is worth more here than the few lines it would save to hand-roll a one-off component — anyone touching timer logic in this codebase should find one pattern, not two.
 
 New module, `src/lib/stopwatch/` (named distinctly from `src/lib/timer/`, which stays the interval machine — the UI label "Timer" and the internal module name don't need to match):
 
@@ -67,7 +67,7 @@ New module, `src/lib/stopwatch/` (named distinctly from `src/lib/timer/`, which 
 
 `StopwatchProvider` is mounted in `App.tsx` alongside the existing providers.
 
-**This is a new pattern for this codebase** — every existing state machine here is route-scoped; this is the first one lifted above the router specifically so it outlives navigation. Documented in [ADR 2026-08-02](../REFERENCE/decisions/2026-08-02-timer-mode-provider-scoped-state.md).
+**This is a new pattern for this codebase** — every existing state machine here is route-scoped; this is the first one lifted above the router specifically so it outlives navigation. Documented in [ADR 2026-08-02](../../REFERENCE/decisions/2026-08-02-timer-mode-provider-scoped-state.md).
 
 ### Persistence: survives a reload, not just navigation
 
@@ -77,7 +77,7 @@ This needs no new derivation logic and carries no drift risk: `accumulatedMs`/`s
 
 **Wake lock on rehydrate.** A reload is a fresh JS context — no platform wake lock is held even if the rehydrated phase is `running`. `useStopwatchMachine` re-acquires it explicitly on mount when the rehydrated phase is `running`, rather than waiting for a phase transition that won't happen until the user next interacts with the controls.
 
-Full reasoning and alternatives: [ADR 2026-08-02, Addendum](../REFERENCE/decisions/2026-08-02-timer-mode-provider-scoped-state.md#addendum-localstorage-persistence-for-reloadrestart-survival).
+Full reasoning and alternatives: [ADR 2026-08-02, Addendum](../../REFERENCE/decisions/2026-08-02-timer-mode-provider-scoped-state.md#addendum-localstorage-persistence-for-reloadrestart-survival).
 
 ### Render cadence lives in the route, not the provider
 

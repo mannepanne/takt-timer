@@ -7,7 +7,7 @@ Auto-loaded when working with files in this directory. Forward-looking plans for
 ## How this folder works
 
 - **Numbered phase files** (`01-…md` through `06-…md`) are completed specs, archived in [ARCHIVE/](./ARCHIVE/). All six phases shipped. Each phase is sequential and self-contained: scope, acceptance criteria, technical approach, testing, PR workflow, risks.
-- **Unnumbered feature specs** sit at the root of this folder once all six phases are live — post-launch features that don't belong to the original phase sequence, e.g. [timer-mode.md](./ARCHIVE/timer-mode.md) (shipped, archived). Same "When a phase ships" archiving rule applies once merged and verified in production.
+- **Unnumbered feature specs** sit at the root of this folder once all six phases are live, while in progress — post-launch features that don't belong to the original phase sequence. Same "When a phase ships" archiving rule applies once merged and verified in production, e.g. [timer-mode.md](./ARCHIVE/timer-mode.md), shipped and archived.
 - **[ORIGINAL_IDEA/project-outline.md](./ORIGINAL_IDEA/project-outline.md)** is the source of truth for _what_ Takt is and _why_. Phase specs reference it but don't duplicate it.
 - **[prototype-design-files/](./prototype-design-files/)** holds the Claude Design prototype — the visual and interaction reference for v1.
 - **[ARCHIVE/](./ARCHIVE/)** receives phase files after they ship. Move them here once the PR is merged and the features are verified in production.
