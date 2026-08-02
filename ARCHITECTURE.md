@@ -127,7 +127,7 @@ stateDiagram-v2
     paused --> idle : reset
 ```
 
-Effects: `acquireWakeLock`, `releaseWakeLock` — owner-keyed in `src/lib/wakeLock.ts` so the interval machine and the stopwatch can each hold the screen wake lock independently. Full spec: [SPECIFICATIONS/timer-mode.md](./SPECIFICATIONS/timer-mode.md).
+Effects: `acquireWakeLock`, `releaseWakeLock` — owner-keyed in `src/lib/wakeLock.ts` so the interval machine and the stopwatch can each hold the screen wake lock independently. Full spec: [SPECIFICATIONS/ARCHIVE/timer-mode.md](./SPECIFICATIONS/ARCHIVE/timer-mode.md).
 
 #### Voice machine (`src/lib/voice/`)
 

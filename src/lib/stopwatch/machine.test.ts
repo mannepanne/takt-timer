@@ -1,5 +1,5 @@
 // ABOUT: Exhaustive tests for the stopwatch state machine.
-// ABOUT: Every cell of the event×state matrix in SPECIFICATIONS/timer-mode.md has a test here.
+// ABOUT: Every cell of the event×state matrix in SPECIFICATIONS/ARCHIVE/timer-mode.md has a test here.
 
 import { describe, expect, it } from 'vitest';
 
