@@ -1,7 +1,7 @@
 # ADR: On-device, English-only voice parsing for the Android release
 
 **Date:** 2026-07-26
-**Status:** Active
+**Status:** Active — see the 2026-08-02 addendum, which supersedes the "zero network, ever" framing for the recogniser (the local parser decision stands).
 
 ---
 
@@ -66,6 +66,24 @@ Given those differences, proceeding is a reasonable bet — but it is a bet, not
 
 - Cross-platform voice-quality parity — Android's voice feature is deliberately a different, lesser-fidelity thing than the web app's, and that difference needs to be communicated honestly in the app (not hidden as if it were equivalent).
 - Adding more languages to the Android build later requires the same rule-authoring effort the 2026-04-20 ADR specifically rejected for the web app — this remains a real constraint on future scope, not solved by anything in this decision.
+
+---
+
+## Addendum: the recogniser may use Google's online path (2026-08-02)
+
+**Decision changed:** the transcription step is no longer required to be strictly on-device/offline. The Android app uses the **system speech recogniser** (via a Capacitor plugin), preferring an on-device path where the platform provides one but **accepting an online transcription path where it doesn't** — we don't fight Google's own recogniser behaviour. The **local English-only deterministic parser, its low-confidence fallback, and the whole "parser vs. the 2026-04-20 precedent" reasoning above are unchanged.** Only the "zero network, ever, including transcription" premise in the original Context is superseded.
+
+**Why:** building or bundling a guaranteed-offline recogniser is disproportionate for a lean £0.99 learning project. Delegating to the OS recogniser — the same one every Android voice-keyboard uses — is the lean choice. This was an explicit owner (Magnus) call: working, lean voice over an absolute privacy claim.
+
+**What still holds — Takt's own process makes zero network calls.** Presets, history, timer, settings, fonts, analytics: none touch a server, and `INTERNET` is removed from Takt's manifest. The recogniser runs in a **separate Google process** with its own permissions, so Takt can invoke it without `INTERNET` (to be confirmed in a spike) and the removal still holds for everything Takt itself does.
+
+**Consequences (recorded so they aren't rediscovered late):**
+
+- The store listing **cannot** claim "nothing ever leaves the device, ever." It claims instead: your presets and history never leave the device, no account ever, and voice input uses the phone's built-in speech recognition (which may involve Google, like any Android mic button).
+- The **Play Data Safety form** must reflect that voice audio may be processed by Google — pending a policy check on whether a user-invoked system recogniser counts as app-collected data or an OS service. Declare conservatively if unclear. This is a legal attestation, not just copy.
+- The "Enables" bullet below ("nothing leaves the device, because nothing is transcribed off-device") is narrowed accordingly: it holds for everything Takt stores, not for the voice transcription path.
+
+**Not superseded:** the parser accuracy risk, the English-only scope, the explicit-fallback safety design, and the "cut voice from v1 if it's not usable" contingency all stand exactly as written above.
 
 ---
 
