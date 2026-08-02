@@ -1,5 +1,6 @@
 // ABOUT: Top-level application component.
-// ABOUT: Wraps routes in PhoneFrame and provides the session context, i18n, and settings to the tree.
+// ABOUT: Wraps routes in PhoneFrame and provides the session, i18n, settings, and
+// ABOUT: stopwatch context to the tree.
 
 import { useCallback, useState } from 'react';
 import { Route, Routes } from 'react-router-dom';

@@ -23,11 +23,14 @@ export type StepResult = { next: MachineState; effects: Effect[] };
 const MS_PER_HOUR = 3_600_000;
 
 // Elapsed is always derived from timestamps rather than counted, so a backwards clock
-// step (NTP correction is the realistic case) can produce a negative delta — clamped
-// here rather than left to render as garbage.
+// step (NTP correction is the realistic case) can produce a negative delta for the
+// current running stint — clamped here rather than left to render as garbage. Only the
+// delta is clamped, not the total: accumulatedMs already holds real elapsed time from
+// before this stint (e.g. a prior pause/resume), and a backward jump big enough to make
+// that sum negative must not discard it.
 export function elapsedMs(state: MachineState, now: number): number {
   if (state.phase === 'running' && state.startedAtMs !== null) {
-    return Math.max(0, state.accumulatedMs + (now - state.startedAtMs));
+    return state.accumulatedMs + Math.max(0, now - state.startedAtMs);
   }
   return state.accumulatedMs;
 }

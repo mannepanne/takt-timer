@@ -1,3 +1,6 @@
+// ABOUT: Tests for useStopwatchMachine — the reducer wired to the wake-lock effect runner
+// ABOUT: and the visibility-reacquire listener.
+
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 

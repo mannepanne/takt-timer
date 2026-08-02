@@ -1,3 +1,5 @@
+// ABOUT: Tests for ProgressRing — stroke-dashoffset math and the decorative aria-hidden contract.
+
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 

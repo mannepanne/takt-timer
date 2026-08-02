@@ -1,3 +1,5 @@
+// ABOUT: Tests for the Timer route — Start/Pause/Resume/Reset, and back navigation.
+
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';

@@ -162,6 +162,12 @@ pnpm dlx wrangler secret put <NAME>
 - Verify `navigator.wakeLock` is available (some browsers don't support it; we degrade silently).
 - On iOS, Wake Lock requires the tab to be foregrounded. This is expected.
 
+### Screen stays awake while sitting on Home, not `/run` or `/timer`
+
+**Symptom:** Phone doesn't auto-lock even though the visible screen is Home.
+
+**Resolution:** Expected if the Timer stopwatch is running — its wake lock is held for as long as `phase === 'running'`, regardless of which route is mounted, since its state lives in an app-level provider rather than the `/timer` route (see [ADR 2026-08-02](./decisions/2026-08-02-timer-mode-provider-scoped-state.md)). The Home "Timer · 4:32" label is the visible reason the screen isn't sleeping. `src/lib/wakeLock.ts` is owner-keyed, so this and an interval session on `/run` can each hold the lock independently — one ending doesn't release the other's.
+
 ---
 
 ## WebAuthn / passkeys

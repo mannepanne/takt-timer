@@ -69,7 +69,7 @@ New module, `src/lib/stopwatch/` (named distinctly from `src/lib/timer/`, which 
 
 ### Render cadence lives in the route, not the provider
 
-A first draft of this spec put a 60fps rAF loop inside the provider-level hook, matching `useTimerMachine`'s shape. That's wrong here: it would force a render tick ~60 times a second for as long as the stopwatch runs, even while the user is sitting on Home with `/timer` unmounted — for a ring that moves 0.1°/second and digits that only need to update once a second. Since elapsed is always derived from a timestamp rather than accumulated, the render pump has no correctness role, only a "please redraw" role, and only whichever screen is actually displaying the value needs to ask for that. `Timer.tsx` and the Home indicator each use the shared `useElapsedMs(intervalMs)` hook (see above) at their own cadence, while the provider's machine itself never ticks.
+A 60fps rAF loop inside the provider-level hook, matching `useTimerMachine`'s shape, would be wrong here: it would force a render tick ~60 times a second for as long as the stopwatch runs, even while the user is sitting on Home with `/timer` unmounted — for a ring that moves 0.1°/second and digits that only need to update once a second. Since elapsed is always derived from a timestamp rather than accumulated, the render pump has no correctness role, only a "please redraw" role, and only whichever screen is actually displaying the value needs to ask for that. `Timer.tsx` and the Home indicator each use the shared `useElapsedMs(intervalMs)` hook (see above) at their own cadence, while the provider's machine itself never ticks.
 
 ### Wake lock: shared and owner-keyed
 

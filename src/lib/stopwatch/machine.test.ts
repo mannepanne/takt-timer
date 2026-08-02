@@ -1,5 +1,5 @@
-// Exhaustive tests for the stopwatch state machine.
-// Every cell of the event×state matrix in SPECIFICATIONS/timer-mode.md has a test here.
+// ABOUT: Exhaustive tests for the stopwatch state machine.
+// ABOUT: Every cell of the event×state matrix in SPECIFICATIONS/timer-mode.md has a test here.
 
 import { describe, expect, it } from 'vitest';
 
@@ -129,6 +129,12 @@ describe('elapsedMs — clamp at zero on a backwards clock step', () => {
   it('clamps to zero rather than going negative when now < startedAtMs', () => {
     // Simulates an NTP/manual clock correction stepping the clock backwards mid-run.
     expect(elapsedMs(running(0, 10_000), 3_000)).toBe(0);
+  });
+
+  it('clamps only the current stint, preserving accumulatedMs from a prior pause/resume', () => {
+    // A backward jump big enough to make (now - startedAtMs) more negative than
+    // accumulatedMs must not wipe out real elapsed time earned before this stint.
+    expect(elapsedMs(running(100_000, 500_000), 300_000)).toBe(100_000);
   });
 
   it('is just accumulatedMs while paused (startedAtMs is null)', () => {
