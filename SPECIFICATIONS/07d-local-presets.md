@@ -6,6 +6,10 @@
 **Gates:** nothing hard downstream, but it's the spine of "a usable native app".
 **Shippable?** Yes — after this, a native user can create, pin, rename, duplicate, delete, and persist presets, all offline.
 
+> **Delivered in two slices.** The **module** (`src/lib/presets-local.ts` + tests) shipped ahead of its `07b`/`07c` dependencies because it's device-independent pure logic — nothing imports it yet, no web path touched. Still to do (the **integration slice**, gated on 07b/07c): the native `@/lib/presets` → `presets-local` build alias, unhiding the presets entry in `Home.tsx`, and the native "Save as preset" path in `Complete.tsx`.
+>
+> **Locked storage key: `takt.presets.v1`.** Device-scoped `localStorage`, keyed to the WebView origin — a locked value on par with `takt.history.v1` and `takt.stopwatch.v1` (the "presets key" [07b](./07b-capacitor-scaffold.md) warns must survive the origin lock). Changing it orphans every user's presets.
+
 ---
 
 ## Goal
