@@ -26,6 +26,20 @@ Replace the web capture-and-parse path (`MicButton` → `useVoiceMachine` → `P
 - **Timer mode is out of the parser's scope entirely** — the stopwatch is touch-launched, nothing to parse. The parser only ever produces interval-session config.
 - **English-only is a _parser_ constraint, not a recogniser one** — the recogniser could transcribe other languages, but the parser is English-only for v1. Swedish-speaking users use manual entry (fully faithful) or English voice.
 
+## Supported grammar (v1 parser — provisional, pending Spike 3)
+
+The parser (`src/lib/voice-local/parser.ts`) is **conservative**: it returns a confident `{ sets, workSec, restSec }` only when all three are present, otherwise `{ ok: false, reason }` → manual entry. It never guesses a missing field (the rejected prototype's silent `?? 3 / ?? 60 / ?? 30` default is exactly what this avoids), because on native the result feeds the Configure confirmation screen, where a confident-looking wrong pre-fill gets tapped through.
+
+- **Set count:** `<number> sets|rounds` ("three sets", "5 rounds"). `reps` is **deliberately not accepted** — rep-based work is Timer mode's job (the stopwatch), out of this parser's scope.
+- **Durations:** `<number> minute(s)|min|second(s)|sec`, or `mm:ss` ("90 seconds", "2 min", "1:30"). A compound `X minutes and Y seconds` merges **only** when joined by "and". A bare number with no unit is never treated as a duration.
+- **Numbers:** digits, or English words 0–99 including compounds ("forty five"); "a"/"an" = 1 when a unit follows ("a minute").
+- **Work markers:** `of` / `for` / `on` / `work`. **Rest markers:** `rest` / `break` / `off` / `between` / `in between` / `rest of …`, plus explicit `no rest` / `without rest` / `no break` / `without a break` / `no breaks` → `restSec: 0`. Rest wins when a duration carries both.
+- **Rejected outright (fall back, never guess):** decimal or thousands-separated numbers ("2.5 minutes", "1,500 seconds") — the tokeniser can't preserve the separator, so it refuses rather than mis-bind — and an `mm:ss` value with a seconds component ≥ 60.
+- **Range guards:** sets 1–99, durations 1–3600 s (rest 0–3600 s); outside → fallback (`out-of-range`).
+- **Fallback reasons:** `empty`, `no-numbers`, `unparseable`, `no-sets`, `no-work`, `no-rest`, `out-of-range` — all route to manual entry.
+
+**Known limits (documented, not bugs):** homophones the recogniser may emit — "for"→"four", "to"→"two", "won"→"one" — are **not** mapped to numbers, so they fall back safely rather than mis-configure; a `rest`/`break` sitting ambiguously between two durations also falls back. These are the exact transcription-variance failure modes the 2026-04-20 precedent warns about, so real-hardware transcript validation (**Spike 3**) is where the corpus earns its acceptance tick — the current corpus is author-authored and marked provisional.
+
 ## Parser precedent — proceed open-eyed (not a resolved question)
 
 [ADR 2026-04-20](../REFERENCE/decisions/2026-04-20-llama-primary-ndjson-streaming.md) built and rejected exactly this shape — a deterministic parser fed by recognition transcripts — because transcription variance broke it on ~50% of Swedish phrases. That's about transcript noise defeating a closed grammar, not a Whisper quirk, so it doesn't vanish with a new engine. This phase differs: (1) **English only**, removing the Nordic-misdetection driver — but English-only accuracy was never separately measured, so it's _untested, not disproven_; (2) the parser fails **loudly and safely**; (3) the bar is "usable", not "matches Llama". If real-hardware validation shows it's unusable even for English, **cut voice from v1** (manual-only) rather than ship something that guesses wrong.
