@@ -30,7 +30,7 @@ Before making an architectural decision that outlasts today's PR, consult [../RE
 
 Full product vision: [ORIGINAL_IDEA/project-outline.md](./ORIGINAL_IDEA/project-outline.md).
 
-**Current phase:** The original six web-app phases are complete and live, with small post-launch features (e.g. [timer-mode.md](./ARCHIVE/timer-mode.md)) shipping as unnumbered specs. [Phase 7](./07-android-app.md) — an Android app sold on Google Play — is spec-approved and broken into eight child deliverables (`07a`–`07h`), ready to implement starting with the `07a` spikes.
+**Current phase:** The original six web-app phases are complete and live, with small post-launch features (e.g. [timer-mode.md](./ARCHIVE/timer-mode.md)) shipping as unnumbered specs. [Phase 7](./07-android-app.md) — an Android app sold on Google Play — is **in progress**: the device-independent module cores ([`07f`](./07f-voice-pipeline.md) voice parser, [`07d`](./07d-local-presets.md) local presets store) are merged; the remaining deliverables (scaffold, spikes, wiring, publishing) are gated on the Android toolchain and a physical test device.
 
 **Live deployment:** https://takt.hultberg.org — all six web-app phases live.
 
