@@ -34,6 +34,24 @@ A spike is done when its question has a definite yes/no answer backed by a real 
 
 **Output:** a finding recorded here + the short `wakeLock.ts` native/web-divergence ADR the umbrella recommends (synthetic-sentinel backing + stale-lock policy live in 07e, but the "does keep-awake even work in a WebView" answer belongs to this spike).
 
+### Finding (2026-08-08) — ✅ PASS
+
+Validated on a real device (OnePlus `CPH2581`, Android) via a throwaway Capacitor 8.5 + `@capacitor-community/keep-awake` 8.0.1 shell (`org.hultberg.taktspike`, built and installed but **not** committed — findings only). The system screen timeout was set to 15 s (`adb shell settings put system screen_off_timeout 15000`, original restored after), and OS state was read from `dumpsys power` rather than eyeballed:
+
+| Step                         | `mWakefulness` | `mHoldingDisplaySuspendBlocker` | reading                                                                                      |
+| ---------------------------- | -------------- | ------------------------------- | -------------------------------------------------------------------------------------------- |
+| baseline (no `keepAwake`)    | Awake          | true                            | screen just on                                                                               |
+| after `keepAwake()`          | Awake          | true                            | —                                                                                            |
+| **+25 s idle, keepAwake on** | **Awake**      | **true**                        | **screen held well past the 15 s timeout — the load-bearing pass**                           |
+| after `allowSleep()`         | Awake          | true                            | just tapped                                                                                  |
+| +25 s idle, allowSleep       | **Dozing**     | **false**                       | timeout fired once released — proves the mechanism and that `allowSleep()` releases the hold |
+
+The `keepAwake()`/`allowSleep()` calls were issued from the WebView JS context (confirmed in logcat: `Capacitor/Console … SPIKE allowSleep() called …`), so the JS→native bridge is what moved the OS state — satisfying the "works from inside the WebView JS context" criterion, not just native init.
+
+**Conclusion:** keep-awake holds the screen inside a Capacitor WebView on real hardware. The interval timer's core native assumption is safe; no foreground-service fallback needed for v1.
+
+**Limit handed to [07e](./07e-wake-lock-native.md):** this is a bare shell, not Takt's WebView with the interval machine driving `wakeLock.ts`. 07e must (a) confirm the hold survives when the real reducer dispatches acquire/release through the owner-keyed synthetic-sentinel backing, and (b) implement the deliberate stale-rehydrated-stopwatch re-acquire policy — keep-awake is **not** self-limiting the way `navigator.wakeLock` is on the web. Recorded in [ADR 2026-08-08](../REFERENCE/decisions/2026-08-08-native-wakelock-keepawake.md).
+
 ---
 
 ## Spike 2 — App-lifecycle signal for background-pause
@@ -75,11 +93,11 @@ A spike is done when its question has a definite yes/no answer backed by a real 
 
 ## Acceptance criteria for this deliverable
 
-- [ ] Spike 1 has a definite pass/fail on real hardware, recorded here.
+- [x] Spike 1 has a definite pass/fail on real hardware, recorded here. **PASS (2026-08-08).**
 - [ ] Spike 2 has a definite pass/fail on real hardware, recorded here.
 - [ ] Spike 3 has a definite pass/fail on real hardware, recorded here.
 - [ ] Any spike that fails has its consequence for the dependent deliverable written down _before_ that deliverable starts.
-- [ ] The `wakeLock.ts` native/web-divergence ADR is opened (even as a stub) if Spike 1 passes.
+- [x] The `wakeLock.ts` native/web-divergence ADR is opened (even as a stub) if Spike 1 passes. **[ADR 2026-08-08](../REFERENCE/decisions/2026-08-08-native-wakelock-keepawake.md).**
 
 ## PR workflow
 
