@@ -71,6 +71,21 @@ The `keepAwake()`/`allowSleep()` calls were issued from the WebView JS context (
 
 **Output:** finding recorded here; the wiring itself is built in 07g.
 
+### Finding (2026-08-08) — ✅ PASS
+
+Captured live on the OnePlus `CPH2581` from the native `Capacitor/AppPlugin` dispatch logs (ground truth) plus the JS listener via `Capacitor/Console`:
+
+| Action            | `appStateChange`     | DOM `visibilitychange` |
+| ----------------- | -------------------- | ---------------------- |
+| open / reopen     | `isActive=true`      | `visible`              |
+| HOME (background) | `isActive=false`     | `hidden`               |
+| **screen lock**   | **`isActive=false`** | `hidden`               |
+| unlock            | `isActive=true`      | `visible`              |
+
+`@capacitor/app` `appStateChange` fires reliably on **both** app-background and screen-lock, and DOM `visibilitychange` fires alongside every time. Either can drive the existing `visibilityHidden`/`visibilityVisible` machine events; the umbrella's choice of `appStateChange` (the native ground truth) stands. No new machine states and no completion guard — the phantom-session fear was a reducer misread, already settled. Wiring is 07g's job.
+
+**Harness note (not a Takt issue):** this device's ColorOS blocks `pm grant` and scripted (`monkey`/`am`) launches of the app, and a chatty log evicts events from a buffer dump — so the clean capture used real manual interaction with a _streaming_ logcat. Worth remembering for Spikes on this device.
+
 ---
 
 ## Spike 3 — Speech-recognition plugin behaviour
@@ -89,14 +104,36 @@ The `keepAwake()`/`allowSleep()` calls were issued from the WebView JS context (
 
 **Output:** finding recorded here; feeds the `INTERNET`-absent + `<queries>`-present merged-manifest checks that 07b and 07f both rely on.
 
+### Finding (2026-08-08) — ✅ PASS
+
+Built with `@capacitor-community/speech-recognition` 7.0.1, `RECORD_AUDIO`, the `RecognitionService` `<queries>` block, and `INTERNET` removed via `tools:node="remove"`. Verified on the OnePlus `CPH2581`:
+
+**Structural** (merged manifest, `aapt2 dump` of the built APK):
+
+- `INTERNET` **absent** from the merged manifest (count 0) — `tools:node="remove"` beat the library manifest-merge. This validates the exact durable-removal approach 07b needs.
+- `RECORD_AUDIO` present; the `RecognitionService` `<queries>` block present in the merged manifest.
+
+**Runtime** (live, spoken by Magnus):
+
+- `SpeechRecognition.available()` → `{"available": true}` — **with no `INTERNET` permission**. The recogniser runs in the system `RecognitionService` process (log: `RecognitionService#onStartListening … callingApp: org.hultberg.taktspike`), so Takt invokes it without holding `INTERNET` itself. The separate-process premise is confirmed, not just assumed.
+- `RECORD_AUDIO` runtime flow works: `checkPermissions()` → `prompt`, `requestPermissions()` → `granted`.
+- Spoken _"three sets of one minute, thirty seconds rest"_ transcribed to **`"three sets of one minute 30 seconds rest"`** (plus a `"…1 minute…"` variant). Feeding either through the shipped `parseIntent` (07f) yields `{ sets: 3, workSec: 60, restSec: 30 }` — a **correct end-to-end result on the first real utterance.**
+
+**Conclusion:** the voice pipeline is viable. The recogniser is reachable with `INTERNET` removed, `<queries>` enables it, and a real transcript parses correctly. **Voice stays in v1.**
+
+**Not isolated (follow-ups for 07f validation, not blockers):**
+
+- On-device vs online path wasn't isolated — the device may have used Google's online recogniser (the [2026-07-26 ADR addendum](../REFERENCE/decisions/2026-07-26-android-on-device-voice-parsing.md) already accepts this). Re-check in airplane mode during 07f to observe the offline behaviour and the manual fallback when a language pack is absent.
+- The negative case (`<queries>` removed → `available()` returns `false`) wasn't separately rebuilt; it's documented Android 11+ behaviour and the positive case is confirmed. 07f's merged-manifest test enforces the block's presence.
+
 ---
 
 ## Acceptance criteria for this deliverable
 
 - [x] Spike 1 has a definite pass/fail on real hardware, recorded here. **PASS (2026-08-08).**
-- [ ] Spike 2 has a definite pass/fail on real hardware, recorded here.
-- [ ] Spike 3 has a definite pass/fail on real hardware, recorded here.
-- [ ] Any spike that fails has its consequence for the dependent deliverable written down _before_ that deliverable starts.
+- [x] Spike 2 has a definite pass/fail on real hardware, recorded here. **PASS (2026-08-08).**
+- [x] Spike 3 has a definite pass/fail on real hardware, recorded here. **PASS (2026-08-08).**
+- [x] Any spike that fails has its consequence for the dependent deliverable written down _before_ that deliverable starts. **N/A — all three passed.**
 - [x] The `wakeLock.ts` native/web-divergence ADR is opened (even as a stub) if Spike 1 passes. **[ADR 2026-08-08](../REFERENCE/decisions/2026-08-08-native-wakelock-keepawake.md).**
 
 ## PR workflow
