@@ -43,6 +43,44 @@ This is the **critical path**. Google requires new personal developer accounts t
 - The **Data Safety** form answers.
 - The signing keystore + the signed-AAB build steps (`07h`). **You hold and back up the keystore secret** — password manager / offline backup, never in the repo. Losing it after first release means you can't update the app under the same listing.
 
+### Tester recruitment (start now — this is the 14-day bottleneck)
+
+Closed testing needs **≥12 testers opted in for 14 continuous days** before you can apply for production. Aim for **~14–15** to absorb drop-off. You can't send the real join link until a build is on the closed-testing track, but line people up now and collect their Gmail addresses so the list is ready to paste in the moment the track exists.
+
+**The ask (copy-paste to friends / family / gym contacts with an Android phone):**
+
+> **Subject: Fancy helping me test a little app? (~2 min of effort)**
+>
+> Hi! I've built a small Android app — **Takt**, a dead-simple voice-driven interval timer I made for my rehab training — and I'm about to put it on the Google Play Store. Google makes new developers run a 2-week closed test first, and I need **at least 12 people** to opt in.
+>
+> What I'd need from you:
+>
+> - An **Android phone** and a **Google account** (the email you use on the phone).
+> - Reply with that **Gmail address** so I can add you to the test list.
+> - When I send a **join link** (in a week or so), tap it, install Takt, and just have it on your phone for a couple of weeks. A quick try is welcome but not essential.
+>
+> That's it — no cost, no spam, and you can remove it after. Reply "in" and send me your Gmail if you're up for it. 🙏
+
+**Tester tracking list** (fill in as replies land; testers must stay opted in for 14 continuous days):
+
+| #   | Name | Gmail address | Confirmed "in"? | Opted in to test? |
+| --- | ---- | ------------- | --------------- | ----------------- |
+| 1   |      |               |                 |                   |
+| 2   |      |               |                 |                   |
+| 3   |      |               |                 |                   |
+| 4   |      |               |                 |                   |
+| 5   |      |               |                 |                   |
+| 6   |      |               |                 |                   |
+| 7   |      |               |                 |                   |
+| 8   |      |               |                 |                   |
+| 9   |      |               |                 |                   |
+| 10  |      |               |                 |                   |
+| 11  |      |               |                 |                   |
+| 12  |      |               |                 |                   |
+| 13  |      |               |                 |                   |
+| 14  |      |               |                 |                   |
+| 15  |      |               |                 |                   |
+
 ---
 
 ## Part 2 — Local Android dev environment (macOS)
