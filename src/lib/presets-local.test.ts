@@ -20,6 +20,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 describe('presets-local — CRUD', () => {
@@ -103,6 +104,18 @@ describe('presets-local — CRUD', () => {
   });
 });
 
+describe('presets-local — pin-first ordering', () => {
+  it('returns pinned presets first, then by order_index (matches the server order)', async () => {
+    const a = await createPreset(input('a'));
+    const b = await createPreset(input('b'));
+    await createPreset(input('c'));
+    await updatePreset(b.id, { pinned: 1 });
+    expect((await listPresets()).map((p) => p.name)).toEqual(['b', 'a', 'c']);
+    // The unpinned tail keeps order_index order.
+    void a;
+  });
+});
+
 describe('presets-local — tolerant reads', () => {
   it('returns [] on corrupt JSON rather than throwing', async () => {
     localStorage.setItem(KEY, '{not json');
@@ -112,6 +125,42 @@ describe('presets-local — tolerant reads', () => {
   it('returns [] when the stored value is not an array', async () => {
     localStorage.setItem(KEY, JSON.stringify({ nope: true }));
     expect(await listPresets()).toEqual([]);
+  });
+
+  it('returns [] when getItem itself throws (DOM storage disabled)', async () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new DOMException('disabled', 'SecurityError');
+    });
+    expect(await listPresets()).toEqual([]);
+  });
+
+  it('returns [] when localStorage is entirely absent', async () => {
+    vi.stubGlobal('localStorage', undefined);
+    expect(await listPresets()).toEqual([]);
+  });
+
+  it('filters out malformed entries so they cannot poison order_index maths', async () => {
+    localStorage.setItem(KEY, JSON.stringify([{ junk: true }, { also: 'bad' }]));
+    expect(await listPresets()).toEqual([]);
+    // A subsequent create still gets order_index 0, not NaN.
+    expect((await createPreset(input('fresh'))).order_index).toBe(0);
+  });
+
+  it('keeps valid entries and drops invalid ones in a mixed array', async () => {
+    const valid = {
+      id: 'x',
+      name: 'keep',
+      sets: 3,
+      work_sec: 60,
+      rest_sec: 30,
+      pinned: 0,
+      order_index: 0,
+      created_at: 1,
+    };
+    localStorage.setItem(KEY, JSON.stringify([valid, { junk: true }]));
+    const list = await listPresets();
+    expect(list).toHaveLength(1);
+    expect(list[0].name).toBe('keep');
   });
 });
 
