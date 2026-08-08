@@ -85,33 +85,42 @@ Closed testing needs **≥12 testers opted in for 14 continuous days** before yo
 
 ## Part 2 — Local Android dev environment (macOS)
 
-This unblocks the code track. This machine currently has **no** Android toolchain (no JDK, no Android SDK, no `adb`, no Android Studio). Here's the setup. Node/pnpm are already fine.
+This unblocks the code track — the full macOS setup, in order. Node/pnpm are already fine.
 
 The `07a` spikes need a **real Android phone** (the specs require real-hardware validation, not an emulator), so the phone-setup step at the end matters.
 
 ### Ordered checklist
 
-1. **Install a JDK (17 or newer; 21 LTS recommended).**
-   - Simplest: let **Android Studio** install its bundled JDK (next step) and point tools at it.
-   - Or install standalone via Homebrew: `brew install --cask temurin@21`.
-   - After install, `java -version` should print 17 or 21.
+1. **Install Android Studio** — [developer.android.com/studio](https://developer.android.com/studio). Multi-GB download; this is the big one. Open it once and let the first-run wizard install the default SDK (this also lays down `~/Library/Android/sdk` and `adb`).
 
-2. **Install Android Studio** — [developer.android.com/studio](https://developer.android.com/studio). Multi-GB download; this is the big one, and it's yours to run. Open it once and let the first-run wizard install the default SDK.
+2. **Install a standalone JDK 21 (LTS)** — do this even though Android Studio ships its own JDK. Two reasons the bundled one isn't enough for our command-line workflow (`npx cap sync`, `gradlew`):
+   - Android Studio's JDK lives _inside the app bundle_ (`/Applications/Android Studio.app/Contents/jbr/Contents/Home`) and is **not registered with macOS**, so `/usr/libexec/java_home` can't find it — which is what the `JAVA_HOME` line below relies on.
+   - It also tends to track a **very new JDK** (25 at time of writing), ahead of what the Gradle version Capacitor scaffolds officially supports. A standalone **JDK 21 LTS** is the safe, supported target.
 
-3. **Install SDK components** via Android Studio's **SDK Manager** (Settings → Languages & Frameworks → Android SDK), or the `sdkmanager` CLI:
-   - **SDK Platform** for a recent API level (e.g. Android 15 / API 35).
-   - **Android SDK Platform-Tools** (this is what provides `adb`).
-   - **Android SDK Build-Tools** and **Command-line Tools**.
+   Install via Homebrew (may prompt for your password):
+
+   ```bash
+   brew install --cask temurin@21
+   ```
+
+   Verify: `/usr/libexec/java_home -v 21` now prints a path (it installs under `/Library/Java/JavaVirtualMachines/temurin-21.jdk/…`).
+
+3. **Install SDK components** via Android Studio's **SDK Manager** (Settings → Languages & Frameworks → Android SDK):
+   - **SDK Platform** for a recent, _stable_ API level (e.g. Android 15 / API 35 — the exact `compileSdk`/`targetSdk` gets pinned when `07b` scaffolds the project).
+   - **Android SDK Platform-Tools** (provides `adb` — usually already installed by the first-run wizard).
+   - **Android SDK Build-Tools** and, on the **SDK Tools** tab, **Android SDK Command-line Tools (latest)** — the latter provides `sdkmanager`, needed to accept SDK licences (Gradle refuses to build without them).
 
 4. **Set environment variables** (add to `~/.zshrc`):
 
    ```bash
    export ANDROID_HOME="$HOME/Library/Android/sdk"
-   export JAVA_HOME="$(/usr/libexec/java_home -v 21)"   # or wherever your JDK lives
+   export JAVA_HOME="$(/usr/libexec/java_home -v 21)"
    export PATH="$PATH:$ANDROID_HOME/platform-tools"
    ```
 
-   Then `source ~/.zshrc`. Verify: `adb version` prints a version, `echo $ANDROID_HOME` is set.
+   **Finding your JDK:** `/usr/libexec/java_home -V` (capital V) lists every JDK macOS knows about. If it says _"Unable to locate a Java Runtime"_, no standalone JDK is installed yet — do step 2. The `-v 21` form above picks the version-21 entry from that list.
+
+   Then `source ~/.zshrc`. Verify: `adb version` prints a version, `echo $ANDROID_HOME` is set, `echo $JAVA_HOME` points at temurin-21.
 
 5. **Accept SDK licences:** `sdkmanager --licenses` (accept all), or do it through Android Studio's SDK Manager.
 
