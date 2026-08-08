@@ -74,6 +74,36 @@ describe('parseIntent — number handling', () => {
   });
 });
 
+describe('parseIntent — tokeniser does not out-guess the grammar', () => {
+  it('refuses a decimal number rather than mis-binding it', () => {
+    // "2.5 minutes" must NOT become 5 minutes (300s) — the leading digit would be dropped.
+    expect(parseIntent('three sets of 2.5 minutes, thirty seconds rest')).toEqual({
+      ok: false,
+      reason: 'unparseable',
+    });
+  });
+
+  it('refuses a thousands-separated number', () => {
+    expect(parseIntent('three sets of 1,500 seconds, thirty seconds rest')).toEqual({
+      ok: false,
+      reason: 'unparseable',
+    });
+  });
+
+  it('does not let "a" extend a tens word into a compound', () => {
+    // "twenty a seconds" must NOT read as 21 seconds; the article does not continue a compound.
+    const result = parseIntent('four sets of twenty a seconds, ten seconds rest');
+    if (result.ok) expect(result.session.workSec).not.toBe(21);
+  });
+
+  it('rejects an out-of-range mm:ss seconds component', () => {
+    // "2:75" is not a real duration; work becomes unknown → fall back.
+    const result = parseIntent('four sets of 2:75 with thirty seconds rest');
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reason).toBe('no-work');
+  });
+});
+
 describe('parseIntent — scope guard', () => {
   it('does NOT treat "reps" as a set count (that is Timer mode territory)', () => {
     // "ten reps" must not become a confident interval; sets stays unknown.

@@ -174,4 +174,16 @@ export const PHRASE_CORPUS: CorpusEntry[] = [
     reason: 'no-numbers',
     note: 'HOMOPHONES: "two"->"to", "one"->"won" — neither maps to a number, so we fall back safely',
   },
+  {
+    transcript: 'three sets of 2.5 minutes, thirty seconds rest',
+    kind: 'no-parse',
+    reason: 'unparseable',
+    note: 'decimal number — normalise() would drop the separator and mis-bind the digits, so we refuse',
+  },
+  {
+    transcript: 'three sets of 1,500 seconds, thirty seconds rest',
+    kind: 'no-parse',
+    reason: 'unparseable',
+    note: 'thousands separator — same class as the decimal case; refuse rather than silently mis-parse',
+  },
 ];

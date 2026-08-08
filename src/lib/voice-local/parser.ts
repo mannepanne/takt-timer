@@ -85,7 +85,16 @@ function readNumberAt(tokens: string[], i: number): { value: number; next: numbe
   if (t in TENS) {
     let value = TENS[t];
     const unit = tokens[i + 1];
-    if (unit != null && unit in ONES && ONES[unit] >= 1 && ONES[unit] <= 9) {
+    // Only a genuine ones-word (one..nine) extends a tens-word into a compound. The
+    // articles "a"/"an" are worth 1 for a bare count but must NOT turn "thirty a" into 31.
+    if (
+      unit != null &&
+      unit !== 'a' &&
+      unit !== 'an' &&
+      unit in ONES &&
+      ONES[unit] >= 1 &&
+      ONES[unit] <= 9
+    ) {
       value += ONES[unit];
       return { value, next: i + 2 };
     }
@@ -106,6 +115,7 @@ function parseDurationAt(tokens: string[], i: number): Duration | null {
 
   if (/^\d{1,2}:\d{1,2}$/.test(t)) {
     const [m, s] = t.split(':').map(Number);
+    if (s >= 60) return null; // "2:75" is not a real duration — fall back rather than guess
     return { seconds: m * 60 + s, start: i, end: i + 1 };
   }
 
@@ -204,6 +214,11 @@ const NO_REST_RE = /\bno rest\b|\bwithout rest\b|\bno break\b|\bwithout a break\
 export function parseIntent(transcript: string): ParseResult {
   if (!transcript.trim()) return { ok: false, reason: 'empty' };
 
+  // Decimal or thousands-separated numbers ("2.5 minutes", "1,500 seconds") would be mangled
+  // by normalise() stripping the separator — "2.5" tokenises to ['2','5'] and the leading digit
+  // is silently dropped, producing a confident wrong duration. Refuse rather than guess.
+  if (/\d[.,]\d/.test(transcript)) return { ok: false, reason: 'unparseable' };
+
   const tokens = normalise(transcript);
   const normalised = tokens.join(' ');
 
@@ -211,6 +226,9 @@ export function parseIntent(transcript: string): ParseResult {
   const durations = collectDurations(tokens);
 
   // Rest wins over work when a duration carries both markers (e.g. "for thirty seconds rest").
+  // This ordering is load-bearing: `of` is both a generic connector ("sets of two minutes")
+  // and a work marker, so isWorkDuration has weak discriminating power on its own — correctness
+  // relies on restDur being resolved first and then excluded from the workDur candidates below.
   const restDur = durations.find((d) => isRestDuration(tokens, d));
   const workDur =
     durations.find((d) => d !== restDur && isWorkDuration(tokens, d)) ??

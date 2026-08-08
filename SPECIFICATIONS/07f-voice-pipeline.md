@@ -33,7 +33,8 @@ The parser (`src/lib/voice-local/parser.ts`) is **conservative**: it returns a c
 - **Set count:** `<number> sets|rounds` ("three sets", "5 rounds"). `reps` is **deliberately not accepted** — rep-based work is Timer mode's job (the stopwatch), out of this parser's scope.
 - **Durations:** `<number> minute(s)|min|second(s)|sec`, or `mm:ss` ("90 seconds", "2 min", "1:30"). A compound `X minutes and Y seconds` merges **only** when joined by "and". A bare number with no unit is never treated as a duration.
 - **Numbers:** digits, or English words 0–99 including compounds ("forty five"); "a"/"an" = 1 when a unit follows ("a minute").
-- **Work markers:** `of` / `for` / `on` / `work`. **Rest markers:** `rest` / `break` / `off` / `between` / `in between` / `rest of …`, plus explicit `no rest` / `without rest` → `restSec: 0`. Rest wins when a duration carries both.
+- **Work markers:** `of` / `for` / `on` / `work`. **Rest markers:** `rest` / `break` / `off` / `between` / `in between` / `rest of …`, plus explicit `no rest` / `without rest` / `no break` / `without a break` / `no breaks` → `restSec: 0`. Rest wins when a duration carries both.
+- **Rejected outright (fall back, never guess):** decimal or thousands-separated numbers ("2.5 minutes", "1,500 seconds") — the tokeniser can't preserve the separator, so it refuses rather than mis-bind — and an `mm:ss` value with a seconds component ≥ 60.
 - **Range guards:** sets 1–99, durations 1–3600 s (rest 0–3600 s); outside → fallback (`out-of-range`).
 - **Fallback reasons:** `empty`, `no-numbers`, `unparseable`, `no-sets`, `no-work`, `no-rest`, `out-of-range` — all route to manual entry.
 
