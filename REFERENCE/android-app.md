@@ -12,7 +12,7 @@ This is the **critical path**. Google requires new personal developer accounts t
 
 ### Ordered checklist — do these in sequence
 
-1. **Create a Google Play Developer account** — [play.google.com/console](https://play.google.com/console/signup).
+1. **Create a Google Play Developer account.** Go to the Play Console at **[play.google.com/console](https://play.google.com/console/)** and sign in with the Google account you want to own the app — new accounts are guided straight into registration. (Overview / "get started" info lives at [play.google.com/console/about](https://play.google.com/console/about/); the Android Developers landing page [developer.android.com/distribute/console](https://developer.android.com/distribute/console) points to the same place.)
    - One-time **$25 USD** registration fee.
    - Choose account type **Personal** (you're an individual, not an organisation).
    - You'll complete **identity verification**: legal name, address, phone, and possibly a government photo ID. This can take anywhere from minutes to a few days on Google's side — starting it is the gate for everything else.
