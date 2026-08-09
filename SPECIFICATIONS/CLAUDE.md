@@ -30,7 +30,7 @@ Before making an architectural decision that outlasts today's PR, consult [../RE
 
 Full product vision: [ORIGINAL_IDEA/project-outline.md](./ORIGINAL_IDEA/project-outline.md).
 
-**Current phase:** The original six web-app phases are complete and live, with small post-launch features (e.g. [timer-mode.md](./ARCHIVE/timer-mode.md)) shipping as unnumbered specs. [Phase 7](./07-android-app.md) — an Android app sold on Google Play — is **in progress**: the device-independent module cores ([`07f`](./07f-voice-pipeline.md) voice parser, [`07d`](./07d-local-presets.md) local presets store) are merged; the remaining deliverables (scaffold, spikes, wiring, publishing) are gated on the Android toolchain and a physical test device.
+**Current phase:** The original six web-app phases are complete and live, with small post-launch features (e.g. [timer-mode.md](./ARCHIVE/timer-mode.md)) shipping as unnumbered specs. [Phase 7](./07-android-app.md) — an Android app sold on Google Play — is **in progress**: `07a`–`07f` plus `07g`'s copy forks have landed and are device-verified — the native app installs, runs offline, keeps the screen awake ([`07e`](./07e-wake-lock-native.md)), does on-device voice setup with a fail-safe manual fallback ([`07f`](./07f-voice-pipeline.md)), and saves/browses device-local presets ([`07d`](./07d-local-presets.md)). Remaining: [`07g`](./07g-back-button-copy.md)'s hardware back-button + lifecycle (gated on `07e`, now unblocked) and [`07h`](./07h-publishing.md) publishing.
 
 **Live deployment:** https://takt.hultberg.org — all six web-app phases live.
 
