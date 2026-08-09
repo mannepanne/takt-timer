@@ -8,5 +8,8 @@ project(':capacitor-community-keep-awake').projectDir = new File('../node_module
 include ':capacitor-community-speech-recognition'
 project(':capacitor-community-speech-recognition').projectDir = new File('../node_modules/.pnpm/@capacitor-community+speech-recognition@7.0.1_@capacitor+core@8.5.0/node_modules/@capacitor-community/speech-recognition/android')
 
+include ':capacitor-app'
+project(':capacitor-app').projectDir = new File('../node_modules/.pnpm/@capacitor+app@8.1.1_@capacitor+core@8.5.0/node_modules/@capacitor/app/android')
+
 include ':capacitor-native-settings'
 project(':capacitor-native-settings').projectDir = new File('../node_modules/.pnpm/capacitor-native-settings@8.2.0_@capacitor+core@8.5.0/node_modules/capacitor-native-settings/android')
