@@ -1,7 +1,8 @@
 // ABOUT: App-lifecycle seam — web backing. Reports app hidden/visible for the interval timer's
 // ABOUT: background-pause, and no-ops the hardware back button / app-exit (the web has neither).
 // ABOUT: The native build aliases this to app-lifecycle-native (@capacitor/app), keeping that
-// ABOUT: plugin out of the web bundle. See vite.config.ts and ADR pattern from 07e.
+// ABOUT: plugin out of the web bundle — the same build-alias seam pattern as wakeLock-platform (07e)
+// ABOUT: and the voice hook (07f). See vite.config.ts.
 
 /**
  * Calls onHidden/onVisible when the app becomes hidden/visible. On the web this is DOM

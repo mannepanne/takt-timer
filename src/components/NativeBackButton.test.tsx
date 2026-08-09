@@ -25,8 +25,12 @@ vi.mock('@/lib/app-lifecycle', () => ({
   exitApp: () => exitApp(),
 }));
 
-const activeRef = { current: false };
-vi.mock('@/lib/interval-active', () => ({ useIntervalActiveRef: () => activeRef }));
+import type { RunSession } from '@/lib/interval-active';
+
+const pause = vi.fn();
+const resume = vi.fn();
+const sessionRef: { current: RunSession | null } = { current: null };
+vi.mock('@/lib/interval-active', () => ({ useRunSessionRef: () => sessionRef }));
 
 function LocationProbe() {
   const loc = useLocation();
@@ -49,10 +53,15 @@ function renderAt(entries: string[], index = entries.length - 1) {
 
 beforeEach(() => {
   backHandler = null;
-  activeRef.current = false;
+  sessionRef.current = null;
+  pause.mockClear();
+  resume.mockClear();
   vi.mocked(isNativePlatform).mockReturnValue(true);
   exitApp.mockClear();
 });
+
+const runningSession = (): RunSession => ({ running: true, pause, resume });
+const pausedSession = (): RunSession => ({ running: false, pause, resume });
 
 function pressBack() {
   act(() => backHandler?.());
@@ -84,42 +93,72 @@ describe('NativeBackButton', () => {
     expect(exitApp).not.toHaveBeenCalled();
   });
 
-  it('with an active interval session, back opens a confirm dialog instead of leaving', () => {
-    activeRef.current = true;
+  it('with a running interval session, back pauses it and opens a confirm dialog instead of leaving', () => {
+    sessionRef.current = runningSession();
     renderAt(['/run']);
     pressBack();
     expect(screen.getByRole('alertdialog')).toBeInTheDocument();
     expect(screen.getByText(/leave your session/i)).toBeInTheDocument();
+    expect(pause).toHaveBeenCalledTimes(1); // paused so it doesn't advance/beep behind the dialog
     expect(exitApp).not.toHaveBeenCalled();
     expect(screen.getByTestId('path')).toHaveTextContent('/run'); // did not navigate yet
   });
 
-  it('confirming "Leave session" navigates home', async () => {
-    activeRef.current = true;
+  it('an already-paused session still confirms, but does not pause again', () => {
+    sessionRef.current = pausedSession();
+    renderAt(['/run']);
+    pressBack();
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+    expect(pause).not.toHaveBeenCalled();
+  });
+
+  it('confirming "Leave session" navigates home and does not resume', async () => {
+    sessionRef.current = runningSession();
     renderAt(['/run']);
     pressBack();
     await userEvent.click(screen.getByRole('button', { name: /leave session/i }));
     expect(screen.getByTestId('path')).toHaveTextContent('/');
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(resume).not.toHaveBeenCalled();
   });
 
-  it('"Keep going" dismisses the dialog and stays put', async () => {
-    activeRef.current = true;
+  it('"Keep going" resumes the timer we paused and stays put', async () => {
+    sessionRef.current = runningSession();
     renderAt(['/run']);
     pressBack();
     await userEvent.click(screen.getByRole('button', { name: /keep going/i }));
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
     expect(screen.getByTestId('path')).toHaveTextContent('/run');
+    expect(resume).toHaveBeenCalledTimes(1);
   });
 
-  it('back while the confirm dialog is open dismisses it (does not exit)', () => {
-    activeRef.current = true;
+  it('"Keep going" does NOT resume a session that was already paused before back', async () => {
+    sessionRef.current = pausedSession();
     renderAt(['/run']);
-    pressBack(); // opens dialog
+    pressBack();
+    await userEvent.click(screen.getByRole('button', { name: /keep going/i }));
+    expect(resume).not.toHaveBeenCalled();
+  });
+
+  it('back while the confirm dialog is open dismisses it and resumes (does not exit)', () => {
+    sessionRef.current = runningSession();
+    renderAt(['/run']);
+    pressBack(); // opens dialog, pauses
     expect(screen.getByRole('alertdialog')).toBeInTheDocument();
-    pressBack(); // dismisses it
+    pressBack(); // dismisses it, resumes
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(resume).toHaveBeenCalledTimes(1);
     expect(exitApp).not.toHaveBeenCalled();
     expect(screen.getByTestId('path')).toHaveTextContent('/run');
+  });
+
+  it('the interval confirm wins in the concurrent case (stopwatch running + interval active)', () => {
+    // Only Run publishes the session, so a running stopwatch elsewhere is irrelevant here — the
+    // presence of a session is what triggers the confirm, never a silent exit.
+    sessionRef.current = runningSession();
+    renderAt(['/run']);
+    pressBack();
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+    expect(exitApp).not.toHaveBeenCalled();
   });
 });

@@ -213,10 +213,10 @@ The pinned validation corpus lives in `src/lib/voice-local/fixtures/phrase-corpu
 
 - **Background-pause via `appStateChange`.** `useTimerMachine` drives its `visibilityHidden`/`visibilityVisible` events off the seam. On web that's DOM `visibilitychange` (unchanged); on native it's `appStateChange`, which 07a Spike 2 confirmed fires reliably on both app-background and screen-lock — the WebView's `visibilitychange` is the signal we deliberately route around. Only one signal is used per platform (no double-dispatch); the machine's `visibilityHidden` is idempotent when already paused as a safety net.
 - **Hardware back button** (`NativeBackButton`, one listener, app-level). Decision is made from the **router location**, not the plugin's `canGoBack` (which reflects WebView history and can disagree with React Router):
-  - An **active interval session** (running or paused, published by `RunInner` via the `interval-active` context) → confirm dialog before leaving. Wins over the stopwatch in the concurrent case.
+  - An **active interval session** (running or paused, published by `RunInner` via the `interval-active` context) → confirm dialog before leaving. A running timer is **paused while the dialog is up** (so it doesn't advance or beep behind an overlay the user can't see) and resumed on "Keep going" — but only if the dialog was the thing that paused it, never un-pausing a timer the user had already paused. Wins over the stopwatch in the concurrent case.
   - **Root (`/`)** → `exitApp()` (a running stopwatch persists in `localStorage` and resumes on relaunch — the intentional silent-exit).
-  - **Deeper screens** → `navigate(-1)`.
-  - Back while the confirm dialog is open dismisses the dialog.
+  - **Deeper screens** (incl. `/timer` with a running stopwatch) → `navigate(-1)`, so exiting from `/timer` is a two-press gesture (`/timer` → Home → exit). A deliberate consequence of deciding from the router rather than special-casing screens; standard Android sub-screen behaviour.
+  - Back while the confirm dialog is open dismisses the dialog (and resumes the timer if the dialog paused it).
 
 Honest limits (documented, not bugs): the confirm guards only the literal back gesture — HOME/app-switch already pauses an interval session silently, and the interval session is not persisted, so OS process-eviction while backgrounded loses it regardless.
 

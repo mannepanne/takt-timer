@@ -4,11 +4,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const remove = vi.fn(async () => {});
-const addListener = vi.fn(async () => ({ remove }));
+const addListener = vi.fn(async (_event: string, _cb: (arg: unknown) => void) => ({ remove }));
 const exitAppNative = vi.fn(async () => {});
 vi.mock('@capacitor/app', () => ({
   App: {
-    addListener: (event: string, cb: unknown) => addListener(event, cb),
+    addListener: (event: string, cb: (arg: unknown) => void) => addListener(event, cb),
     exitApp: () => exitAppNative(),
   },
 }));
@@ -22,7 +22,7 @@ beforeEach(() => {
 // Pulls the listener callback the seam registered for a given event.
 function registeredCb(event: string): (arg: unknown) => void {
   const call = addListener.mock.calls.find((c) => c[0] === event);
-  return call![1] as (arg: unknown) => void;
+  return call![1];
 }
 
 describe('app-lifecycle (native)', () => {
