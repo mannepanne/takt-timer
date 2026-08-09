@@ -29,6 +29,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@capacitor-community/keep-awake": "^8.0.1",
     "@capacitor/android": "^8",
     "@capacitor/core": "^8",
     "@simplewebauthn/browser": "^13.3.0",

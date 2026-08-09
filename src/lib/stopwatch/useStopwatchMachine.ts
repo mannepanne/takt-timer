@@ -6,6 +6,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { isNativePlatform } from '@/lib/platform';
 import { acquire, reacquireIfNeeded, release } from '@/lib/wakeLock';
 
 import { elapsedMs, initial, step } from './machine';
@@ -55,8 +56,13 @@ export function useStopwatchMachine(): StopwatchMachineApi {
   // A reload is a fresh JS context — no platform wake lock is held yet even though the
   // rehydrated phase may say `running`. Re-acquire once on mount; further transitions
   // are already covered by runEffects() above.
+  //
+  // Web only. On native, keep-awake is NOT self-limiting the way navigator.wakeLock is, so a
+  // stopwatch left `running` days ago would re-grab the screen on every app launch and hold it
+  // across unrelated screens (Settings, presets). The native rehydrated-running lock is instead
+  // tied to the Timer screen being on-screen — see Timer.tsx's `stopwatch-screen` owner (07e).
   useEffect(() => {
-    if (state.phase === 'running') {
+    if (!isNativePlatform() && state.phase === 'running') {
       void acquire(WAKE_LOCK_OWNER);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

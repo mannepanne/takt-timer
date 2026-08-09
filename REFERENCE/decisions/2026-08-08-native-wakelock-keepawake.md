@@ -1,7 +1,7 @@
 # ADR: Native wake lock is backed by a Capacitor keep-awake plugin
 
-**Date:** 2026-08-08
-**Status:** Active (stub — the full backing design is specced and decided in Phase 7e)
+**Date:** 2026-08-08 (amended 2026-08-09 when 07e landed)
+**Status:** Active
 
 ---
 
@@ -23,17 +23,21 @@ Throwaway Capacitor 8.5 + `@capacitor-community/keep-awake` 8.0.1 shell on a One
 
 Full readings: [SPECIFICATIONS/07a-spikes.md](../../SPECIFICATIONS/07a-spikes.md) → Spike 1 finding.
 
-## What this ADR does NOT yet decide (deferred to 07e)
+## What 07e settled (amendment, 2026-08-09)
 
-This is a stub recording the _validated plugin choice_. The mechanics of wiring it behind the existing owned interface are [07e](../../SPECIFICATIONS/07e-wake-lock-native.md)'s job and are **not** settled here:
+**1. Where the divergence lives — a platform seam, not a runtime branch.** Rather than branch `wakeLock.ts` on `isNativePlatform()` (which would pull the plugin into the _web_ bundle and contort five functions), the platform primitive is a tiny seam — `src/lib/wakeLock-platform.ts` (web, `navigator.wakeLock`) aliased on native to `src/lib/wakeLock-platform-native.ts` (keep-awake). `wakeLock.ts` keeps **all** owner-set, `requestPending`, and convergence logic and calls `isPlatformSupported()` / `requestPlatformLock()` through the seam. Consequence: the plugin stays out of the web bundle, the convergence logic exists once and stays under the existing web-resolved vitest suite, and the web build is provably byte-identical (mirrors 07d's alias approach). A compile-time parity guard in the native module pins the seam's signature to the web module's.
 
-- **The synthetic-sentinel backing.** `wakeLock.ts` is built around a `WakeLockSentinel` (`.released`, `.release()`, a `'release'` event); the keep-awake plugin exposes only `keepAwake()`/`allowSleep()`. The native path needs a hand-maintained synthetic sentinel to preserve the owner-keyed acquire/release convergence logic.
-- **The stale-rehydrated-stopwatch re-acquire policy.** Keep-awake is **not** self-limiting the way `navigator.wakeLock` is on the web (the browser only grants it to a visible document and auto-releases on hide). A stopwatch left `running` and rehydrated on a later app launch would otherwise re-grab keep-awake on any screen. 07e must choose a deliberate policy (hold only while the running stopwatch is on screen, or expire a long-stale `running` state). See the cross-note in [ADR 2026-08-02](./2026-08-02-timer-mode-provider-scoped-state.md).
-- **Confirmation with the real machine.** Spike 1 used a bare shell; 07e must confirm the hold survives when the actual interval reducer dispatches acquire/release.
+**2. The synthetic sentinel is a ~15-line object, not a parallel implementation.** `requestPlatformLock()` on native calls `keepAwake()` and returns `{ released, release(), addEventListener() }`: `release()` calls `allowSleep()` once (idempotent) and flips `released`; `addEventListener` is a **no-op** because keep-awake never fires a spontaneous release — unlike `navigator.wakeLock`, which the browser auto-releases on tab-hide. The native primitive is genuinely _simpler_ than the web one (no sentinel to leak), so the "last owner released mid-request" race and the `requestPending` guard remain web concerns handled entirely in `wakeLock.ts`.
+
+**3. Stale-rehydrated-stopwatch re-acquire policy: option (a), hold only while on screen.** On native the launch re-acquire in `useStopwatchMachine` (which fires for a rehydrated `running` phase) is **skipped**; instead `Timer.tsx` holds a **distinct owner** (`stopwatch-screen`) while the running stopwatch is actually shown, releasing it on leave. A distinct owner (not the reducer's `stopwatch`) is required — screen-presence is a second independent wanter, exactly what the owner set is for; sharing one key would make two controllers fight over it. **Only the rehydrated case diverges:** during an _active_ session the reducer's `stopwatch` owner is held regardless of screen, same as web. This is the only way to satisfy both "screen stays on while a timer runs, foregrounded" and "a forgotten running stopwatch doesn't pin the screen on Settings/presets."
+
+**Web has the same latent behaviour — deliberately out of 07e's scope.** The spike's stated rationale ("on web that's self-limiting") is weaker than it reads: on a cold load that lands on Home with a stale `running` stopwatch, the document _is_ visible, so `navigator.wakeLock.request()` would be granted on web too. The _decision_ (a deliberate native re-acquire policy) stands; the _rationale_ does not for that case. 07e's acceptance criteria forbid changing the web path, so the equivalent web tidy-up (scope the rehydrated re-acquire to the Timer screen on web as well) is tracked separately, not folded in here.
+
+**4. Real-machine confirmation.** Spike 1 used a bare shell. 07e's device verification (Magnus, real hardware) confirms the hold survives when the actual reducer dispatches acquire/release, and that a forgotten running stopwatch does not keep the screen awake on an unrelated screen.
 
 ## Trade-offs accepted
 
-A second wake-lock implementation now exists (web `navigator.wakeLock`, native keep-awake) behind one interface. The native internals are a genuine rewrite, not a config flip — accepted because it's the only way to keep both call sites (`useTimerMachine`, `useStopwatchMachine`) unchanged.
+A second wake-lock backing now exists (web `navigator.wakeLock`, native keep-awake) behind one seam. The native backing is real code, not a config flip — accepted because it keeps both call sites (`useTimerMachine`, `useStopwatchMachine`) and `wakeLock.ts`'s convergence logic unchanged. The stale-lock policy adds one native-only branch to `Timer.tsx` and `useStopwatchMachine.ts` (both inert on web via `isNativePlatform()`), accepted as the minimum surface that makes "on screen ⇒ awake, off screen ⇒ may sleep" true for the rehydrated case.
 
 ---
 
