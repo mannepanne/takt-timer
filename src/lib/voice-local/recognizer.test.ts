@@ -100,6 +100,31 @@ describe('recognizeOnce', () => {
     start.mockResolvedValue({});
     expect(await recognizeOnce()).toBeNull();
   });
+
+  it('retries once when start fails fast (the post-recognition rebind race), then succeeds', async () => {
+    // On-device, the first start() after a completed recognition can lose the speech-service
+    // binding and fail in ~20ms. A real elapsed here is ~0, so recognizeOnce retries after the
+    // settle and returns the retry's result — the fix that makes the 2nd+ tap usable.
+    start
+      .mockRejectedValueOnce(new Error('Didn’t understand, please try again.'))
+      .mockResolvedValueOnce({ matches: ['three sets of one minute'] });
+    expect(await recognizeOnce()).toBe('three sets of one minute');
+    expect(start).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not retry a slow failure (real no-match / network error) — surfaces it', async () => {
+    const nowSpy = vi.spyOn(performance, 'now').mockReturnValueOnce(0).mockReturnValueOnce(2000);
+    start.mockRejectedValue(new Error('Network error'));
+    await expect(recognizeOnce()).rejects.toThrow('Network error');
+    expect(start).toHaveBeenCalledTimes(1);
+    nowSpy.mockRestore();
+  });
+
+  it('skips the retry when the caller aborted during the settle (user cancelled)', async () => {
+    start.mockRejectedValueOnce(new Error('Didn’t understand, please try again.'));
+    expect(await recognizeOnce('en-US', () => true)).toBeNull();
+    expect(start).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('stopRecognition', () => {

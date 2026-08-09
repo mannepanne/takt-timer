@@ -60,14 +60,34 @@ describe('useVoiceMachine (native)', () => {
     expect(navigate).not.toHaveBeenCalled();
   });
 
-  it('a throwing recogniser (offline / no language pack) lands on the recognition-failed sheet', async () => {
+  it('a throwing recogniser (non-network) lands on the recognition-failed sheet', async () => {
     // Drives the async catch in startCapture — recognitionError is dispatched through the real
     // orchestration, not just the reducer. Neutral copy, never a "you said it wrong".
-    recognizeOnce.mockRejectedValue(new Error('recognizer failed'));
+    recognizeOnce.mockRejectedValue(new Error('Didn’t understand, please try again.'));
     const { result } = renderHook(() => useVoiceMachine());
     act(() => result.current.micTap());
     await waitFor(() => expect(result.current.state.phase).toBe('parse-error'));
     expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it('a "Network error" (online-only recogniser, no connection) routes to the offline sheet', async () => {
+    recognizeOnce.mockRejectedValue(new Error('Network error'));
+    const { result } = renderHook(() => useVoiceMachine());
+    act(() => result.current.micTap());
+    await waitFor(() => expect(result.current.state.phase).toBe('offline'));
+  });
+
+  it('does NOT stop the recogniser again after a completed session (the second-tap bug)', async () => {
+    // The bug: unmount after a successful recognition called stop() on the already-finished
+    // recogniser, wedging Android's speech service so the next start() failed. After a natural
+    // resolve, stop() must not be called on cleanup.
+    recognizeOnce.mockResolvedValue('three sets of one minute, thirty seconds rest');
+    const { result, unmount } = renderHook(() => useVoiceMachine());
+    act(() => result.current.micTap());
+    await waitFor(() => expect(navigate).toHaveBeenCalled());
+    expect(stopRecognition).not.toHaveBeenCalled(); // recogniser finished on its own
+    unmount();
+    expect(stopRecognition).not.toHaveBeenCalled(); // and cleanup must not stop a finished session
   });
 
   it('unmounting mid-listen stops the recogniser and ignores a transcript that resolves after', async () => {

@@ -36,7 +36,18 @@ export function useVoiceMachine(): VoiceApi {
   // Cancellation sentinel for the in-flight capture flow. Flipped when the user cancels (or the
   // component unmounts) so the resolving recogniser promise stops dispatching stale events.
   const captureRef = useRef<{ cancelled: boolean } | null>(null);
+  // True only while the recogniser is actively listening. Calling the plugin's stop() when it has
+  // ALREADY finished leaves Android's speech service stuck "unbinding", so the next start() fails
+  // instantly ("Client side error" / no-match). So every stop() is gated on this flag — stop only
+  // an active session, never a completed one.
+  const listeningRef = useRef(false);
   const sendRef = useRef<(event: NativeVoiceEvent) => void>(() => {});
+
+  const stopActiveRecognition = useCallback(() => {
+    if (!listeningRef.current) return;
+    listeningRef.current = false;
+    void stopRecognition();
+  }, []);
 
   const runEffect = useCallback(
     (effect: NativeEffect) => {
@@ -57,11 +68,21 @@ export function useVoiceMachine(): VoiceApi {
                 return;
               }
               sendRef.current({ type: 'listeningBegan', now: performance.now() });
-              const transcript = await recognizeOnce(RECOGNITION_LANGUAGE);
+              listeningRef.current = true;
+              const transcript = await recognizeOnce(RECOGNITION_LANGUAGE, () => capture.cancelled);
+              listeningRef.current = false;
               if (capture.cancelled) return;
               sendRef.current({ type: 'transcript', text: transcript });
-            } catch {
-              if (!capture.cancelled) sendRef.current({ type: 'recognitionError' });
+            } catch (err) {
+              listeningRef.current = false;
+              if (capture.cancelled) return;
+              // The recogniser is online-only on many devices (no EXTRA_PREFER_OFFLINE), so a
+              // "Network error" means voice can't run without a connection here — route to the
+              // offline sheet ("you're offline, Configure manually") rather than the retry sheet,
+              // which would just fail again. Anything else (no-match, client error) is genuinely
+              // retryable.
+              const message = (err as { message?: string } | null)?.message ?? '';
+              sendRef.current({ type: 'recognitionError', offline: /network/i.test(message) });
             }
           })();
           return;
@@ -69,7 +90,7 @@ export function useVoiceMachine(): VoiceApi {
 
         case 'stopRecognition':
           if (captureRef.current) captureRef.current.cancelled = true;
-          void stopRecognition();
+          stopActiveRecognition();
           return;
 
         case 'navigateToConfigure':
@@ -81,7 +102,7 @@ export function useVoiceMachine(): VoiceApi {
           return;
       }
     },
-    [navigate],
+    [navigate, stopActiveRecognition],
   );
 
   const send = useCallback(
@@ -108,20 +129,22 @@ export function useVoiceMachine(): VoiceApi {
     send({ type: 'cancel' });
   }, [send]);
 
-  // Stop listening early and use what was heard: stopRecognition() makes the pending recognizeOnce()
-  // resolve, which dispatches the 'transcript' event through the normal path.
+  // Stop listening early and use what was heard: stopping an ACTIVE recogniser makes the pending
+  // recognizeOnce() resolve, which dispatches the 'transcript' event through the normal path.
+  // Guarded so it never stops an already-finished session (see stopActiveRecognition).
   const userStop = useCallback(() => {
-    if (stateRef.current.phase !== 'listening') return;
-    void stopRecognition();
-  }, []);
+    stopActiveRecognition();
+  }, [stopActiveRecognition]);
 
-  // Unmount cleanup — cancel any in-flight capture and stop the recogniser.
+  // Unmount cleanup — cancel any in-flight capture and stop the recogniser ONLY if it's still
+  // listening. Stopping a finished session here was the bug that wedged Android's speech service
+  // ("unbinding"), breaking the next start().
   useEffect(
     () => () => {
       if (captureRef.current) captureRef.current.cancelled = true;
-      void stopRecognition();
+      stopActiveRecognition();
     },
-    [],
+    [stopActiveRecognition],
   );
 
   // Native has no blob-empty retry toast (that's a web MediaRecorder concern) — always false.

@@ -20,7 +20,7 @@ export type NativeVoiceEvent =
   | { type: 'permissionDenied' } // RECORD_AUDIO denied (re-askable or permanent — overlay offers both)
   | { type: 'listeningBegan'; now: number }
   | { type: 'transcript'; text: string | null } // recogniser returned (null = nothing heard)
-  | { type: 'recognitionError' } // the plugin threw mid-capture
+  | { type: 'recognitionError'; offline?: boolean } // the plugin threw mid-capture (offline = no network)
   | { type: 'openSettings' } // user tapped "Open settings" on the permission sheet
   | { type: 'cancel' }
   | { type: 'retry' };
@@ -82,6 +82,9 @@ export function step(state: VoiceState, event: NativeVoiceEvent): NativeStepResu
         return { next: notASession(text), effects: [] }; // heard words, no session
       }
       if (event.type === 'recognitionError') {
+        // Offline (no on-device recogniser + no network) → the offline sheet, which says "you're
+        // offline, Configure manually" instead of inviting a retry that can't succeed here.
+        if (event.offline) return { next: { phase: 'offline' }, effects: [] };
         return { next: recognitionFailed(), effects: [] };
       }
       if (event.type === 'cancel') {
@@ -92,6 +95,7 @@ export function step(state: VoiceState, event: NativeVoiceEvent): NativeStepResu
     case 'parse-error':
     case 'permission-denied':
     case 'browser-unsupported':
+    case 'offline':
       if (event.type === 'openSettings') {
         return { next: state, effects: [{ type: 'openAppSettings' }] };
       }
@@ -101,13 +105,12 @@ export function step(state: VoiceState, event: NativeVoiceEvent): NativeStepResu
       return { next: state, effects: [] };
 
     // States the native flow never enters (web-only: uploading/transcribing/parsing/rate-limited/
-    // language-mismatch/offline). Kept exhaustive so a future VoiceState addition is a compile error.
+    // language-mismatch). Kept exhaustive so a future VoiceState addition is a compile error.
     case 'uploading':
     case 'transcribing':
     case 'parsing':
     case 'rate-limited':
     case 'language-mismatch':
-    case 'offline':
       return { next: state, effects: [] };
   }
 }

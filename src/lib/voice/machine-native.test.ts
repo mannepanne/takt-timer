@@ -73,9 +73,14 @@ describe('machine-native', () => {
     expect(next).toEqual({ phase: 'parse-error', reason: 'recognition-failed' });
   });
 
-  it('a recognition error falls back as recognition-failed (neutral — may be offline/no pack)', () => {
+  it('a recognition error falls back as recognition-failed (neutral — retryable)', () => {
     const { next } = step(listening, { type: 'recognitionError' });
     expect(next).toEqual({ phase: 'parse-error', reason: 'recognition-failed' });
+  });
+
+  it('an OFFLINE recognition error routes to the offline sheet (retry would fail here)', () => {
+    const { next } = step(listening, { type: 'recognitionError', offline: true });
+    expect(next).toEqual({ phase: 'offline' });
   });
 
   it('cancelling while listening stops the recogniser and returns to idle', () => {
@@ -96,10 +101,16 @@ describe('machine-native', () => {
     expect(effects).toEqual([{ type: 'openAppSettings' }]);
   });
 
-  it('retry from an error sheet returns to idle', () => {
-    for (const phase of ['parse-error', 'permission-denied', 'browser-unsupported'] as const) {
-      const state = { phase, reason: 'not-a-session' } as VoiceState;
+  it('retry/cancel from any error sheet (incl. offline) returns to idle', () => {
+    const states: VoiceState[] = [
+      { phase: 'parse-error', reason: 'not-a-session' },
+      { phase: 'permission-denied' },
+      { phase: 'browser-unsupported' },
+      { phase: 'offline' },
+    ];
+    for (const state of states) {
       expect(step(state, { type: 'retry' }).next).toEqual({ phase: 'idle' });
+      expect(step(state, { type: 'cancel' }).next).toEqual({ phase: 'idle' });
     }
   });
 
