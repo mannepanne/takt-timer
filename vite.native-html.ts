@@ -1,7 +1,19 @@
 // ABOUT: The native (Android) build's index.html transform, extracted so it can be unit-tested.
 // ABOUT: Strips Google Fonts + Cloudflare Analytics, self-hosts fonts, injects the scoped CSP.
 
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+
 import type { Plugin } from 'vite';
+
+// The self-hosted fonts the native @font-face points at. They are committed to public/fonts/ (the
+// source of truth); scripts/copy-fonts.mjs only refreshes them. The build must FAIL if they are
+// missing — otherwise it silently ships an unresolvable @font-face and the app renders in a fallback
+// font with no signal. This list is the single check tying the committed binaries to the build.
+export const NATIVE_FONT_FILES = [
+  'figtree-latin-wght-normal.woff2',
+  'jetbrains-mono-latin-wght-normal.woff2',
+];
 
 // The scoped Content-Security-Policy for the native build. Deliberately NOT `default-src 'none'`
 // (that stops the local WebView app loading at all). `connect-src 'none'` makes any stray app-level
@@ -72,6 +84,18 @@ export function transformNativeHtml(html: string): string {
 export function nativeHtmlPlugin(): Plugin {
   return {
     name: 'takt-native-html',
+    buildStart() {
+      // Fail early if a bundled font is missing — the native @font-face would otherwise resolve to
+      // nothing and the app would silently render in a fallback font.
+      const fontsDir = resolve(process.cwd(), 'public/fonts');
+      const missing = NATIVE_FONT_FILES.filter((f) => !existsSync(resolve(fontsDir, f)));
+      if (missing.length > 0) {
+        throw new Error(
+          `takt-native-html: missing self-hosted font(s) in public/fonts/: ${missing.join(', ')}. ` +
+            'Run `pnpm fonts:copy` to restore them from @fontsource-variable/*.',
+        );
+      }
+    },
     transformIndexHtml(html) {
       return transformNativeHtml(html);
     },

@@ -1,9 +1,9 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { NATIVE_CSP, transformNativeHtml } from './vite.native-html';
+import { NATIVE_CSP, NATIVE_FONT_FILES, transformNativeHtml } from './vite.native-html';
 
 // The real web entry, so this test tracks index.html as it actually is — if a new network tag is
 // added to the web entry, this test exercises the native strip against it rather than a stale copy.
@@ -47,5 +47,13 @@ describe('transformNativeHtml', () => {
 
   it('leaves the app entry script intact', () => {
     expect(out).toContain('/src/main.tsx');
+  });
+
+  it('the self-hosted fonts the @font-face references are committed in public/fonts/', () => {
+    // public/fonts/ is the source of truth (the native build's buildStart guard fails without them).
+    for (const file of NATIVE_FONT_FILES) {
+      expect(existsSync(resolve(__dirname, 'public/fonts', file))).toBe(true);
+      expect(out).toContain(`/fonts/${file}`);
+    }
   });
 });

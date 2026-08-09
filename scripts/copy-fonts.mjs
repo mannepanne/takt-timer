@@ -3,8 +3,12 @@
 //
 // The native build has no INTERNET permission and a `font-src 'self'` CSP, so it serves
 // Figtree + JetBrains Mono from bundled woff2 instead of the Google Fonts <link> the web
-// build uses. Run `pnpm fonts:copy` after bumping either @fontsource-variable package to
-// refresh the committed binaries. Provenance lives here rather than being a mystery blob.
+// build uses.
+//
+// The committed files in public/fonts/ are the SOURCE OF TRUTH — the native build asserts they
+// exist (nativeHtmlPlugin's buildStart) and fails without them. This script only REFRESHES them;
+// run `pnpm fonts:copy` after bumping either @fontsource-variable package. Provenance lives here
+// rather than being a mystery blob.
 //
 // We copy only the `latin` normal variable files: they cover English and Swedish (å ä ö
 // live in Latin-1, inside the latin subset), all weights via the wght axis, no italics

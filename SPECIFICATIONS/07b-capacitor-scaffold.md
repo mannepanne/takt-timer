@@ -48,7 +48,9 @@ Package the existing Vite build as an Android app via Capacitor, reusing `src/` 
 - [x] The native build completes with VitePWA disabled and **no** build-time error from a dangling `virtual:pwa-register` import (build-time alias to `src/lib/pwa-register-stub.ts`).
 - [x] The **web** build is unchanged in behaviour: the Vitest suite passes (966), `dist/index.html` still loads fonts + analytics, `dist/sw.js` still generated. Native carries none of these.
 
-**Still pending (needs the physical device):** install `app-debug.apk` and confirm it launches, shows the app, and renders the adaptive icon + splash. `adb devices` was empty this session — do this when the phone is next connected: `cd android && ./gradlew installDebug` (or `adb install -r app/build/outputs/apk/debug/app-debug.apk`).
+**CSP exercised, not just asserted:** the native bundle was served (`vite preview --mode native`) and loaded in a real browser CSP engine. Under the scoped CSP the full app renders — onboarding _and_ the main "What cadence do you need?" screen — with the self-hosted Figtree font, **zero** console violations, and the **only** network request being the bundled `woff2` (no Google Fonts, no analytics, no `/api`). So `connect-src 'none'` + `style-src 'self' 'unsafe-inline'` do not blank the app; the "app loads white on device" failure mode is disproven ahead of the device check.
+
+**Still pending (needs the physical device):** install `app-debug.apk` and confirm it launches, shows the app, and renders the adaptive icon + splash. This is the only check that covers (a) any Android-WebView-specific CSP quirk the desktop engine wouldn't show, and (b) which splash actually renders — `Theme.SplashScreen` (androidx) **ignores `android:background` on Android 12+** in favour of the system splash, so `drawable/splash.xml` may only apply on API < 31; the system splash on 12+ is acceptable but unconfirmed. `adb devices` was empty this session — run when the phone is next connected: `cd android && ./gradlew installDebug` (or `adb install -r app/build/outputs/apk/debug/app-debug.apk`).
 
 ## Testing
 
