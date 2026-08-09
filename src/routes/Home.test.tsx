@@ -193,6 +193,18 @@ describe('Home', () => {
     expect(apiFetch).not.toHaveBeenCalled();
   });
 
+  it('surfaces the presets entry on native even when unauthenticated (07d)', () => {
+    vi.mocked(isNativePlatform).mockReturnValue(true);
+    // useSession stays unauthenticated (beforeEach) — presets are device-local, no auth gate.
+    renderHome();
+    expect(screen.getByRole('button', { name: /open presets/i })).toBeInTheDocument();
+  });
+
+  it('hides the presets entry on web when unauthenticated', () => {
+    renderHome();
+    expect(screen.queryByRole('button', { name: /open presets/i })).not.toBeInTheDocument();
+  });
+
   it('does not show sparkline for authenticated users (server source instead)', () => {
     vi.mocked(useSession).mockReturnValue({
       session: { status: 'authenticated', user: { userHandle: 'u1', isAdmin: false } },

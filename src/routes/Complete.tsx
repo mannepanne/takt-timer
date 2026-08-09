@@ -35,8 +35,8 @@ export function Complete() {
   const [interactable, setInteractable] = useState(false);
 
   const isAuthenticated = authSession.status === 'authenticated';
-  // Native has no accounts (07c/07g): no sign-in-to-save CTA and no passkey prompt. Device-local
-  // "Save as preset" is 07d and not wired yet, so native shows only Run again / Done for now.
+  // Native has no accounts (07c/07g): no passkey prompt. "Save as preset" writes to device-local
+  // presets with no sign-in (07d), via the native @/lib/presets → presets-local build alias.
   const native = isNativePlatform();
 
   useEffect(() => {
@@ -115,7 +115,9 @@ export function Complete() {
           <Icon.Play size={18} color="var(--paper)" />
           {t('complete.runAgain')}
         </button>
-        {native ? null : isAuthenticated ? (
+        {native || isAuthenticated ? (
+          // Native saves to device-local presets (no sign-in); web needs an account. SavePresetSheet
+          // calls createPreset from @/lib/presets, which the native build aliases to presets-local.
           <button
             type="button"
             className="btn btn-ghost"
