@@ -117,6 +117,10 @@ export default defineConfig(({ mode }) => {
                 __dirname,
                 './src/lib/voice/useVoiceMachine-native.ts',
               ),
+              // Native app lifecycle (background-pause via appStateChange, hardware back button,
+              // exitApp) is @capacitor/app; swap the seam so the plugin stays out of the web bundle
+              // and the web keeps DOM visibilitychange (07g).
+              '@/lib/app-lifecycle': path.resolve(__dirname, './src/lib/app-lifecycle-native.ts'),
               // Native has no VitePWA and therefore no `virtual:pwa-register` module; alias it to a
               // no-op stub so the bare import in main.tsx resolves at build time.
               'virtual:pwa-register': path.resolve(__dirname, './src/lib/pwa-register-stub.ts'),

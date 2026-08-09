@@ -8,6 +8,7 @@ import { Icon } from '@/components/icons';
 import { useI18n } from '@/i18n/context';
 import { setMuted } from '@/lib/audio';
 import { fmtTime } from '@/lib/format';
+import { useSetIntervalActive } from '@/lib/interval-active';
 import { useSettings } from '@/lib/settings/context';
 import { useTimerMachine } from '@/lib/timer/useTimerMachine';
 import type { Session } from '@/lib/timer/types';
@@ -43,10 +44,18 @@ function RunInner({ session, onComplete }: RunInnerProps) {
   const api = useTimerMachine(session);
   const { state } = api;
   const { soundOn, setSoundOn } = useSettings();
+  const setIntervalActive = useSetIntervalActive();
 
   useEffect(() => {
     setMuted(!soundOn);
   }, [soundOn]);
+
+  // Publish "an interval session is active" (running or paused) for the native back-button
+  // confirm-before-exit (07g). Idle/complete don't count; clear on unmount. Inert on web.
+  useEffect(() => {
+    setIntervalActive(state.phase !== 'idle' && state.phase !== 'complete');
+  }, [state.phase, setIntervalActive]);
+  useEffect(() => () => setIntervalActive(false), [setIntervalActive]);
 
   // Auto-start on mount.
   const started = useStartedOnce(api.start);

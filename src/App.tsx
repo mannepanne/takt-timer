@@ -5,9 +5,11 @@
 import { useCallback, useState } from 'react';
 import { Route, Routes } from 'react-router-dom';
 
+import { NativeBackButton } from '@/components/NativeBackButton';
 import { PhoneFrame } from '@/components/PhoneFrame';
 import { I18nProvider } from '@/i18n/context';
 import { SessionProvider } from '@/lib/auth/session';
+import { IntervalActiveProvider } from '@/lib/interval-active';
 import { SettingsProvider } from '@/lib/settings/context';
 import { StopwatchProvider } from '@/lib/stopwatch/context';
 import { Complete } from '@/routes/Complete';
@@ -37,18 +39,21 @@ export function App() {
       <SessionProvider>
         <SettingsProvider>
           <StopwatchProvider>
-            <PhoneFrame>
-              <Routes>
-                <Route path="/" element={<HomeOrOnboarding />} />
-                <Route path="/configure" element={<Configure />} />
-                <Route path="/run" element={<Run />} />
-                <Route path="/complete" element={<Complete />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/privacy" element={<Privacy />} />
-                <Route path="/timer" element={<Timer />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </PhoneFrame>
+            <IntervalActiveProvider>
+              <PhoneFrame>
+                <NativeBackButton />
+                <Routes>
+                  <Route path="/" element={<HomeOrOnboarding />} />
+                  <Route path="/configure" element={<Configure />} />
+                  <Route path="/run" element={<Run />} />
+                  <Route path="/complete" element={<Complete />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/privacy" element={<Privacy />} />
+                  <Route path="/timer" element={<Timer />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </PhoneFrame>
+            </IntervalActiveProvider>
           </StopwatchProvider>
         </SettingsProvider>
       </SessionProvider>
