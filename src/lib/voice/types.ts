@@ -12,6 +12,9 @@ export type ErrorReason =
   | 'whisper-error'
   | 'llama-error'
   | 'not-a-session'
+  | 'recognition-failed' // native (07f): recogniser threw or heard nothing — a neutral "voice
+  // didn't work" rather than "not-a-session", which would wrongly blame the user for a failure
+  // that may be offline / no language pack.
   | 'schema-failed'
   | 'method-not-allowed'
   | 'rate-limited'

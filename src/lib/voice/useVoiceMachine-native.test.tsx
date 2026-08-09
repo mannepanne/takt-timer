@@ -60,6 +60,30 @@ describe('useVoiceMachine (native)', () => {
     expect(navigate).not.toHaveBeenCalled();
   });
 
+  it('a throwing recogniser (offline / no language pack) lands on the recognition-failed sheet', async () => {
+    // Drives the async catch in startCapture — recognitionError is dispatched through the real
+    // orchestration, not just the reducer. Neutral copy, never a "you said it wrong".
+    recognizeOnce.mockRejectedValue(new Error('recognizer failed'));
+    const { result } = renderHook(() => useVoiceMachine());
+    act(() => result.current.micTap());
+    await waitFor(() => expect(result.current.state.phase).toBe('parse-error'));
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it('unmounting mid-listen stops the recogniser and ignores a transcript that resolves after', async () => {
+    let resolveRec: (v: string | null) => void = () => {};
+    recognizeOnce.mockReturnValue(new Promise<string | null>((r) => (resolveRec = r)));
+    const { result, unmount } = renderHook(() => useVoiceMachine());
+    act(() => result.current.micTap());
+    await waitFor(() => expect(result.current.state.phase).toBe('listening'));
+
+    unmount();
+    expect(stopRecognition).toHaveBeenCalled();
+    // The cleanup flipped the capture sentinel, so a late transcript must not navigate.
+    await act(async () => resolveRec('three sets of one minute, thirty seconds rest'));
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
   it('routes to the unsupported sheet when recognition is unavailable', async () => {
     isRecognitionAvailable.mockResolvedValue(false);
     const { result } = renderHook(() => useVoiceMachine());

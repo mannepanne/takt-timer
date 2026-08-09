@@ -48,6 +48,8 @@ function parseErrorCopy(reason: ErrorReason, t: TFunc): string {
   switch (reason) {
     case 'not-a-session':
       return t('voice.error.notASession');
+    case 'recognition-failed':
+      return t('voice.error.recognitionFailedBody');
     case 'cold-start-timeout':
       return t('voice.error.coldStartTimeout');
     case 'upload-empty':

@@ -63,19 +63,19 @@ describe('machine-native', () => {
     expect(next.phase).toBe('parse-error');
   });
 
-  it('a null transcript (nothing heard) falls back with no transcript', () => {
+  it('a null transcript (nothing heard) falls back as recognition-failed, not blaming the user', () => {
     const { next } = step(listening, { type: 'transcript', text: null });
-    expect(next).toEqual({ phase: 'parse-error', reason: 'not-a-session', transcript: undefined });
+    expect(next).toEqual({ phase: 'parse-error', reason: 'recognition-failed' });
   });
 
-  it('a whitespace-only transcript falls back', () => {
+  it('a whitespace-only transcript falls back as recognition-failed', () => {
     const { next } = step(listening, { type: 'transcript', text: '   ' });
-    expect(next).toEqual({ phase: 'parse-error', reason: 'not-a-session', transcript: undefined });
+    expect(next).toEqual({ phase: 'parse-error', reason: 'recognition-failed' });
   });
 
-  it('a recognition error falls back to manual', () => {
+  it('a recognition error falls back as recognition-failed (neutral — may be offline/no pack)', () => {
     const { next } = step(listening, { type: 'recognitionError' });
-    expect(next).toEqual({ phase: 'parse-error', reason: 'not-a-session', transcript: undefined });
+    expect(next).toEqual({ phase: 'parse-error', reason: 'recognition-failed' });
   });
 
   it('cancelling while listening stops the recogniser and returns to idle', () => {

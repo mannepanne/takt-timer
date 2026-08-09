@@ -140,6 +140,12 @@ const strings = {
     en: 'Couldn’t make a session from that. Have another go, or tap Configure to build one manually.',
     sv: 'Kunde inte skapa ett pass från det. Försök igen eller tryck på Konfigurera.',
   },
+  // Native (07f): the recogniser threw or heard nothing — neutral, doesn't blame the user's phrasing
+  // (the cause may be offline / a missing language pack, not a bad session description).
+  'voice.error.recognitionFailedBody': {
+    en: 'Voice didn’t catch that. Try again, or tap Configure to build a session manually.',
+    sv: 'Rösten uppfattade inte det. Försök igen eller tryck på Konfigurera för att bygga ett pass manuellt.',
+  },
   'voice.error.coldStartTimeout': {
     en: 'Voice took longer than expected. Try again, or tap Configure to build a session manually.',
     sv: 'Rösten tog längre tid än väntat. Försök igen eller tryck på Konfigurera.',
@@ -162,8 +168,8 @@ const strings = {
   },
   // Native (Android) variants — no "browser", and a settings deep link for a blocked mic (07f).
   'voice.error.permissionDeniedBody.native': {
-    en: 'Microphone access is off for Takt. Open Settings to enable it, or tap Configure to build a session manually.',
-    sv: 'Mikrofonåtkomst är avstängd för Takt. Öppna Inställningar för att slå på den, eller tryck på Konfigurera för att bygga ett pass manuellt.',
+    en: 'Microphone access is off for Takt. Open settings to enable it, or tap Configure to build a session manually.',
+    sv: 'Mikrofonåtkomst är avstängd för Takt. Öppna inställningar för att slå på den, eller tryck på Konfigurera för att bygga ett pass manuellt.',
   },
   'voice.error.unsupportedBody.native': {
     en: 'Voice input isn’t available on this device. Tap Configure to build a session manually.',

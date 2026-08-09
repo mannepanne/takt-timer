@@ -21,15 +21,10 @@ import type { VoiceApi as WebVoiceApi } from './useVoiceMachine';
 // language — a Swedish-speaking user gets manual entry or English voice, per the umbrella spec.
 const RECOGNITION_LANGUAGE = 'en-US';
 
-export type VoiceApi = {
-  state: VoiceState;
-  micTap: () => void;
-  userStop: () => void;
-  cancel: () => void;
-  retry: () => void;
-  retryToastVisible: boolean;
-  openSettings: () => void;
-};
+// Defined by reference to the web VoiceApi so the shared fields can't drift, plus a REQUIRED
+// openSettings (the web one has it optional). Required here is load-bearing: it's the permanent-
+// denial recovery, and VoiceOverlay only shows the button when the callback is present.
+export type VoiceApi = WebVoiceApi & { openSettings: () => void };
 
 export function useVoiceMachine(): VoiceApi {
   const [state, setState] = useState<VoiceState>(() => initial());
@@ -138,3 +133,14 @@ export function useVoiceMachine(): VoiceApi {
 // VoiceApi. Type-only import — erased at build, so the web module isn't pulled into the native bundle.
 const _apiParity: WebVoiceApi = null as unknown as ReturnType<typeof useVoiceMachine>;
 void _apiParity;
+
+// Pin openSettings as REQUIRED on the native return, independent of the VoiceApi type above. Because
+// the web VoiceApi makes it optional, the _apiParity check alone would NOT catch openSettings being
+// dropped from the native hook (required-satisfies-optional). Purely type-level (no runtime deref):
+// resolves to 'ok' only when openSettings is required; a dropped/optional openSettings makes it
+// `never` (or an index error), failing typecheck — the settings recovery is a silent-failure guard.
+type _OpenSettingsIsRequired = undefined extends ReturnType<typeof useVoiceMachine>['openSettings']
+  ? never
+  : 'ok';
+const _openSettingsPinned: _OpenSettingsIsRequired = 'ok';
+void _openSettingsPinned;
