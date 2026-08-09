@@ -13,6 +13,7 @@ import { useSession } from '@/lib/auth/session';
 import { fmtTime } from '@/lib/format';
 import { lastSession } from '@/lib/history';
 import { pushSession } from '@/lib/history-sync';
+import { isNativePlatform } from '@/lib/platform';
 import type { Session } from '@/lib/timer/types';
 
 type CompleteState = {
@@ -41,7 +42,9 @@ export function Complete() {
   }, []);
 
   useEffect(() => {
-    if (!state || !isAuthenticated) return;
+    // Platform-gated so the sync is dead on native regardless of auth state (07c). History is still
+    // saved to localStorage by the timer machine — only the D1 sync is suppressed.
+    if (isNativePlatform() || !state || !isAuthenticated) return;
     const completed = lastSession();
     if (completed && completed.completedAt === state.completedAt) {
       pushSession(completed).catch(() => {

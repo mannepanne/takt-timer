@@ -6,6 +6,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { useI18n } from '@/i18n/context';
 import { apiFetch } from '@/lib/apiFetch';
 import { useSession } from '@/lib/auth/session';
+import { isNativePlatform } from '@/lib/platform';
 import { DEFAULT_ACCENT_ID, findAccent, type AccentId } from './accents';
 
 const ACCENT_KEY = 'takt.accent.v1';
@@ -67,9 +68,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     applyAccentCss(accentId);
   }, [accentId]);
 
-  // One-shot fetch from server when user authenticates.
+  // One-shot fetch from server when user authenticates. Platform-gated: native never syncs (07c);
+  // settings stay purely localStorage-backed.
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (isNativePlatform() || !isAuthenticated) return;
     apiFetch('/api/me/settings')
       .then((r) => (r.ok ? r.json() : null))
       .then((data: { language?: string; accent_colour?: string; sound_on?: number } | null) => {
@@ -101,7 +103,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   const persistToServer = useCallback(
     (overrides?: { language?: string; accent_colour?: string; sound_on?: number }) => {
-      if (!isAuthenticated) return;
+      if (isNativePlatform() || !isAuthenticated) return;
       const body = {
         language: overrides?.language ?? lang,
         accent_colour: overrides?.accent_colour ?? accentId,

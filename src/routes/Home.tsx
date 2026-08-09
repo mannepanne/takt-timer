@@ -15,6 +15,7 @@ import { useSession } from '@/lib/auth/session';
 import { apiFetch } from '@/lib/apiFetch';
 import { fmtTime } from '@/lib/format';
 import { readHistory } from '@/lib/history';
+import { isNativePlatform } from '@/lib/platform';
 import { useElapsedMs, useStopwatch } from '@/lib/stopwatch/context';
 import type { CompletedSession } from '@/lib/timer/types';
 
@@ -53,7 +54,9 @@ export function Home() {
   }, []);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    // Native never has an account: gate on platform so the sessions fetch is guaranteed dead, not
+    // just incidentally silent because auth resolved to unauthenticated (07c).
+    if (isNativePlatform() || !isAuthenticated) return;
     apiFetch('/api/sessions?latest=1')
       .then((r) => (r.ok ? r.json() : null))
       .then((row: SessionRow | null) => {
