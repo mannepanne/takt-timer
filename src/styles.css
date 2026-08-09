@@ -195,6 +195,13 @@ input {
   display: flex;
   flex-direction: column;
   background: var(--paper);
+  /* Native (Capacitor) draws edge-to-edge behind the status bar and gesture-nav bar (index.html
+     sets viewport-fit=cover). Inset each screen's content by the safe-area insets so top/bottom
+     chrome clears the system bars, while the screen's own background (paper, or the run phase
+     colour) still fills the border-box edge-to-edge. Inert on non-notched viewports (insets are 0),
+     so the web app is unchanged. */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
 }
 
 /* Top bar */
@@ -1339,7 +1346,10 @@ button.settings-link {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  /* Full-screen fixed overlay — escapes .screen's safe-area padding, so keep the centred sheet
+     clear of the system bars on native. At least 24px, more if an inset is larger. */
+  padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right))
+    max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
 }
 .voice-overlay-sheet {
   width: 100%;
@@ -1426,7 +1436,8 @@ button.settings-link {
 .mic-retry-toast {
   position: fixed;
   left: 50%;
-  bottom: 24px;
+  /* Fixed to the window — lift above the gesture-nav bar on native. */
+  bottom: calc(24px + env(safe-area-inset-bottom));
   transform: translateX(-50%);
   max-width: calc(100% - 32px);
   padding: 12px 16px;
