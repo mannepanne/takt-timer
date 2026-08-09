@@ -102,6 +102,24 @@ describe('useVoiceMachine (native)', () => {
     expect(navigate).not.toHaveBeenCalled();
   });
 
+  it('Stop then Cancel before the recogniser resolves must NOT navigate (cancel wins)', async () => {
+    // userStop() calls stopRecognition() directly (keep the transcript); a following cancel() means
+    // "discard". Both hit the same plugin — the per-capture cancelled sentinel is what distinguishes
+    // them, so a transcript resolving after cancel must be dropped, never navigated into Configure.
+    let resolveRec: (v: string | null) => void = () => {};
+    recognizeOnce.mockReturnValue(new Promise<string | null>((r) => (resolveRec = r)));
+    const { result } = renderHook(() => useVoiceMachine());
+    act(() => result.current.micTap());
+    await waitFor(() => expect(result.current.state.phase).toBe('listening'));
+
+    act(() => result.current.userStop()); // tap Stop
+    act(() => result.current.cancel()); // then Cancel before the transcript arrives
+    expect(result.current.state.phase).toBe('idle');
+
+    await act(async () => resolveRec('three sets of one minute, thirty seconds rest'));
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
   it('userStop stops the recogniser so the pending capture resolves', async () => {
     let resolveRec: (v: string | null) => void = () => {};
     recognizeOnce.mockReturnValue(new Promise<string | null>((r) => (resolveRec = r)));
