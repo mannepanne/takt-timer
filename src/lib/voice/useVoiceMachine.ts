@@ -40,6 +40,10 @@ export type VoiceApi = {
   cancel: () => void;
   retry: () => void;
   retryToastVisible: boolean;
+  // Native-only: deep-links to the app's settings page when the mic permission is permanently
+  // denied (07f). Absent on web; MicButton passes it through and VoiceOverlay only renders the
+  // control when it's present, so the web build is unaffected.
+  openSettings?: () => void;
 };
 
 export function useVoiceMachine(): VoiceApi {

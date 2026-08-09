@@ -148,13 +148,13 @@ The Capacitor scaffold lives in `android/` (checked in; build artefacts are giti
 
 ### The pnpm scripts
 
-| Command                      | What it does                                                                                                                                         |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm build:native`          | Vite build in native mode → `dist-native/` (fonts self-hosted, no analytics, scoped CSP, SW disabled).                                               |
-| `pnpm cap:sync`              | `build:native` then `cap sync android` — copies the native bundle into the Android project. Run this before any Gradle build.                        |
-| `pnpm android:check`         | Asserts the **built APK's merged manifest has no `INTERNET` permission** (`aapt2 dump permissions`). The durable guard behind `tools:node="remove"`. |
-| `pnpm fonts:copy`            | Refreshes the bundled variable `woff2` in `public/fonts/` from the `@fontsource-variable/*` packages (only after bumping them).                      |
-| `node scripts/gen-icons.mjs` | Regenerates web + Android launcher icons and the splash logo from the "takt" wordmark SVG — no external artwork.                                     |
+| Command                      | What it does                                                                                                                                                                                                                                                                                                                                                        |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm build:native`          | Vite build in native mode → `dist-native/` (fonts self-hosted, no analytics, scoped CSP, SW disabled).                                                                                                                                                                                                                                                              |
+| `pnpm cap:sync`              | `build:native` then `cap sync android` — copies the native bundle into the Android project. Run this before any Gradle build.                                                                                                                                                                                                                                       |
+| `pnpm android:check`         | Asserts the **built APK's merged manifest** has **no `INTERNET`** permission, **and** keeps the speech-recogniser surface: `RECORD_AUDIO` + the `RecognitionService` `<queries>` block (both contributed by the speech plugin's manifest merge, 07f). The durable guard behind `tools:node="remove"` and the "voice silently unavailable without `<queries>`" trap. |
+| `pnpm fonts:copy`            | Refreshes the bundled variable `woff2` in `public/fonts/` from the `@fontsource-variable/*` packages (only after bumping them).                                                                                                                                                                                                                                     |
+| `node scripts/gen-icons.mjs` | Regenerates web + Android launcher icons and the splash logo from the "takt" wordmark SVG — no external artwork.                                                                                                                                                                                                                                                    |
 
 ### Build + verify a debug APK
 
@@ -179,10 +179,34 @@ If `adb devices` is empty, the phone isn't in debugging mode / the USB cable is 
 
 ---
 
+## Part 4 — Native voice (on-device recogniser + local parser, from 07f)
+
+On native, the web voice pipeline (`MicButton` → `useVoiceMachine` → `POST /api/voice/parse`, Whisper + Llama) is swapped, via a build-time alias (`@/lib/voice/useVoiceMachine` → `useVoiceMachine-native.ts`), for an **on-device pipeline**: Android's system speech recogniser → a local **English-only deterministic parser** → `{ sets, workSec, restSec }`. `MicButton`/`VoiceOverlay` stay shared. See [ADR 2026-07-26 (+ 2026-08-02 addendum)](./decisions/2026-07-26-android-on-device-voice-parsing.md) for the why.
+
+**Takt still makes no network call** — the recogniser runs in a separate Google process (which _may_ go online to transcribe), reached without `INTERNET`. Two plugins back this: `@capacitor-community/speech-recognition` (capture + transcription; contributes `RECORD_AUDIO` and the `RecognitionService` `<queries>` block via manifest merge) and `capacitor-native-settings` (deep link to the app settings page when the mic is permanently denied).
+
+**Fail-safe by design:** every low-confidence/failed parse, unavailable recogniser, or denied permission routes to the manual/Interpretation screen (`/configure`) — **never a silent or wrong auto-configuration**. The parser never guesses a missing field.
+
+### Supported parser grammar (v1, `src/lib/voice-local/parser.ts`)
+
+Conservative closed grammar — returns a confident `{ sets, workSec, restSec }` **only when all three are present**, otherwise falls back:
+
+- **Set count:** `<number> sets|rounds` ("three sets", "5 rounds"). `reps` is deliberately **not** accepted (rep-based work is Timer mode's job).
+- **Durations:** `<number> minute(s)|min|second(s)|sec`, or `mm:ss` ("90 seconds", "2 min", "1:30"). A compound merges only when joined by "and" ("one minute **and** thirty seconds"). A bare number with no unit is never a duration.
+- **Numbers:** digits, or English words 0–99 incl. compounds ("forty five"); "a"/"an" = 1 before a unit.
+- **Work markers:** `of` / `for` / `on` / `work`. **Rest markers:** `rest` / `break` / `off` / `between` / `in between`, plus explicit `no rest` / `without rest` / `no break` → `restSec: 0`. Rest wins when a duration carries both.
+- **Rejected (fall back, never guess):** decimals / thousands separators ("2.5 minutes"), an `mm:ss` seconds component ≥ 60, sets outside 1–99, durations outside 1–3600 s.
+- **Known safe limits:** recogniser homophones ("for"→"four", "to"→"two") are **not** mapped to numbers, so they fall back rather than mis-configure.
+
+The pinned validation corpus lives in `src/lib/voice-local/fixtures/phrase-corpus.ts`; real-hardware transcript validation (spoken aloud, not typed) is where the corpus earns its acceptance tick.
+
+---
+
 ## Cross-references
 
 - [SPECIFICATIONS/07-android-app.md](../SPECIFICATIONS/07-android-app.md) — the umbrella spec (north star, architecture, risks).
 - [SPECIFICATIONS/07b-capacitor-scaffold.md](../SPECIFICATIONS/07b-capacitor-scaffold.md) — the scaffold deliverable this build workflow comes from.
 - [SPECIFICATIONS/07a-spikes.md](../SPECIFICATIONS/07a-spikes.md) — the first code work (keep-awake / lifecycle / speech-recognition), needs the dev environment above.
+- [SPECIFICATIONS/07f-voice-pipeline.md](../SPECIFICATIONS/07f-voice-pipeline.md) — the native voice deliverable documented in Part 4 above.
 - [SPECIFICATIONS/07h-publishing.md](../SPECIFICATIONS/07h-publishing.md) — the publishing deliverable, whose admin track is Part 1 above.
 - [environment-setup.md](./environment-setup.md) — the _web_ app's Cloudflare/Wrangler environment (unrelated to Android, but the sibling setup doc).

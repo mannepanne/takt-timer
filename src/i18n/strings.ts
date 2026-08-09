@@ -160,6 +160,19 @@ const strings = {
     en: 'This browser doesn’t support voice input. Tap Configure to build a session manually.',
     sv: 'Den här webbläsaren stöder inte röstinmatning. Tryck på Konfigurera för att bygga ett pass manuellt.',
   },
+  // Native (Android) variants — no "browser", and a settings deep link for a blocked mic (07f).
+  'voice.error.permissionDeniedBody.native': {
+    en: 'Microphone access is off for Takt. Open Settings to enable it, or tap Configure to build a session manually.',
+    sv: 'Mikrofonåtkomst är avstängd för Takt. Öppna Inställningar för att slå på den, eller tryck på Konfigurera för att bygga ett pass manuellt.',
+  },
+  'voice.error.unsupportedBody.native': {
+    en: 'Voice input isn’t available on this device. Tap Configure to build a session manually.',
+    sv: 'Röstinmatning är inte tillgänglig på den här enheten. Tryck på Konfigurera för att bygga ett pass manuellt.',
+  },
+  'voice.error.openSettings': {
+    en: 'Open settings',
+    sv: 'Öppna inställningar',
+  },
   'voice.error.generic': {
     en: 'Something went wrong. Please try again.',
     sv: 'Något gick fel. Försök igen.',
