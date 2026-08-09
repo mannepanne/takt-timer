@@ -34,6 +34,7 @@ import { lastSession } from '@/lib/history';
 import { pushSession } from '@/lib/history-sync';
 import { hasRegisteredBefore } from '@/lib/auth/local-hint';
 import { isNativePlatform } from '@/lib/platform';
+import { createPreset } from '@/lib/presets';
 import { Complete } from './Complete';
 import { I18nProvider } from '@/i18n/context';
 
@@ -86,13 +87,31 @@ describe('Complete route', () => {
     expect(screen.getByTestId('home')).toBeInTheDocument();
   });
 
-  it('on native (07g): no "Sign in to save" CTA and no passkey prompt', () => {
+  it('on native (07d): shows "Save as preset" (no sign-in), never the passkey CTA', () => {
     vi.mocked(isNativePlatform).mockReturnValue(true);
     renderComplete(state);
-    // Run again / Done remain; the account/passkey save CTA is gone (native save-as-preset is 07d).
-    expect(screen.getByRole('button', { name: /run it again/i })).toBeInTheDocument();
+    // Native saves device-local presets with no account, so the save CTA is present and the
+    // account/passkey "sign in to save" path is gone.
+    expect(screen.getByRole('button', { name: /save as preset/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /sign in to save/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /save.*preset/i })).not.toBeInTheDocument();
+  });
+
+  it('on native, tapping "Save as preset" opens the save sheet and writes via createPreset', async () => {
+    vi.mocked(isNativePlatform).mockReturnValue(true);
+    renderComplete(state);
+    await clickWhenReady(/save as preset/i);
+    const input = await screen.findByLabelText(/name/i);
+    await userEvent.type(input, 'Leg day');
+    await userEvent.click(screen.getByRole('button', { name: /^save$/i }));
+    // This asserts the native UI *branching* (save available, wired to createPreset) — not the build
+    // alias itself: vitest runs the web resolution, so createPreset here is the mocked presets.ts
+    // surface. The alias swap to presets-local is guarded by the parity check in presets-local.test.ts
+    // and verified in the built bundle (pnpm build:native → no /api/presets, has takt.presets.v1).
+    await waitFor(() =>
+      expect(createPreset).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'Leg day', sets: 3, work_sec: 60, rest_sec: 30 }),
+      ),
+    );
   });
 
   it('on web: keeps the sign-in-to-save CTA for unauthenticated users', () => {

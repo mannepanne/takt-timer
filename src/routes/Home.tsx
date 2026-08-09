@@ -48,6 +48,9 @@ export function Home() {
   const stopwatchElapsedMs = useElapsedMs(1000);
 
   const isAuthenticated = authSession.status === 'authenticated';
+  // Presets are the phase's main native feature — on native they're device-local and need no auth,
+  // so surface the entry point regardless of auth state (07d). On web it stays account-gated.
+  const showPresets = isNativePlatform() || isAuthenticated;
 
   useEffect(() => {
     setHistory(readHistory());
@@ -94,7 +97,7 @@ export function Home() {
     <div className="screen">
       <TopBar
         left={
-          isAuthenticated ? (
+          showPresets ? (
             <button
               className="icon-btn"
               aria-label={t('home.openPresets')}
@@ -156,9 +159,7 @@ export function Home() {
         <Link to="/privacy">{t('home.privacy')}</Link>
       </div>
 
-      {isAuthenticated && (
-        <PresetsDrawer open={presetsOpen} onClose={() => setPresetsOpen(false)} />
-      )}
+      {showPresets && <PresetsDrawer open={presetsOpen} onClose={() => setPresetsOpen(false)} />}
     </div>
   );
 }

@@ -94,13 +94,22 @@ export default defineConfig(({ mode }) => {
           ]),
     ],
     resolve: {
+      // More-specific native aliases MUST precede the '@' catch-all — @rollup/plugin-alias matches
+      // in order, first hit wins, and '@' would otherwise swallow '@/lib/presets'. (The string
+      // matcher requires '/' or end after the key, so '@/lib/presets' does NOT catch
+      // '@/lib/presets-local'.)
       alias: {
-        '@': path.resolve(__dirname, './src'),
-        // Native has no VitePWA and therefore no `virtual:pwa-register` module; alias it to a
-        // no-op stub so the bare import in main.tsx resolves at build time.
         ...(isNative
-          ? { 'virtual:pwa-register': path.resolve(__dirname, './src/lib/pwa-register-stub.ts') }
+          ? {
+              // Native presets live in device localStorage, not D1 — swap the whole module so
+              // PresetsDrawer/SavePresetSheet stay byte-identical on web (07d).
+              '@/lib/presets': path.resolve(__dirname, './src/lib/presets-local.ts'),
+              // Native has no VitePWA and therefore no `virtual:pwa-register` module; alias it to a
+              // no-op stub so the bare import in main.tsx resolves at build time.
+              'virtual:pwa-register': path.resolve(__dirname, './src/lib/pwa-register-stub.ts'),
+            }
           : {}),
+        '@': path.resolve(__dirname, './src'),
       },
     },
     server: {

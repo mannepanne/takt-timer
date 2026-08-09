@@ -144,7 +144,7 @@ Once `adb devices` shows your phone, the toolchain is ready and we can scaffold 
 
 ## Part 3 — Building the app locally (from 07b)
 
-The Capacitor scaffold lives in `android/` (checked in; build artefacts are gitignored). The app runs from the **native Vite build variant** — self-hosted fonts, no analytics, a scoped CSP, no service worker — kept separate from the web build so "Takt's own process makes zero network calls" is structural, not observed. WebView origin is locked to `https://localhost` and the application ID to `org.hultberg.takt` — both immutable after first release.
+The Capacitor scaffold lives in `android/` (checked in; build artefacts are gitignored). The app runs from the **native Vite build variant** — self-hosted fonts, no analytics, a scoped CSP, no service worker, and two **build-time module aliases** (`virtual:pwa-register` → a no-op stub; `@/lib/presets` → `presets-local`, so presets are device-local and `/api/presets` never reaches the native bundle) — kept separate from the web build so "Takt's own process makes zero network calls" is structural, not observed. WebView origin is locked to `https://localhost` and the application ID to `org.hultberg.takt` — both immutable after first release.
 
 ### The pnpm scripts
 
