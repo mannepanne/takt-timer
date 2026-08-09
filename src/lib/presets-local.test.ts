@@ -4,6 +4,48 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { listPresets, createPreset, updatePreset, deletePreset } from './presets-local';
+import type { Preset as LocalPreset, PresetInput as LocalPresetInput } from './presets-local';
+import type { PresetInput as WebPresetInput } from './presets';
+
+// ── Compile-time parity guard (07d) ───────────────────────────────────────────────────────────
+// The native build aliases `@/lib/presets` → this module (vite.config.ts). tsc only ever checks
+// consumers against presets.ts, and vitest runs the web module — so nothing else catches a drift
+// where this module's consumed surface diverges from presets.ts's. That would break the native
+// build at runtime with no type error and no failing test. These assertions fail to COMPILE on
+// drift. Keep the consumed-function list in sync with PresetsDrawer/SavePresetSheet's imports.
+type Exact<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
+
+// 1. PresetInput must be identical — SavePresetSheet passes the same object to createPreset on both.
+const _inputParity: Exact<WebPresetInput, LocalPresetInput> = true;
+void _inputParity;
+
+// 2. The consumed functions must exist and accept presets.ts's parameter types.
+const _consumedSurface: {
+  listPresets: () => Promise<unknown>;
+  createPreset: (input: WebPresetInput) => Promise<unknown>;
+  updatePreset: (
+    id: string,
+    patch: Partial<WebPresetInput & { pinned: number }>,
+  ) => Promise<unknown>;
+  deletePreset: (id: string) => Promise<unknown>;
+} = { listPresets, createPreset, updatePreset, deletePreset };
+void _consumedSurface;
+
+// 3. The Preset fields the drawer/sheet read (user_handle is intentionally NOT consumed) must exist.
+type ConsumedPresetField =
+  | 'id'
+  | 'name'
+  | 'sets'
+  | 'work_sec'
+  | 'rest_sec'
+  | 'pinned'
+  | 'order_index'
+  | 'created_at';
+const _presetFields: Record<ConsumedPresetField, unknown> = {} as Pick<
+  LocalPreset,
+  ConsumedPresetField
+>;
+void _presetFields;
 
 const KEY = 'takt.presets.v1';
 

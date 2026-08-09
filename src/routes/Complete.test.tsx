@@ -103,7 +103,10 @@ describe('Complete route', () => {
     const input = await screen.findByLabelText(/name/i);
     await userEvent.type(input, 'Leg day');
     await userEvent.click(screen.getByRole('button', { name: /^save$/i }));
-    // createPreset is the aliased local module in the native build; here it's the mocked surface.
+    // This asserts the native UI *branching* (save available, wired to createPreset) — not the build
+    // alias itself: vitest runs the web resolution, so createPreset here is the mocked presets.ts
+    // surface. The alias swap to presets-local is guarded by the parity check in presets-local.test.ts
+    // and verified in the built bundle (pnpm build:native → no /api/presets, has takt.presets.v1).
     await waitFor(() =>
       expect(createPreset).toHaveBeenCalledWith(
         expect.objectContaining({ name: 'Leg day', sets: 3, work_sec: 60, rest_sec: 30 }),
