@@ -1,25 +1,20 @@
 // ABOUT: Screen Wake Lock wrapper. Graceful degradation when unsupported.
-// ABOUT: The platform auto-releases the lock when the tab goes hidden; use reacquireIfNeeded
-// ABOUT: on visibility-visible to get it back. Owner-keyed so multiple independent callers
-// ABOUT: (interval timer, stopwatch) can each want the lock without stepping on one another.
+// ABOUT: Owner-keyed so multiple independent callers (interval timer, stopwatch) can each want
+// ABOUT: the lock without stepping on one another. The platform primitive is swapped via the
+// ABOUT: wakeLock-platform seam: navigator.wakeLock on web, keep-awake on native.
 
-type WakeLockSentinel = {
-  released: boolean;
-  release: () => Promise<void>;
-  addEventListener: (type: 'release', cb: () => void) => void;
-};
+import {
+  isPlatformSupported,
+  requestPlatformLock,
+  type PlatformSentinel,
+} from '@/lib/wakeLock-platform';
 
-type NavigatorWithWakeLock = Navigator & {
-  wakeLock?: { request: (type: 'screen') => Promise<WakeLockSentinel> };
-};
-
-let sentinel: WakeLockSentinel | null = null;
+let sentinel: PlatformSentinel | null = null;
 const owners = new Set<string>();
 let requestPending = false;
 
 export function isSupported(): boolean {
-  if (typeof navigator === 'undefined') return false;
-  return typeof (navigator as NavigatorWithWakeLock).wakeLock?.request === 'function';
+  return isPlatformSupported();
 }
 
 // Centralises the actual platform request behind an in-flight guard, so concurrent
@@ -30,8 +25,7 @@ async function requestSentinel(): Promise<void> {
   if (requestPending) return;
   requestPending = true;
   try {
-    const nav = navigator as NavigatorWithWakeLock;
-    const acquired = (await nav.wakeLock!.request('screen')) ?? null;
+    const acquired = await requestPlatformLock();
     // The last owner may have released while this request was in flight — release()
     // saw no sentinel yet to act on, so this request must not leak one now.
     if (acquired && owners.size === 0) {
@@ -44,7 +38,9 @@ async function requestSentinel(): Promise<void> {
       return;
     }
     sentinel = acquired;
-    // The platform auto-releases on hidden; clear our handle when that happens.
+    // On web the browser auto-releases the lock on tab-hide and fires 'release'; clear our handle
+    // when that happens. On native keep-awake never auto-releases (the seam's addEventListener is
+    // a no-op there), so the handle lives until an explicit release() — see reacquireIfNeeded.
     sentinel?.addEventListener('release', () => {
       sentinel = null;
     });

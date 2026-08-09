@@ -104,6 +104,13 @@ export default defineConfig(({ mode }) => {
               // Native presets live in device localStorage, not D1 — swap the whole module so
               // PresetsDrawer/SavePresetSheet stay byte-identical on web (07d).
               '@/lib/presets': path.resolve(__dirname, './src/lib/presets-local.ts'),
+              // Native screen keep-awake is a Capacitor plugin, not navigator.wakeLock — swap the
+              // platform seam so wakeLock.ts's owner-keyed logic is unchanged and the plugin stays
+              // out of the web bundle (07e).
+              '@/lib/wakeLock-platform': path.resolve(
+                __dirname,
+                './src/lib/wakeLock-platform-native.ts',
+              ),
               // Native voice uses the on-device recogniser + local English parser, not the Whisper/
               // Llama HTTP pipeline — swap the hook so MicButton/VoiceOverlay stay shared (07f).
               '@/lib/voice/useVoiceMachine': path.resolve(
