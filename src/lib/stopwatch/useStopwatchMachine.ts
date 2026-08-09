@@ -74,8 +74,9 @@ export function useStopwatchMachine(): StopwatchMachineApi {
   const reset = useCallback(() => send({ type: 'reset' }), [send]);
 
   // No visibility-driven *state* transitions — this machine is explicitly meant to keep
-  // running while backgrounded. It does need the wake lock reacquired on return, though,
-  // since the platform auto-releases it on hide.
+  // running while backgrounded. On the web the browser auto-releases the wake lock on hide, so
+  // it needs reacquiring on return; on native keep-awake never auto-releases (07e), making this
+  // a harmless no-op there. Kept unconditional so the web path is byte-identical.
   useEffect(() => {
     const handler = () => {
       if (document.visibilityState === 'visible') {

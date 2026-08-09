@@ -8,6 +8,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { I18nProvider } from '@/i18n/context';
 import { isNativePlatform } from '@/lib/platform';
 import { StopwatchProvider } from '@/lib/stopwatch/context';
+import { persistState } from '@/lib/stopwatch/persistence';
 import * as wakeLock from '@/lib/wakeLock';
 
 import { Timer } from './Timer';
@@ -127,6 +128,19 @@ describe('Timer route', () => {
   });
 
   describe('native screen keep-awake (07e stale-lock policy)', () => {
+    it('holds the screen on mount when the stopwatch is ALREADY running (rehydrated), with no click', () => {
+      // The load-bearing path: on native the launch re-acquire in useStopwatchMachine is skipped,
+      // so when the user reopens the app to a still-running stopwatch and lands on the Timer screen,
+      // Timer.tsx's mount effect is the ONLY thing keeping the screen on. If this regresses the
+      // phone sleeps mid-set and the suite would otherwise stay green.
+      vi.mocked(isNativePlatform).mockReturnValue(true);
+      persistState({ phase: 'running', accumulatedMs: 0, startedAtMs: 0 });
+      const acquireSpy = vi.spyOn(wakeLock, 'acquire').mockResolvedValue();
+      renderTimer();
+      expect(screen.getByRole('button', { name: 'Pause' })).toBeInTheDocument(); // rehydrated running
+      expect(acquireSpy).toHaveBeenCalledWith('stopwatch-screen');
+    });
+
     it('holds the screen (stopwatch-screen owner) while running on this screen, releasing on leave', () => {
       vi.mocked(isNativePlatform).mockReturnValue(true);
       const acquireSpy = vi.spyOn(wakeLock, 'acquire').mockResolvedValue();

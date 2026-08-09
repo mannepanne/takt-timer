@@ -7,11 +7,9 @@ import { KeepAwake } from '@capacitor-community/keep-awake';
 
 import type * as WebPlatform from './wakeLock-platform';
 
-export type PlatformSentinel = {
-  released: boolean;
-  release: () => Promise<void>;
-  addEventListener: (type: 'release', cb: () => void) => void;
-};
+// The sentinel shape is owned by the web seam; reuse it rather than redeclare, so the two seams
+// can't drift structurally (the _parity guard below already pins the function signatures).
+type PlatformSentinel = WebPlatform.PlatformSentinel;
 
 // The keep-awake plugin is a screen-timeout flag, always available inside the WebView (Spike 1,
 // ADR 2026-08-08) — there is no capability to feature-detect, unlike navigator.wakeLock.

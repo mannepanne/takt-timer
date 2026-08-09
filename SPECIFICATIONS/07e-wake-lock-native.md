@@ -37,7 +37,12 @@ Back `src/lib/wakeLock.ts` with a native keep-awake path so both callers — the
 ## Testing
 
 - Unit-test the synthetic-sentinel bookkeeping (acquire/release/reacquire, owner-set convergence) with the native backing mocked.
-- Manual (real device): screen stays on foregrounded; forgotten-stopwatch does not pin the screen on an unrelated screen.
+- Manual (real device) — **set the device screen timeout to its minimum (15–30 s) first**, or a session shorter than the timeout proves nothing:
+  - Interval session runs foregrounded past the timeout → screen stays on, no manual touch.
+  - Stopwatch runs on the Timer screen past the timeout → screen stays on.
+  - **Stale-lock (rehydrated):** start stopwatch → background → reopen to a **non-Timer** screen (Home/Settings), wait past the timeout → screen sleeps; it is **not** pinned on.
+  - **Same-session (documented, expected to hold):** start stopwatch → navigate to Settings **without** backgrounding → the screen stays on (web-parity behaviour, see the ADR's "same-session off-screen hold" note). Confirm this matches the documented decision rather than reading as a bug.
+  - **OEM/battery-saver:** repeat the interval-session check with battery-saver engaged on the target device — a rejected `keepAwake()` is swallowed by design, so observation is the only signal, and Android keep-awake is OEM-fragmented (the spike validated one OnePlus only).
 
 ## Cross-refs
 

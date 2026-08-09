@@ -178,6 +178,19 @@ describe('useStopwatchMachine', () => {
       expect(acquireSpy).not.toHaveBeenCalled();
     });
 
+    it('the native skip is launch-only — a later resume still re-acquires the stopwatch owner', () => {
+      // Guards against a future refactor over-broadening the native launch-skip into disabling the
+      // stopwatch's own wake lock: the reducer's acquireWakeLock effect must still fire on resume.
+      vi.mocked(isNativePlatform).mockReturnValue(true);
+      const acquireSpy = vi.spyOn(wakeLock, 'acquire').mockResolvedValue();
+      const { result } = renderHook(() => useStopwatchMachine());
+      act(() => result.current.start());
+      act(() => result.current.pause());
+      acquireSpy.mockClear();
+      act(() => result.current.resume());
+      expect(acquireSpy).toHaveBeenCalledWith('stopwatch');
+    });
+
     it('does not acquire the wake lock on mount when the rehydrated phase is paused', () => {
       const acquireSpy = vi.spyOn(wakeLock, 'acquire').mockResolvedValue();
       persistState({ phase: 'paused', accumulatedMs: 1000, startedAtMs: null });
