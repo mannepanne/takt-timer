@@ -3,6 +3,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { subscribeAppVisibility } from '@/lib/app-lifecycle';
 import { beep, prepareAudio } from '@/lib/audio';
 import { haptic } from '@/lib/haptics';
 import { appendHistory } from '@/lib/history';
@@ -91,20 +92,21 @@ export function useTimerMachine(session: Session): TimerApi {
     };
   }, [running, send]);
 
-  // Visibility → pause/resume-audio-and-reacquire.
-  useEffect(() => {
-    const handler = () => {
-      const t = performance.now();
-      if (document.visibilityState === 'hidden') {
-        send({ type: 'visibilityHidden', now: t });
-      } else {
-        send({ type: 'visibilityVisible', now: t });
-        void reacquireIfNeeded();
-      }
-    };
-    document.addEventListener('visibilitychange', handler);
-    return () => document.removeEventListener('visibilitychange', handler);
-  }, [send]);
+  // App hidden/visible → pause / resume-audio-and-reacquire. The seam is DOM visibilitychange on
+  // web and @capacitor/app appStateChange on native (07g) — the WebView's visibilitychange is the
+  // unreliable signal this reroutes around. reacquireIfNeeded() stays here (not in the seam): the
+  // seam only reports visibility; the wake lock is this caller's concern.
+  useEffect(
+    () =>
+      subscribeAppVisibility(
+        () => send({ type: 'visibilityHidden', now: performance.now() }),
+        () => {
+          send({ type: 'visibilityVisible', now: performance.now() });
+          void reacquireIfNeeded();
+        },
+      ),
+    [send],
+  );
 
   // Safari bfcache: a `pageshow` with `event.persisted` means the page was restored from
   // the back-forward cache. Any in-flight session state is stale — no live Wake Lock, no

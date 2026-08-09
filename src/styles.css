@@ -1278,6 +1278,16 @@ button.settings-link {
   font-size: 14px;
   color: var(--ink-3);
 }
+/* The leave-confirm dialog (07g) is the only pause-toast card with two buttons; stack them full
+   width with spacing so they don't sit cramped side-by-side. */
+.leave-confirm-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.leave-confirm-actions .btn {
+  width: 100%;
+}
 
 /* ───────── Phase 2: Complete route ───────── */
 .complete-screen-body {

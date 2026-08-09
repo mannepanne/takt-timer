@@ -50,6 +50,14 @@ const strings = {
     en: 'Your phone was locked or the tab went to the background. Ready to pick up where you left off?',
     sv: 'Din telefon låstes eller fliken gick till bakgrunden. Redo att fortsätta där du var?',
   },
+  // Native back-button confirm before leaving a running interval session (07g).
+  'run.leaveConfirm.title': { en: 'Leave your session?', sv: 'Lämna passet?' },
+  'run.leaveConfirm.body': {
+    en: 'Your interval session will end and won’t be saved.',
+    sv: 'Ditt intervallpass avslutas och sparas inte.',
+  },
+  'run.leaveConfirm.stay': { en: 'Keep going', sv: 'Fortsätt' },
+  'run.leaveConfirm.leave': { en: 'Leave session', sv: 'Lämna passet' },
 
   // ── Complete ─────────────────────────────────────────────────────────
   'complete.title': { en: 'Complete', sv: 'Klart' },

@@ -32,6 +32,7 @@
     "@capacitor-community/keep-awake": "^8.0.1",
     "@capacitor-community/speech-recognition": "^7.0.1",
     "@capacitor/android": "^8",
+    "@capacitor/app": "^8.1.1",
     "@capacitor/core": "^8",
     "@simplewebauthn/browser": "^13.3.0",
     "@simplewebauthn/server": "^13.3.0",

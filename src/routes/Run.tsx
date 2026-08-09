@@ -8,6 +8,7 @@ import { Icon } from '@/components/icons';
 import { useI18n } from '@/i18n/context';
 import { setMuted } from '@/lib/audio';
 import { fmtTime } from '@/lib/format';
+import { useSetRunSession } from '@/lib/interval-active';
 import { useSettings } from '@/lib/settings/context';
 import { useTimerMachine } from '@/lib/timer/useTimerMachine';
 import type { Session } from '@/lib/timer/types';
@@ -43,10 +44,23 @@ function RunInner({ session, onComplete }: RunInnerProps) {
   const api = useTimerMachine(session);
   const { state } = api;
   const { soundOn, setSoundOn } = useSettings();
+  const setRunSession = useSetRunSession();
+  const { pause, resume } = api;
 
   useEffect(() => {
     setMuted(!soundOn);
   }, [soundOn]);
+
+  // Publish the live interval session for the native back-button handler (07g): whether one is
+  // active (running or paused — idle/complete don't count), whether it's currently running, and the
+  // pause/resume controls so the handler can pause the timer while the confirm dialog is up. Clear
+  // on unmount. Inert on web (no back-button handler consumes it there).
+  useEffect(() => {
+    const active = state.phase !== 'idle' && state.phase !== 'complete';
+    const running = state.phase === 'countIn' || state.phase === 'work' || state.phase === 'rest';
+    setRunSession(active ? { running, pause, resume } : null);
+  }, [state.phase, pause, resume, setRunSession]);
+  useEffect(() => () => setRunSession(null), [setRunSession]);
 
   // Auto-start on mount.
   const started = useStartedOnce(api.start);
