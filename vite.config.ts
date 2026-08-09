@@ -111,6 +111,12 @@ export default defineConfig(({ mode }) => {
                 __dirname,
                 './src/lib/wakeLock-platform-native.ts',
               ),
+              // Native voice uses the on-device recogniser + local English parser, not the Whisper/
+              // Llama HTTP pipeline — swap the hook so MicButton/VoiceOverlay stay shared (07f).
+              '@/lib/voice/useVoiceMachine': path.resolve(
+                __dirname,
+                './src/lib/voice/useVoiceMachine-native.ts',
+              ),
               // Native has no VitePWA and therefore no `virtual:pwa-register` module; alias it to a
               // no-op stub so the bare import in main.tsx resolves at build time.
               'virtual:pwa-register': path.resolve(__dirname, './src/lib/pwa-register-stub.ts'),

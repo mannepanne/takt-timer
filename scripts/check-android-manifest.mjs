@@ -1,12 +1,15 @@
-// ABOUT: Guards the "Takt's own process makes zero network calls" property against the built APK.
-// ABOUT: Asserts the MERGED manifest has no INTERNET permission — the durable check behind tools:node="remove".
+// ABOUT: Guards the native APK's manifest invariants — the durable checks behind cap sync.
+// ABOUT: Asserts the MERGED manifest's platform permissions are EXACTLY an allowlist ({RECORD_AUDIO},
+// ABOUT: so INTERNET or any surprise permission fails) and that the RecognitionService <queries>
+// ABOUT: block survives — the speech recogniser is silently unavailable on Android 11+ without it.
 //
-// The manifest merger can re-introduce INTERNET from a dependency library, so checking the source
-// AndroidManifest.xml is not enough — we inspect the actual built artifact. Run after a debug (or
-// release) build: `pnpm android:check`. Exits non-zero (failing CI / the release flow) if INTERNET
-// is present, if the APK is missing, or if aapt2 can't be found.
-//
-// 07f will extend this to also assert the RecognitionService <queries> block is present.
+// The manifest merger can re-introduce INTERNET from a dependency, and can also drop a plugin's
+// <queries>/permission across a `cap sync` — so checking the source AndroidManifest.xml is not
+// enough; we inspect the actual built artifact. Run after a debug (or release) build:
+// `pnpm android:check`. Exits non-zero (failing CI / the release flow) if INTERNET is present, if
+// the recogniser surface is missing (07f: without the <queries> block, isRecognitionAvailable()
+// returns false on Android 11+ and voice silently always falls back to manual), if the APK is
+// missing, or if aapt2 can't be found.
 
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync } from 'node:fs';
@@ -42,15 +45,53 @@ if (!existsSync(aapt2)) {
   fail(`aapt2 not found at ${aapt2}.`);
 }
 
-// Dump the merged manifest from the APK and assert INTERNET is absent.
-const dump = execFileSync(aapt2, ['dump', 'permissions', apk], { encoding: 'utf8' });
-if (/android\.permission\.INTERNET/.test(dump)) {
+// (1) Assert the platform permission set is EXACTLY the allowlist — an allowlist, not a denylist,
+// so a future plugin's manifest merge introducing ANY new android.permission.* (INTERNET,
+// ACCESS_NETWORK_STATE, storage, …) fails the build rather than slipping into the Play listing.
+// Only android.permission.* are policed; app-private permissions (org.hultberg.takt.*, e.g. the
+// androidx-generated DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION) are not capabilities and are ignored.
+const ALLOWED_PERMISSIONS = new Set(['android.permission.RECORD_AUDIO']);
+const permissions = execFileSync(aapt2, ['dump', 'permissions', apk], { encoding: 'utf8' });
+const declared = new Set(
+  [...permissions.matchAll(/uses-permission: name='(android\.permission\.[^']+)'/g)].map(
+    (m) => m[1],
+  ),
+);
+if (declared.has('android.permission.INTERNET')) {
   fail(
     'INTERNET permission present in the MERGED manifest. tools:node="remove" is not taking effect — ' +
       'a dependency library likely re-introduced it. Fix before shipping; the zero-network property is broken.',
   );
 }
+const unexpected = [...declared].filter((p) => !ALLOWED_PERMISSIONS.has(p));
+if (unexpected.length > 0) {
+  fail(
+    `Unexpected platform permission(s) in the MERGED manifest: ${unexpected.join(', ')}. ` +
+      'A dependency likely contributed them via manifest merge. Add to the allowlist only after a ' +
+      'deliberate privacy review, or remove the source; do not let permissions accrete silently.',
+  );
+}
+const missing = [...ALLOWED_PERMISSIONS].filter((p) => !declared.has(p));
+if (missing.length > 0) {
+  fail(
+    `Required permission(s) missing from the MERGED manifest: ${missing.join(', ')}. RECORD_AUDIO is ` +
+      'contributed by the speech-recognition plugin — voice capture will fail without it (07f).',
+  );
+}
+
+const xmltree = execFileSync(aapt2, ['dump', 'xmltree', apk, '--file', 'AndroidManifest.xml'], {
+  encoding: 'utf8',
+});
+if (!/android\.speech\.RecognitionService/.test(xmltree)) {
+  fail(
+    'RecognitionService <queries> block missing from the MERGED manifest. On Android 11+ ' +
+      'isRecognitionAvailable() returns false without it, so voice silently always falls back to ' +
+      'manual — reading as "the parser never works". Must survive cap sync (07f).',
+  );
+}
 
 console.log(
-  `✓ android manifest check: no INTERNET permission in merged manifest (${apk.split('/').pop()}, build-tools ${version}).`,
+  `✓ android manifest check: platform permissions = {${[...declared].join(', ') || 'none'}} ` +
+    `(allowlisted, no INTERNET); RecognitionService <queries> present ` +
+    `(${apk.split('/').pop()}, build-tools ${version}).`,
 );

@@ -7,7 +7,8 @@ import { useVoiceMachine } from '@/lib/voice/useVoiceMachine';
 
 export function MicButton() {
   const { t } = useI18n();
-  const { state, micTap, userStop, cancel, retry, retryToastVisible } = useVoiceMachine();
+  const { state, micTap, userStop, cancel, retry, retryToastVisible, openSettings } =
+    useVoiceMachine();
 
   return (
     <>
@@ -23,7 +24,13 @@ export function MicButton() {
         <p className="mic-button-hint">{t('mic.tapToStart')}</p>
       </div>
 
-      <VoiceOverlay state={state} onUserStop={userStop} onCancel={cancel} onRetry={retry} />
+      <VoiceOverlay
+        state={state}
+        onUserStop={userStop}
+        onCancel={cancel}
+        onRetry={retry}
+        onOpenSettings={openSettings}
+      />
 
       {retryToastVisible && (
         <div className="mic-retry-toast" role="status" aria-live="polite">

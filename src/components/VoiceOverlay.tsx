@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 
 import { Icon } from '@/components/icons';
 import { useI18n, type TFunc } from '@/i18n/context';
+import { isNativePlatform } from '@/lib/platform';
 import type { ErrorReason, VoiceState } from '@/lib/voice/types';
 
 type Props = {
@@ -13,6 +14,9 @@ type Props = {
   onUserStop: () => void;
   onCancel: () => void;
   onRetry: () => void;
+  // Native-only: opens the app's settings page from the permission-denied sheet (07f). Undefined
+  // on web, where the sheet never renders a settings control.
+  onOpenSettings?: () => void;
 };
 
 const OVERLAY_BODY_ID = 'voice-overlay-body';
@@ -44,6 +48,8 @@ function parseErrorCopy(reason: ErrorReason, t: TFunc): string {
   switch (reason) {
     case 'not-a-session':
       return t('voice.error.notASession');
+    case 'recognition-failed':
+      return t('voice.error.recognitionFailedBody');
     case 'cold-start-timeout':
       return t('voice.error.coldStartTimeout');
     case 'upload-empty':
@@ -67,7 +73,13 @@ function parseErrorCopy(reason: ErrorReason, t: TFunc): string {
   }
 }
 
-export function VoiceOverlay({ state, onUserStop, onCancel, onRetry }: Props): React.ReactNode {
+export function VoiceOverlay({
+  state,
+  onUserStop,
+  onCancel,
+  onRetry,
+  onOpenSettings,
+}: Props): React.ReactNode {
   const { t } = useI18n();
   const cancelBtnRef = useRef<HTMLButtonElement | null>(null);
 
@@ -93,7 +105,7 @@ export function VoiceOverlay({ state, onUserStop, onCancel, onRetry }: Props): R
       aria-describedby={isErrorState(state.phase) ? OVERLAY_BODY_ID : undefined}
     >
       <div className="voice-overlay-sheet">
-        {renderContent(state, titleId, onUserStop, onRetry, t)}
+        {renderContent(state, titleId, onUserStop, onRetry, t, isNativePlatform(), onOpenSettings)}
 
         <button
           type="button"
@@ -114,6 +126,8 @@ function renderContent(
   onUserStop: () => void,
   onRetry: () => void,
   t: TFunc,
+  native: boolean,
+  onOpenSettings?: () => void,
 ): React.ReactNode {
   switch (state.phase) {
     case 'requesting-permission':
@@ -180,9 +194,16 @@ function renderContent(
       return errorSheet(
         titleId,
         t('voice.error.permissionDeniedHeading'),
-        t('voice.error.permissionDeniedBody'),
+        native
+          ? t('voice.error.permissionDeniedBody.native')
+          : t('voice.error.permissionDeniedBody'),
         onRetry,
         t,
+        undefined,
+        // Native permanent-denial recovery: the mic can only be re-enabled from the app's settings.
+        native && onOpenSettings
+          ? { label: t('voice.error.openSettings'), onClick: onOpenSettings }
+          : undefined,
       );
     case 'offline':
       return errorSheet(
@@ -196,7 +217,7 @@ function renderContent(
       return errorSheet(
         titleId,
         t('voice.error.unsupportedHeading'),
-        t('voice.error.unsupportedBody'),
+        native ? t('voice.error.unsupportedBody.native') : t('voice.error.unsupportedBody'),
         onRetry,
         t,
       );
@@ -231,6 +252,7 @@ function errorSheet(
   onRetry: () => void,
   t: TFunc,
   transcript?: string,
+  extraAction?: { label: string; onClick?: () => void },
 ): React.ReactNode {
   return (
     <>
@@ -249,6 +271,11 @@ function errorSheet(
         <Link to="/configure" className="btn btn-primary">
           {t('voice.configureCta')}
         </Link>
+        {extraAction && (
+          <button type="button" className="btn btn-ghost" onClick={extraAction.onClick}>
+            {extraAction.label}
+          </button>
+        )}
         <button type="button" className="btn btn-ghost" onClick={onRetry}>
           {t('voice.tryAgain')}
         </button>

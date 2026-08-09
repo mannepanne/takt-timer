@@ -85,6 +85,8 @@ Given those differences, proceeding is a reasonable bet — but it is a bet, not
 
 **Not superseded:** the parser accuracy risk, the English-only scope, the explicit-fallback safety design, and the "cut voice from v1 if it's not usable" contingency all stand exactly as written above.
 
+**Implementation landed (07f, 2026-08-09):** the recogniser is `@capacitor-community/speech-recognition` (single-shot `start()` → best transcript; `available()`/`checkPermissions()`/`requestPermissions()` for the availability + `RECORD_AUDIO` gate), and the permanent-denial recovery deep-link is `capacitor-native-settings`. Confirmed on a built APK: the speech plugin contributes both `RECORD_AUDIO` **and** the `RecognitionService` `<queries>` block via manifest merge (no manual manifest edit), and — the spike's open question — the merged manifest still has **no `INTERNET`**, so Takt invokes the recogniser without it. `scripts/check-android-manifest.mjs` now asserts all three (INTERNET absent; RECORD_AUDIO + `<queries>` present) so a later `cap sync` can't silently drop them. The web build is unchanged (the swap is a build-time alias, invisible to the Vitest/web path). The parser's supported grammar is documented in [REFERENCE/android-app.md](../android-app.md) Part 4.
+
 ---
 
 ## References
