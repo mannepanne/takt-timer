@@ -27,15 +27,20 @@ vi.mock('@/lib/auth/local-hint', () => ({
   hasRegisteredBefore: vi.fn(() => false),
   markRegistered: vi.fn(),
 }));
+vi.mock('@/lib/platform', () => ({ isNativePlatform: vi.fn(() => false) }));
 
 import { useSession } from '@/lib/auth/session';
 import { lastSession } from '@/lib/history';
 import { pushSession } from '@/lib/history-sync';
 import { hasRegisteredBefore } from '@/lib/auth/local-hint';
+import { isNativePlatform } from '@/lib/platform';
 import { Complete } from './Complete';
 import { I18nProvider } from '@/i18n/context';
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.mocked(isNativePlatform).mockReturnValue(false);
+});
 
 function HomeMarker() {
   return <div data-testid="home">Home</div>;
@@ -79,6 +84,20 @@ describe('Complete route', () => {
   it('without router state, redirects to Home', () => {
     renderComplete(null);
     expect(screen.getByTestId('home')).toBeInTheDocument();
+  });
+
+  it('on native (07g): no "Sign in to save" CTA and no passkey prompt', () => {
+    vi.mocked(isNativePlatform).mockReturnValue(true);
+    renderComplete(state);
+    // Run again / Done remain; the account/passkey save CTA is gone (native save-as-preset is 07d).
+    expect(screen.getByRole('button', { name: /run it again/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /sign in to save/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /save.*preset/i })).not.toBeInTheDocument();
+  });
+
+  it('on web: keeps the sign-in-to-save CTA for unauthenticated users', () => {
+    renderComplete(state);
+    expect(screen.getByRole('button', { name: /sign in to save/i })).toBeInTheDocument();
   });
 
   it('renders totals and work time from router state', () => {

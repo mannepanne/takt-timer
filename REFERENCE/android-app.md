@@ -30,7 +30,7 @@ This is the **critical path**. Google requires new personal developer accounts t
 4. **Create the app entry in Play Console** (can happen once the account exists, before the build is final):
    - App name **Takt**, default language, "app" (not game), **paid**.
    - You'll later fill: store listing (copy + screenshots — I'll draft these), **privacy policy URL**, **Data Safety** form, content rating questionnaire, target audience.
-   - The **Data Safety** form is a legal attestation. It must say: no account/personal data collected; and that **voice input may be processed by Google's speech-recognition service** (pending a policy check on whether a user-invoked system recogniser counts as app-collected data — declare conservatively if unclear). I'll prep the exact answers under `07h`.
+   - The **Data Safety** form is a legal attestation. It must say: no account/personal data collected; and that **voice input may be processed by Google's speech-recognition service** (pending a policy check on whether a user-invoked system recogniser counts as app-collected data — declare conservatively if unclear). I'll prep the exact answers under `07h`. **Source of truth (as of 07g):** the native `Privacy.tsx` copy now states these facts concretely (local-only storage; audio handed to the phone's recogniser, which may involve Google; Takt never records/stores/sends audio). Fill the Data Safety form to **match that copy** — the privacy page is authoritative, not the other way round.
 
 5. **Set the price to £0.99.** Note: Play allows **paid→free** later but restricts **free→paid**. So £0.99 is a floor you can drop but not re-raise — don't launch free intending to charge later.
 

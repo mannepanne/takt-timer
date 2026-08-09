@@ -35,6 +35,9 @@ export function Complete() {
   const [interactable, setInteractable] = useState(false);
 
   const isAuthenticated = authSession.status === 'authenticated';
+  // Native has no accounts (07c/07g): no sign-in-to-save CTA and no passkey prompt. Device-local
+  // "Save as preset" is 07d and not wired yet, so native shows only Run again / Done for now.
+  const native = isNativePlatform();
 
   useEffect(() => {
     const timerId = setTimeout(() => setInteractable(true), 400);
@@ -112,7 +115,7 @@ export function Complete() {
           <Icon.Play size={18} color="var(--paper)" />
           {t('complete.runAgain')}
         </button>
-        {isAuthenticated ? (
+        {native ? null : isAuthenticated ? (
           <button
             type="button"
             className="btn btn-ghost"
@@ -148,15 +151,17 @@ export function Complete() {
         }}
       />
 
-      <PasskeyPrompt
-        open={signinOpen}
-        mode={hasRegisteredBefore() ? 'signin' : 'register'}
-        onSuccess={(user) => {
-          login(user);
-          setSigninOpen(false);
-        }}
-        onClose={() => setSigninOpen(false)}
-      />
+      {!native && (
+        <PasskeyPrompt
+          open={signinOpen}
+          mode={hasRegisteredBefore() ? 'signin' : 'register'}
+          onSuccess={(user) => {
+            login(user);
+            setSigninOpen(false);
+          }}
+          onClose={() => setSigninOpen(false)}
+        />
+      )}
     </div>
   );
 }

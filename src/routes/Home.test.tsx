@@ -14,6 +14,7 @@ vi.mock('@/lib/auth/session', () => ({
   })),
 }));
 vi.mock('@/lib/apiFetch', () => ({ apiFetch: vi.fn() }));
+vi.mock('@/lib/platform', () => ({ isNativePlatform: vi.fn(() => false) }));
 vi.mock('@/components/PresetsDrawer', () => ({
   PresetsDrawer: ({ open }: { open: boolean }) =>
     open ? <div data-testid="presets-drawer" /> : null,
@@ -21,6 +22,7 @@ vi.mock('@/components/PresetsDrawer', () => ({
 
 import { useSession } from '@/lib/auth/session';
 import { apiFetch } from '@/lib/apiFetch';
+import { isNativePlatform } from '@/lib/platform';
 import { Home } from './Home';
 import { I18nProvider } from '@/i18n/context';
 import { StopwatchProvider, useStopwatch } from '@/lib/stopwatch/context';
@@ -55,6 +57,7 @@ function renderHome() {
 describe('Home', () => {
   beforeEach(() => {
     localStorage.clear();
+    vi.mocked(isNativePlatform).mockReturnValue(false);
     vi.mocked(useSession).mockReturnValue({
       session: { status: 'unauthenticated' },
       refresh: vi.fn(),
@@ -173,6 +176,21 @@ describe('Home', () => {
     } as Response);
     renderHome();
     await waitFor(() => expect(apiFetch).toHaveBeenCalledWith('/api/sessions?latest=1'));
+  });
+
+  it('never fetches on native, even in the impossible native-and-authenticated state (07c gate)', async () => {
+    // Forces the platform gate to matter: without `isNativePlatform() ||`, an authenticated session
+    // would fire the fetch — so this test fails if that guard is removed (non-vacuous).
+    vi.mocked(isNativePlatform).mockReturnValue(true);
+    vi.mocked(useSession).mockReturnValue({
+      session: { status: 'authenticated', user: { userHandle: 'u1', isAdmin: false } },
+      refresh: vi.fn(),
+      login: vi.fn(),
+    });
+    vi.mocked(apiFetch).mockClear(); // beforeEach doesn't clear call history; ignore prior tests' calls
+    renderHome();
+    await Promise.resolve();
+    expect(apiFetch).not.toHaveBeenCalled();
   });
 
   it('does not show sparkline for authenticated users (server source instead)', () => {

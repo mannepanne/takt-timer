@@ -315,6 +315,11 @@ const strings = {
     en: 'Simplest possible interval timer. Voice configured, tap to go. No account required.',
     sv: 'Enklast möjliga intervall timer. Röst-styrd, tuta och kör. Konto valfritt.',
   },
+  // Native (Android) has no account concept at all — drop the account clause (07g copy fork).
+  'onboarding.s1.body.native': {
+    en: 'Simplest possible interval timer. Voice configured, tap to go.',
+    sv: 'Enklast möjliga intervalltimer. Röststyrd, tuta och kör.',
+  },
   'onboarding.s2.eyebrow': { en: 'Voice configured', sv: 'Styr med rösten' },
   'onboarding.s2.intro': {
     en: 'Tap the mic and speak naturally.',
@@ -343,12 +348,14 @@ const strings = {
   },
   // Native (Android) has no accounts — presets/settings live only on the device (07g copy fork).
   'onboarding.s3.body.native': {
-    en: 'Your presets and settings save to this device automatically. No account, no sign-in — nothing leaves your phone.',
-    sv: 'Dina rundor och inställningar sparas automatiskt på enheten. Inget konto, ingen inloggning — ingenting lämnar telefonen.',
+    en: 'Your presets, settings, and history save to this device automatically. No account, no sign-in.',
+    sv: 'Dina rundor, inställningar och historik sparas automatiskt på enheten. Inget konto, ingen inloggning.',
   },
+  // Scoped, not absolute: voice may reach Google via the system recogniser, so the claim is limited
+  // to stored data and the voice caveat is stated — matches Privacy.tsx + the 07h Data Safety form.
   'onboarding.s3.warning.native': {
-    en: "That's the whole privacy story — everything stays on your device.",
-    sv: 'Det är hela grejen — allt stannar på din enhet.',
+    en: "Voice setup uses your phone's built-in speech recognition, which may involve Google. Nothing else leaves your device.",
+    sv: 'Röststyrning använder telefonens inbyggda taligenkänning, som kan involvera Google. Inget annat lämnar enheten.',
   },
   'onboarding.s3.privacyLink': { en: 'Privacy policy', sv: 'Integritetspolicy' },
   'onboarding.s4.eyebrow': { en: 'Off you go', sv: 'Kör så det ryker' },

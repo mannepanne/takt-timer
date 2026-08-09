@@ -46,15 +46,16 @@ export function Privacy() {
               {lang === 'sv' ? (
                 <p className="privacy-body">
                   Allt Takt sparar — dina rundor, inställningar och pass-historik — lagras enbart på
-                  den här enheten. Det finns inget konto och ingen server: ingenting skickas
-                  någonstans, och ingenting identifierar dig. Inga namn, inga e-postadresser, inga
-                  platser.
+                  den här enheten. Det finns inget konto och ingen server, och ingenting
+                  identifierar dig. Inga namn, inga e-postadresser, inga platser. (Röstinmatning
+                  hanteras separat — se nedan.)
                 </p>
               ) : (
                 <p className="privacy-body">
                   Everything Takt keeps — your presets, settings, and session history — is stored
-                  only on this device. There's no account and no server: nothing is sent anywhere,
-                  and nothing identifies you. No names, no email addresses, no locations.
+                  only on this device. There's no account and no server, and none of it identifies
+                  you. No names, no email addresses, no locations. (Voice input is handled
+                  separately — see below.)
                 </p>
               )}
             </section>

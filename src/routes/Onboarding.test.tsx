@@ -33,7 +33,11 @@ describe('native copy fork (07g)', () => {
     renderOnboarding();
     await user.click(screen.getByRole('button', { name: /next/i }));
     await user.click(screen.getByRole('button', { name: /next/i }));
-    expect(screen.getByText(/nothing leaves your phone/i)).toBeInTheDocument();
+    expect(screen.getByText(/save to this device/i)).toBeInTheDocument();
+    // Voice caveat is present and the absolute "nothing leaves your phone" claim is gone (spec :115).
+    expect(screen.getByText(/may involve Google/i)).toBeInTheDocument();
+    expect(screen.queryByText(/nothing leaves your phone/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/everything stays on your device/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/sign in with a passkey/i)).not.toBeInTheDocument();
   });
 

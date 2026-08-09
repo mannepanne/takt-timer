@@ -76,7 +76,9 @@ export function Onboarding({ onDone }: Props) {
         {slide === 0 && (
           <div className="onboarding-slide-content">
             <h1 className="onboarding-tagline">{t('onboarding.s1.tagline')}</h1>
-            <p className="onboarding-body">{t('onboarding.s1.body')}</p>
+            <p className="onboarding-body">
+              {t(native ? 'onboarding.s1.body.native' : 'onboarding.s1.body')}
+            </p>
           </div>
         )}
 
