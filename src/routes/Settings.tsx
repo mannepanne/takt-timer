@@ -16,6 +16,7 @@ import { hasRegisteredBefore, markUnregistered } from '@/lib/auth/local-hint';
 import { clearOnboardingSeen } from '@/routes/Onboarding';
 import { useSession } from '@/lib/auth/session';
 import { apiFetch } from '@/lib/apiFetch';
+import { isNativePlatform } from '@/lib/platform';
 import { clearHistory } from '@/lib/history';
 import { importLocalHistory } from '@/lib/history-sync';
 import { useSettings } from '@/lib/settings/context';
@@ -37,6 +38,8 @@ export function Settings() {
 
   const isAuthenticated = session.status === 'authenticated';
   const isAdmin = session.status === 'authenticated' && session.user.isAdmin;
+  // Native has no accounts (07c) — hide the whole account block and the passkey prompt (07g).
+  const showAccount = !isNativePlatform();
 
   function triggerSaved() {
     if (savedTimer.current) clearTimeout(savedTimer.current);
@@ -156,54 +159,62 @@ export function Settings() {
           </div>
         </section>
 
-        <div className="hairline" />
+        {showAccount && (
+          <>
+            <div className="hairline" />
 
-        <section className="settings-section">
-          <div className="settings-row">
-            <span className="settings-label">{t('settings.account')}</span>
-            <span className="settings-value">
-              {isAuthenticated ? t('settings.signedIn') : t('settings.notSignedIn')}
-            </span>
-          </div>
-          {isAuthenticated ? (
-            <div className="settings-account-actions">
-              <button type="button" className="btn btn-ghost" onClick={handleSignOut}>
-                {t('account.signOut')}
-              </button>
-              {deleteError && <p className="account-error">{deleteError}</p>}
-              <button
-                type="button"
-                className="btn btn-danger"
-                onClick={handleDelete}
-                disabled={deleting}
-              >
-                {deleting
-                  ? t('account.deleting')
-                  : confirmDelete
-                    ? t('account.deleteConfirm')
-                    : t('account.delete')}
-              </button>
-              {confirmDelete && !deleting && (
-                <>
-                  <p className="account-delete-warning">{t('account.deleteWarning')}</p>
+            <section className="settings-section">
+              <div className="settings-row">
+                <span className="settings-label">{t('settings.account')}</span>
+                <span className="settings-value">
+                  {isAuthenticated ? t('settings.signedIn') : t('settings.notSignedIn')}
+                </span>
+              </div>
+              {isAuthenticated ? (
+                <div className="settings-account-actions">
+                  <button type="button" className="btn btn-ghost" onClick={handleSignOut}>
+                    {t('account.signOut')}
+                  </button>
+                  {deleteError && <p className="account-error">{deleteError}</p>}
                   <button
                     type="button"
-                    className="btn btn-ghost"
-                    onClick={() => setConfirmDelete(false)}
+                    className="btn btn-danger"
+                    onClick={handleDelete}
+                    disabled={deleting}
                   >
-                    {t('account.cancel')}
+                    {deleting
+                      ? t('account.deleting')
+                      : confirmDelete
+                        ? t('account.deleteConfirm')
+                        : t('account.delete')}
                   </button>
-                </>
+                  {confirmDelete && !deleting && (
+                    <>
+                      <p className="account-delete-warning">{t('account.deleteWarning')}</p>
+                      <button
+                        type="button"
+                        className="btn btn-ghost"
+                        onClick={() => setConfirmDelete(false)}
+                      >
+                        {t('account.cancel')}
+                      </button>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="settings-account-actions">
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => setPromptOpen(true)}
+                  >
+                    {t('settings.signInCta')}
+                  </button>
+                </div>
               )}
-            </div>
-          ) : (
-            <div className="settings-account-actions">
-              <button type="button" className="btn btn-primary" onClick={() => setPromptOpen(true)}>
-                {t('settings.signInCta')}
-              </button>
-            </div>
-          )}
-        </section>
+            </section>
+          </>
+        )}
 
         <div className="hairline" />
 
@@ -243,12 +254,14 @@ export function Settings() {
         {signedInVisible ? t('settings.signedIn') : savedVisible ? t('settings.saved') : ''}
       </div>
 
-      <PasskeyPrompt
-        open={promptOpen}
-        mode={hasRegisteredBefore() ? 'signin' : 'register'}
-        onSuccess={handleAuthSuccess}
-        onClose={() => setPromptOpen(false)}
-      />
+      {showAccount && (
+        <PasskeyPrompt
+          open={promptOpen}
+          mode={hasRegisteredBefore() ? 'signin' : 'register'}
+          onSuccess={handleAuthSuccess}
+          onClose={() => setPromptOpen(false)}
+        />
+      )}
     </div>
   );
 }

@@ -49,10 +49,13 @@ vi.mock('@/components/PasskeyPrompt', () => ({
     ) : null,
 }));
 
+vi.mock('@/lib/platform', () => ({ isNativePlatform: vi.fn(() => false) }));
+
 import { apiFetch } from '@/lib/apiFetch';
 import { signOut } from '@/lib/auth/client';
 import { hasRegisteredBefore } from '@/lib/auth/local-hint';
 import { useSession } from '@/lib/auth/session';
+import { isNativePlatform } from '@/lib/platform';
 import { clearOnboardingSeen } from '@/routes/Onboarding';
 
 function HomeMarker() {
@@ -77,6 +80,7 @@ function renderSettings() {
 beforeEach(() => {
   vi.clearAllMocks();
   localStorage.clear();
+  vi.mocked(isNativePlatform).mockReturnValue(false);
   vi.mocked(apiFetch).mockResolvedValue(new Response(null, { status: 401 }));
   vi.mocked(useSession).mockReturnValue({
     session: { status: 'unauthenticated' },
@@ -89,6 +93,16 @@ describe('Settings route', () => {
   it('renders the settings heading', () => {
     renderSettings();
     expect(screen.getByRole('heading')).toBeInTheDocument();
+  });
+
+  it('hides the entire account block on native (07g): no account label, no sign-in CTA', () => {
+    vi.mocked(isNativePlatform).mockReturnValue(true);
+    renderSettings();
+    // Language/accent/sound still render; the account section and its sign-in CTA do not.
+    expect(screen.getByText('Language')).toBeInTheDocument();
+    expect(screen.queryByText('Account')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /sign in/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/not signed in/i)).not.toBeInTheDocument();
   });
 
   it('renders language, accent, and sound sections', () => {

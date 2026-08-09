@@ -341,6 +341,15 @@ const strings = {
     en: 'Fair warning: if you lose your passkey, your account goes with it.',
     sv: 'Varning: om du blir av med din passkey kan du inte återställa ditt konto.',
   },
+  // Native (Android) has no accounts — presets/settings live only on the device (07g copy fork).
+  'onboarding.s3.body.native': {
+    en: 'Your presets and settings save to this device automatically. No account, no sign-in — nothing leaves your phone.',
+    sv: 'Dina rundor och inställningar sparas automatiskt på enheten. Inget konto, ingen inloggning — ingenting lämnar telefonen.',
+  },
+  'onboarding.s3.warning.native': {
+    en: "That's the whole privacy story — everything stays on your device.",
+    sv: 'Det är hela grejen — allt stannar på din enhet.',
+  },
   'onboarding.s3.privacyLink': { en: 'Privacy policy', sv: 'Integritetspolicy' },
   'onboarding.s4.eyebrow': { en: 'Off you go', sv: 'Kör så det ryker' },
   'onboarding.s4.body': { en: "That's it.", sv: 'Det var allt.' },
@@ -353,6 +362,8 @@ const strings = {
   },
   'privacy.stored.heading': { en: 'What we store', sv: 'Vad vi lagrar' },
   'privacy.cloudflare.heading': { en: 'What Cloudflare sees', sv: 'Vad Cloudflare ser' },
+  // Native (Android) privacy page — no server/Cloudflare; voice uses the on-device recogniser (07g).
+  'privacy.voice.heading': { en: 'Voice input', sv: 'Röstinmatning' },
   'privacy.delete.heading': { en: 'How to delete your data', sv: 'Hur du raderar dina uppgifter' },
   'privacy.contact.heading': { en: 'Contact', sv: 'Kontakt' },
 
