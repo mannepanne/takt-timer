@@ -7,8 +7,10 @@ import { SessionProvider, useSession } from './session';
 
 vi.mock('./client', () => ({ getMe: vi.fn() }));
 vi.mock('./local-hint', () => ({ markRegistered: vi.fn() }));
+vi.mock('@/lib/platform', () => ({ isNativePlatform: vi.fn(() => false) }));
 import { getMe } from './client';
 import { markRegistered } from './local-hint';
+import { isNativePlatform } from '@/lib/platform';
 
 function wrapper({ children }: { children: ReactNode }) {
   return <SessionProvider>{children}</SessionProvider>;
@@ -105,5 +107,32 @@ describe('SessionProvider / useSession', () => {
     expect(() => renderHook(() => useSession())).toThrow(
       'useSession must be used inside SessionProvider',
     );
+  });
+
+  // 07c: on native the "no auth network call, ever" guarantee is structural — gated on platform,
+  // not on auth state. These are the load-bearing tests (spec 07c): resolve to a definite
+  // `unauthenticated` and never call getMe, including after a refresh().
+  describe('native (no accounts)', () => {
+    beforeEach(() => vi.mocked(isNativePlatform).mockReturnValue(true));
+
+    it('resolves to a definite unauthenticated state with no loading flash', () => {
+      vi.mocked(getMe).mockReturnValue(new Promise(() => {})); // would hang if ever called
+      const { result } = renderHook(() => useSession(), { wrapper });
+      expect(result.current.session.status).toBe('unauthenticated');
+    });
+
+    it('never calls getMe on mount', () => {
+      vi.mocked(getMe).mockReturnValue(new Promise(() => {}));
+      renderHook(() => useSession(), { wrapper });
+      expect(getMe).not.toHaveBeenCalled();
+    });
+
+    it('refresh() stays unauthenticated and still never calls getMe', () => {
+      vi.mocked(getMe).mockReturnValue(new Promise(() => {}));
+      const { result } = renderHook(() => useSession(), { wrapper });
+      act(() => result.current.refresh());
+      expect(result.current.session.status).toBe('unauthenticated');
+      expect(getMe).not.toHaveBeenCalled();
+    });
   });
 });

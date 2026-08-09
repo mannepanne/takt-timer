@@ -3,6 +3,7 @@
 
 import { apiFetch } from '@/lib/apiFetch';
 import { readHistory, setHistory, clearHistory } from '@/lib/history';
+import { isNativePlatform } from '@/lib/platform';
 import type { CompletedSession } from '@/lib/timer/types';
 
 type SessionRow = {
@@ -26,6 +27,8 @@ function toRow(s: CompletedSession & { id: string }): SessionRow {
 }
 
 export async function importLocalHistory(): Promise<number> {
+  // Native has no server to import to (07c) — history lives only in localStorage.
+  if (isNativePlatform()) return 0;
   const sessions = readHistory();
   if (sessions.length === 0) return 0;
 
@@ -53,6 +56,8 @@ export async function importLocalHistory(): Promise<number> {
 }
 
 export async function pushSession(session: CompletedSession): Promise<void> {
+  // No D1 sync on native (07c) — the completed session is already in localStorage.
+  if (isNativePlatform()) return;
   const id = session.id ?? crypto.randomUUID();
   const row = toRow({ ...session, id });
   await apiFetch('/api/sessions', {

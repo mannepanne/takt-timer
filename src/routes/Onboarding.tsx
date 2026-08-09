@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 import { useI18n } from '@/i18n/context';
+import { isNativePlatform } from '@/lib/platform';
 
 const ONBOARDING_KEY = 'takt.onboarding.v1';
 const TOTAL_SLIDES = 4;
@@ -37,6 +38,7 @@ type Props = { onDone: () => void };
 
 export function Onboarding({ onDone }: Props) {
   const { t } = useI18n();
+  const native = isNativePlatform();
   const location = useLocation();
   const resumeSlide = (location.state as { resumeSlide?: number } | null)?.resumeSlide;
   const [slide, setSlide] = useState(typeof resumeSlide === 'number' ? resumeSlide : 0);
@@ -74,7 +76,9 @@ export function Onboarding({ onDone }: Props) {
         {slide === 0 && (
           <div className="onboarding-slide-content">
             <h1 className="onboarding-tagline">{t('onboarding.s1.tagline')}</h1>
-            <p className="onboarding-body">{t('onboarding.s1.body')}</p>
+            <p className="onboarding-body">
+              {t(native ? 'onboarding.s1.body.native' : 'onboarding.s1.body')}
+            </p>
           </div>
         )}
 
@@ -95,8 +99,12 @@ export function Onboarding({ onDone }: Props) {
         {slide === 2 && (
           <div className="onboarding-slide-content">
             <div className="eyebrow onboarding-eyebrow">{t('onboarding.s3.eyebrow')}</div>
-            <p className="onboarding-body">{t('onboarding.s3.body')}</p>
-            <p className="onboarding-warning">{t('onboarding.s3.warning')}</p>
+            <p className="onboarding-body">
+              {t(native ? 'onboarding.s3.body.native' : 'onboarding.s3.body')}
+            </p>
+            <p className="onboarding-warning">
+              {t(native ? 'onboarding.s3.warning.native' : 'onboarding.s3.warning')}
+            </p>
             <Link to="/privacy" state={{ returnSlide: slide }} className="onboarding-privacy-link">
               {t('onboarding.s3.privacyLink')}
             </Link>

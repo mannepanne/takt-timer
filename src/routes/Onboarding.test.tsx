@@ -8,6 +8,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { I18nProvider } from '@/i18n/context';
 import { hasSeenOnboarding, markOnboardingSeen, Onboarding } from './Onboarding';
 
+vi.mock('@/lib/platform', () => ({ isNativePlatform: vi.fn(() => false) }));
+import { isNativePlatform } from '@/lib/platform';
+
 function renderOnboarding(onDone = vi.fn()) {
   return render(
     <MemoryRouter>
@@ -20,6 +23,31 @@ function renderOnboarding(onDone = vi.fn()) {
 
 beforeEach(() => {
   localStorage.clear();
+  vi.mocked(isNativePlatform).mockReturnValue(false);
+});
+
+describe('native copy fork (07g)', () => {
+  it('third slide shows device-local copy on native, not the passkey pitch', async () => {
+    vi.mocked(isNativePlatform).mockReturnValue(true);
+    const user = userEvent.setup();
+    renderOnboarding();
+    await user.click(screen.getByRole('button', { name: /next/i }));
+    await user.click(screen.getByRole('button', { name: /next/i }));
+    expect(screen.getByText(/save to this device/i)).toBeInTheDocument();
+    // Voice caveat is present and the absolute "nothing leaves your phone" claim is gone (spec :115).
+    expect(screen.getByText(/may involve Google/i)).toBeInTheDocument();
+    expect(screen.queryByText(/nothing leaves your phone/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/everything stays on your device/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/sign in with a passkey/i)).not.toBeInTheDocument();
+  });
+
+  it('third slide shows the passkey pitch on web', async () => {
+    const user = userEvent.setup();
+    renderOnboarding();
+    await user.click(screen.getByRole('button', { name: /next/i }));
+    await user.click(screen.getByRole('button', { name: /next/i }));
+    expect(screen.getByText(/sign in with a passkey/i)).toBeInTheDocument();
+  });
 });
 
 describe('localStorage helpers', () => {

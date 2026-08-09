@@ -11,6 +11,8 @@ import {
   type ReactNode,
 } from 'react';
 
+import { isNativePlatform } from '@/lib/platform';
+
 import { getMe, type AuthUser } from './client';
 import { markRegistered } from './local-hint';
 
@@ -31,12 +33,24 @@ type SessionContextValue = {
 const SessionContext = createContext<SessionContextValue | null>(null);
 
 export function SessionProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<SessionState>({ status: 'loading' });
+  // On native there are no accounts: start at a definite `unauthenticated` state (no `loading`
+  // flash, no spinner-stuck views) rather than hydrating from the network.
+  const [session, setSession] = useState<SessionState>(() =>
+    isNativePlatform() ? { status: 'unauthenticated' } : { status: 'loading' },
+  );
   // Generation counter: login() increments this so any in-flight refresh() response
   // whose generation no longer matches is dropped rather than overwriting the login state.
   const refreshGenRef = useRef(0);
 
   const refresh = useCallback(() => {
+    // Native makes the "no auth network call, ever" guarantee structural: gate on platform, not on
+    // auth state. Resolve to unauthenticated without ever calling getMe(). Otherwise a later
+    // refresh() would re-arm the very GET /api/auth/me the mount path avoids.
+    if (isNativePlatform()) {
+      refreshGenRef.current++;
+      setSession({ status: 'unauthenticated' });
+      return;
+    }
     const gen = ++refreshGenRef.current;
     setSession({ status: 'loading' });
     getMe()

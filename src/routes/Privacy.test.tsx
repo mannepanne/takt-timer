@@ -2,10 +2,13 @@
 
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { I18nProvider } from '@/i18n/context';
 import { Privacy } from './Privacy';
+
+vi.mock('@/lib/platform', () => ({ isNativePlatform: vi.fn(() => false) }));
+import { isNativePlatform } from '@/lib/platform';
 
 function renderPrivacy() {
   return render(
@@ -16,6 +19,27 @@ function renderPrivacy() {
     </MemoryRouter>,
   );
 }
+
+describe('native copy fork (07g)', () => {
+  afterEach(() => vi.mocked(isNativePlatform).mockReturnValue(false));
+
+  it('on native: local-only storage, a Voice input section, and no server/Cloudflare copy', () => {
+    vi.mocked(isNativePlatform).mockReturnValue(true);
+    renderPrivacy();
+    expect(screen.getByRole('heading', { name: /voice input/i })).toBeInTheDocument();
+    expect(screen.getByText(/stored only on this device/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Cloudflare/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/passkey public key/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Delete account/i)).not.toBeInTheDocument();
+  });
+
+  it('on web: keeps the server/Cloudflare/passkey copy and has no Voice input section', () => {
+    renderPrivacy();
+    expect(screen.getAllByText(/Cloudflare/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/passkey public key/i)).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /voice input/i })).not.toBeInTheDocument();
+  });
+});
 
 describe('Privacy page', () => {
   it('renders the privacy promise heading', () => {

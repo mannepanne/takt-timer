@@ -13,6 +13,7 @@ import { useSession } from '@/lib/auth/session';
 import { fmtTime } from '@/lib/format';
 import { lastSession } from '@/lib/history';
 import { pushSession } from '@/lib/history-sync';
+import { isNativePlatform } from '@/lib/platform';
 import type { Session } from '@/lib/timer/types';
 
 type CompleteState = {
@@ -34,6 +35,9 @@ export function Complete() {
   const [interactable, setInteractable] = useState(false);
 
   const isAuthenticated = authSession.status === 'authenticated';
+  // Native has no accounts (07c/07g): no sign-in-to-save CTA and no passkey prompt. Device-local
+  // "Save as preset" is 07d and not wired yet, so native shows only Run again / Done for now.
+  const native = isNativePlatform();
 
   useEffect(() => {
     const timerId = setTimeout(() => setInteractable(true), 400);
@@ -41,7 +45,9 @@ export function Complete() {
   }, []);
 
   useEffect(() => {
-    if (!state || !isAuthenticated) return;
+    // Platform-gated so the sync is dead on native regardless of auth state (07c). History is still
+    // saved to localStorage by the timer machine — only the D1 sync is suppressed.
+    if (isNativePlatform() || !state || !isAuthenticated) return;
     const completed = lastSession();
     if (completed && completed.completedAt === state.completedAt) {
       pushSession(completed).catch(() => {
@@ -109,7 +115,7 @@ export function Complete() {
           <Icon.Play size={18} color="var(--paper)" />
           {t('complete.runAgain')}
         </button>
-        {isAuthenticated ? (
+        {native ? null : isAuthenticated ? (
           <button
             type="button"
             className="btn btn-ghost"
@@ -145,15 +151,17 @@ export function Complete() {
         }}
       />
 
-      <PasskeyPrompt
-        open={signinOpen}
-        mode={hasRegisteredBefore() ? 'signin' : 'register'}
-        onSuccess={(user) => {
-          login(user);
-          setSigninOpen(false);
-        }}
-        onClose={() => setSigninOpen(false)}
-      />
+      {!native && (
+        <PasskeyPrompt
+          open={signinOpen}
+          mode={hasRegisteredBefore() ? 'signin' : 'register'}
+          onSuccess={(user) => {
+            login(user);
+            setSigninOpen(false);
+          }}
+          onClose={() => setSigninOpen(false)}
+        />
+      )}
     </div>
   );
 }
