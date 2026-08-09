@@ -734,6 +734,10 @@ button.settings-link {
   display: flex;
   flex-direction: column;
   box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.08);
+  /* Bottom sheet anchored to the viewport edge — it escapes .screen's safe-area padding, so lift
+     its content above the gesture-nav bar on native while the sheet background still meets the
+     screen edge. Inert on web (inset is 0). */
+  padding-bottom: env(safe-area-inset-bottom);
 }
 .drawer.open {
   transform: translateY(0) !important;
@@ -1797,12 +1801,17 @@ button.settings-link {
 .onboarding {
   display: flex;
   flex-direction: column;
-  padding: 60px 24px 32px;
+  /* Sets its own padding, which overrides .screen's safe-area padding — so fold the insets in here,
+     or the footer/CTA collide with the gesture-nav bar on native. Inert on web (insets are 0). */
+  padding: calc(60px + env(safe-area-inset-top)) calc(24px + env(safe-area-inset-right))
+    calc(32px + env(safe-area-inset-bottom)) calc(24px + env(safe-area-inset-left));
 }
 .onboarding-skip {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  /* Absolutely positioned from the element edge, so it ignores the container padding — add the
+     safe-area insets directly or it lands under the status bar on native. */
+  top: calc(16px + env(safe-area-inset-top));
+  right: calc(16px + env(safe-area-inset-right));
   font-size: 14px;
   font-weight: 500;
   color: var(--ink-3);
