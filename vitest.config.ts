@@ -32,6 +32,9 @@ export default defineConfig({
         'src/vite-env.d.ts',
         'src/components/icons.tsx',
         'src/routes/Spike.tsx',
+        // Build-time alias target for the native build (replaces virtual:pwa-register); never runs
+        // in the web/test path, so it carries no runtime tests.
+        'src/lib/pwa-register-stub.ts',
       ],
       // Recalibrated for vitest 4's AST-aware v8 coverage, which measures the
       // identical suite a few points lower than vitest 2 did. Goal is to climb

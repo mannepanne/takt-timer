@@ -21,6 +21,10 @@ out/
 .parcel-cache/
 .wrangler/
 
+# Android signing keystores (NEVER commit — Play publishing secret, created in 07h)
+*.jks
+*.keystore
+
 # Environment files (NEVER commit secrets!)
 .env
 .env.local

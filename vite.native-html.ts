@@ -30,7 +30,8 @@ export const NATIVE_CSP = [
   "base-uri 'none'",
   "form-action 'none'",
   "object-src 'none'",
-  "frame-ancestors 'none'",
+  // Note: frame-ancestors is intentionally omitted — it is ignored in a <meta>-delivered CSP
+  // (header-only per spec), and framing isn't a concern for a local-content WebView.
 ].join('; ');
 
 // Self-hosted @font-face for the native build, pointing at the bundled variable woff2 in
