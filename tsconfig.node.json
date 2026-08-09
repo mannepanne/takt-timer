@@ -16,5 +16,11 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["vite.config.ts", "vitest.config.ts", "eslint.config.js"]
+  "include": [
+    "vite.config.ts",
+    "vite.native-html.ts",
+    "vitest.config.ts",
+    "eslint.config.js",
+    "capacitor.config.ts"
+  ]
 }

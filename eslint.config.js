@@ -20,6 +20,8 @@ export default tseslint.config(
   {
     ignores: [
       'dist',
+      'dist-native',
+      'android',
       'coverage',
       '.wrangler',
       'SPECIFICATIONS/prototype-design-files',

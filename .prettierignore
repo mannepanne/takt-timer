@@ -1,5 +1,8 @@
 node_modules
 dist
+dist-native
+android
+public/fonts
 coverage
 .wrangler
 SPECIFICATIONS/prototype-design-files

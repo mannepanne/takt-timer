@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Takt's warm off-white — the adaptive-icon background layer and the splash background. -->
+    <color name="ic_launcher_background">#F5F4F0</color>
+    <color name="splash_background">#F5F4F0</color>
+</resources>

@@ -142,9 +142,47 @@ Once `adb devices` shows your phone, the toolchain is ready and we can scaffold 
 
 ---
 
+## Part 3 — Building the app locally (from 07b)
+
+The Capacitor scaffold lives in `android/` (checked in; build artefacts are gitignored). The app runs from the **native Vite build variant** — self-hosted fonts, no analytics, a scoped CSP, no service worker — kept separate from the web build so "Takt's own process makes zero network calls" is structural, not observed. WebView origin is locked to `https://localhost` and the application ID to `org.hultberg.takt` — both immutable after first release.
+
+### The pnpm scripts
+
+| Command                      | What it does                                                                                                                                         |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm build:native`          | Vite build in native mode → `dist-native/` (fonts self-hosted, no analytics, scoped CSP, SW disabled).                                               |
+| `pnpm cap:sync`              | `build:native` then `cap sync android` — copies the native bundle into the Android project. Run this before any Gradle build.                        |
+| `pnpm android:check`         | Asserts the **built APK's merged manifest has no `INTERNET` permission** (`aapt2 dump permissions`). The durable guard behind `tools:node="remove"`. |
+| `pnpm fonts:copy`            | Refreshes the bundled variable `woff2` in `public/fonts/` from the `@fontsource-variable/*` packages (only after bumping them).                      |
+| `node scripts/gen-icons.mjs` | Regenerates web + Android launcher icons and the splash logo from the "takt" wordmark SVG — no external artwork.                                     |
+
+### Build + verify a debug APK
+
+```bash
+export JAVA_HOME="$(/usr/libexec/java_home -v 21)"
+export ANDROID_HOME="$HOME/Library/Android/sdk"
+export PATH="$ANDROID_HOME/platform-tools:$PATH"
+
+pnpm cap:sync                       # build native bundle + copy into android/
+cd android && ./gradlew assembleDebug   # → app/build/outputs/apk/debug/app-debug.apk
+cd .. && pnpm android:check         # confirm no INTERNET in the merged manifest
+```
+
+### Install + launch on a connected phone
+
+```bash
+cd android && ./gradlew installDebug        # or: adb install -r app/build/outputs/apk/debug/app-debug.apk
+adb shell monkey -p org.hultberg.takt -c android.intent.category.LAUNCHER 1
+```
+
+If `adb devices` is empty, the phone isn't in debugging mode / the USB cable is charge-only — see the Part 2 sanity check.
+
+---
+
 ## Cross-references
 
 - [SPECIFICATIONS/07-android-app.md](../SPECIFICATIONS/07-android-app.md) — the umbrella spec (north star, architecture, risks).
+- [SPECIFICATIONS/07b-capacitor-scaffold.md](../SPECIFICATIONS/07b-capacitor-scaffold.md) — the scaffold deliverable this build workflow comes from.
 - [SPECIFICATIONS/07a-spikes.md](../SPECIFICATIONS/07a-spikes.md) — the first code work (keep-awake / lifecycle / speech-recognition), needs the dev environment above.
 - [SPECIFICATIONS/07h-publishing.md](../SPECIFICATIONS/07h-publishing.md) — the publishing deliverable, whose admin track is Part 1 above.
 - [environment-setup.md](./environment-setup.md) — the _web_ app's Cloudflare/Wrangler environment (unrelated to Android, but the sibling setup doc).

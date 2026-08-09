@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Takt splash: solid brand background with the centred wordmark logo. One vector-ish layer-list
+     instead of per-density/orientation raster splash.png files, so it renders crisply everywhere
+     and carries no browser chrome. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/splash_background" />
+    <item>
+        <bitmap android:src="@drawable/splash_logo" android:gravity="center" />
+    </item>
+</layer-list>

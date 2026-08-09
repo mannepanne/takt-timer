@@ -195,6 +195,13 @@ input {
   display: flex;
   flex-direction: column;
   background: var(--paper);
+  /* Native (Capacitor) draws edge-to-edge behind the status bar and gesture-nav bar (index.html
+     sets viewport-fit=cover). Inset each screen's content by the safe-area insets so top/bottom
+     chrome clears the system bars, while the screen's own background (paper, or the run phase
+     colour) still fills the border-box edge-to-edge. Inert on non-notched viewports (insets are 0),
+     so the web app is unchanged. */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
 }
 
 /* Top bar */
@@ -727,6 +734,10 @@ button.settings-link {
   display: flex;
   flex-direction: column;
   box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.08);
+  /* Bottom sheet anchored to the viewport edge — it escapes .screen's safe-area padding, so lift
+     its content above the gesture-nav bar on native while the sheet background still meets the
+     screen edge. Inert on web (inset is 0). */
+  padding-bottom: env(safe-area-inset-bottom);
 }
 .drawer.open {
   transform: translateY(0) !important;
@@ -1339,7 +1350,10 @@ button.settings-link {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  /* Full-screen fixed overlay — escapes .screen's safe-area padding, so keep the centred sheet
+     clear of the system bars on native. At least 24px, more if an inset is larger. */
+  padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right))
+    max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
 }
 .voice-overlay-sheet {
   width: 100%;
@@ -1426,7 +1440,8 @@ button.settings-link {
 .mic-retry-toast {
   position: fixed;
   left: 50%;
-  bottom: 24px;
+  /* Fixed to the window — lift above the gesture-nav bar on native. */
+  bottom: calc(24px + env(safe-area-inset-bottom));
   transform: translateX(-50%);
   max-width: calc(100% - 32px);
   padding: 12px 16px;
@@ -1786,12 +1801,17 @@ button.settings-link {
 .onboarding {
   display: flex;
   flex-direction: column;
-  padding: 60px 24px 32px;
+  /* Sets its own padding, which overrides .screen's safe-area padding — so fold the insets in here,
+     or the footer/CTA collide with the gesture-nav bar on native. Inert on web (insets are 0). */
+  padding: calc(60px + env(safe-area-inset-top)) calc(24px + env(safe-area-inset-right))
+    calc(32px + env(safe-area-inset-bottom)) calc(24px + env(safe-area-inset-left));
 }
 .onboarding-skip {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  /* Absolutely positioned from the element edge, so it ignores the container padding — add the
+     safe-area insets directly or it lands under the status bar on native. */
+  top: calc(16px + env(safe-area-inset-top));
+  right: calc(16px + env(safe-area-inset-right));
   font-size: 14px;
   font-weight: 500;
   color: var(--ink-3);
