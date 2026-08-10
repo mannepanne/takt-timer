@@ -98,11 +98,26 @@ describe('Settings route', () => {
   it('hides the entire account block on native (07g): no account label, no sign-in CTA', () => {
     vi.mocked(isNativePlatform).mockReturnValue(true);
     renderSettings();
-    // Language/accent/sound still render; the account section and its sign-in CTA do not.
-    expect(screen.getByText('Language')).toBeInTheDocument();
+    // Accent/sound still render; the account section and its sign-in CTA do not.
+    expect(screen.getByRole('radiogroup')).toBeInTheDocument();
+    expect(screen.getByRole('switch')).toBeInTheDocument();
     expect(screen.queryByText('Account')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /sign in/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/not signed in/i)).not.toBeInTheDocument();
+  });
+
+  it('hides the language toggle on native — the Android app is English-only (07f)', () => {
+    vi.mocked(isNativePlatform).mockReturnValue(true);
+    renderSettings();
+    expect(screen.queryByText('Language')).not.toBeInTheDocument();
+    // The language segmented control is a role="group"; only accent (radiogroup) should remain.
+    expect(screen.queryByRole('group')).not.toBeInTheDocument();
+  });
+
+  it('shows the language toggle on web', () => {
+    renderSettings();
+    expect(screen.getByText('Language')).toBeInTheDocument();
+    expect(screen.getByRole('group')).toBeInTheDocument();
   });
 
   it('renders language, accent, and sound sections', () => {

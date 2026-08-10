@@ -3,8 +3,14 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { I18nProvider, useI18n } from './context';
+import { isNativePlatform } from '@/lib/platform';
 
-beforeEach(() => localStorage.clear());
+vi.mock('@/lib/platform', () => ({ isNativePlatform: vi.fn(() => false) }));
+
+beforeEach(() => {
+  localStorage.clear();
+  vi.mocked(isNativePlatform).mockReturnValue(false);
+});
 afterEach(() => vi.unstubAllGlobals());
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -26,6 +32,20 @@ describe('useI18n', () => {
     vi.stubGlobal('navigator', { language: 'sv-SE' });
     const { result } = renderHook(() => useI18n(), { wrapper });
     expect(result.current.lang).toBe('sv');
+  });
+
+  it('forces en on native even when navigator.language is sv-SE (Android is English-only)', () => {
+    vi.mocked(isNativePlatform).mockReturnValue(true);
+    vi.stubGlobal('navigator', { language: 'sv-SE' });
+    const { result } = renderHook(() => useI18n(), { wrapper });
+    expect(result.current.lang).toBe('en');
+  });
+
+  it('forces en on native even when localStorage has sv stored', () => {
+    vi.mocked(isNativePlatform).mockReturnValue(true);
+    localStorage.setItem('takt.lang.v1', 'sv');
+    const { result } = renderHook(() => useI18n(), { wrapper });
+    expect(result.current.lang).toBe('en');
   });
 
   it('reads language from localStorage and overrides navigator.language', () => {

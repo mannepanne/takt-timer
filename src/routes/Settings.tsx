@@ -40,6 +40,9 @@ export function Settings() {
   const isAdmin = session.status === 'authenticated' && session.user.isAdmin;
   // Native has no accounts (07c) — hide the whole account block and the passkey prompt (07g).
   const showAccount = !isNativePlatform();
+  // The Android app is English-only (native voice is English-only, 07f) — hide the language
+  // toggle; I18nProvider forces 'en' on native so there's nothing to switch.
+  const showLanguage = !isNativePlatform();
 
   function triggerSaved() {
     if (savedTimer.current) clearTimeout(savedTimer.current);
@@ -126,14 +129,18 @@ export function Settings() {
       <div className="settings-body">
         <h1 className="settings-title">{t('settings.title')}</h1>
 
-        <section className="settings-section">
-          <div className="settings-row">
-            <span className="settings-label">{t('settings.language')}</span>
-            <LanguageToggle onChange={handleLangChange} />
-          </div>
-        </section>
+        {showLanguage && (
+          <>
+            <section className="settings-section">
+              <div className="settings-row">
+                <span className="settings-label">{t('settings.language')}</span>
+                <LanguageToggle onChange={handleLangChange} />
+              </div>
+            </section>
 
-        <div className="hairline" />
+            <div className="hairline" />
+          </>
+        )}
 
         <section className="settings-section">
           <div className="settings-row settings-row--stack">
