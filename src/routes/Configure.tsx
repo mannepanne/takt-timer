@@ -1,5 +1,6 @@
 // ABOUT: Configure route — edit a session's sets/work/rest via the Interpretation chips.
-// ABOUT: Accepts a pre-populated session via location.state.session (voice handoff) and
+// ABOUT: Accepts a pre-populated session via location.state.session (voice handoff), plus an
+// ABOUT: optional location.state.transcript rendered as a native-only "Heard: …" hint, and
 // ABOUT: falls back to DEFAULT_SESSION when opened directly from Home. Start navigates to /run.
 
 import { useState } from 'react';
