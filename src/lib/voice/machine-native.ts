@@ -11,7 +11,7 @@ import type { ParsedSession, VoiceState } from './types';
 export type NativeEffect =
   | { type: 'startCapture' } // availability → permission → recognise, dispatched back as events
   | { type: 'stopRecognition' } // user cancelled / stopped mid-listen
-  | { type: 'navigateToConfigure'; session: ParsedSession }
+  | { type: 'navigateToConfigure'; session: ParsedSession; transcript: string }
   | { type: 'openAppSettings' };
 
 export type NativeVoiceEvent =
@@ -74,9 +74,12 @@ export function step(state: VoiceState, event: NativeVoiceEvent): NativeStepResu
         if (!text) return { next: recognitionFailed(), effects: [] }; // nothing heard
         const result = parseIntent(text);
         if (result.ok) {
+          // Carry the heard transcript through so Configure can surface a "Heard: …" hint —
+          // the confident-but-misheard parse (e.g. "fifty" for "fifteen") is the one gap the
+          // parser can't catch, so the user needs a glimpse of what was heard to sanity-check.
           return {
             next: { phase: 'idle' },
-            effects: [{ type: 'navigateToConfigure', session: result.session }],
+            effects: [{ type: 'navigateToConfigure', session: result.session, transcript: text }],
           };
         }
         return { next: notASession(text), effects: [] }; // heard words, no session

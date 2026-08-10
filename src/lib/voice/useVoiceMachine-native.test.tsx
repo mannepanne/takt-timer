@@ -45,7 +45,10 @@ describe('useVoiceMachine (native)', () => {
     act(() => result.current.micTap());
     await waitFor(() =>
       expect(navigate).toHaveBeenCalledWith('/configure', {
-        state: { session: { sets: 3, workSec: 60, restSec: 30 } },
+        state: {
+          session: { sets: 3, workSec: 60, restSec: 30 },
+          transcript: 'three sets of one minute, thirty seconds rest',
+        },
       }),
     );
     expect(recognizeOnce).toHaveBeenCalledWith('en-US');
@@ -177,7 +180,10 @@ describe('useVoiceMachine (native)', () => {
     await act(async () => resolveRec('three sets of one minute, thirty seconds rest'));
     await waitFor(() =>
       expect(navigate).toHaveBeenCalledWith('/configure', {
-        state: { session: { sets: 3, workSec: 60, restSec: 30 } },
+        state: {
+          session: { sets: 3, workSec: 60, restSec: 30 },
+          transcript: 'three sets of one minute, thirty seconds rest',
+        },
       }),
     );
   });
