@@ -1996,3 +1996,27 @@ button.settings-link {
     transition: none !important;
   }
 }
+
+/* JS-disabled fallback shown inside index.html's <noscript>. Kept as classes (not inline styles)
+   so the CSP style-src can drop 'unsafe-inline'. This is a standalone dark splash, deliberately
+   independent of the app's runtime theming — hence literal colours, not design tokens. It resolves
+   with JS off because the bundled stylesheet loads via a static <link>. */
+.noscript-fallback {
+  padding: 32px 24px;
+  font-family: Figtree, ui-sans-serif, system-ui, sans-serif;
+  color: #f5f4f0;
+  background: #0e1116;
+  min-height: 100vh;
+  text-align: center;
+}
+.noscript-fallback-title {
+  font-size: 22px;
+  font-weight: 500;
+  margin: 0 0 12px;
+}
+.noscript-fallback-text {
+  font-size: 14px;
+  color: #8a92a0;
+  line-height: 1.5;
+  margin: 0;
+}
