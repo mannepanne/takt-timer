@@ -19,6 +19,7 @@ export function PresetsDrawer({ open, onClose }: Props) {
   const [presets, setPresets] = useState<Preset[]>([]);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState(false);
+  const [mutateError, setMutateError] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [renameId, setRenameId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
@@ -27,6 +28,7 @@ export function PresetsDrawer({ open, onClose }: Props) {
     if (!open) return;
     setLoading(true);
     setFetchError(false);
+    setMutateError(null);
     listPresets()
       .then(setPresets)
       .catch(() => setFetchError(true))
@@ -47,29 +49,48 @@ export function PresetsDrawer({ open, onClose }: Props) {
     });
   }
 
+  // Each mutation applies its React state change only after the write resolves, so a rejection
+  // leaves the list untouched (no false "saved" flip/copy/remove). On native, presets-local
+  // throws on a full or blocked store; on web the API call can reject. Either way we surface the
+  // failure instead of letting it become a silent no-op and an unhandled rejection.
   async function togglePin(preset: Preset) {
-    const updated = await updatePreset(preset.id, { pinned: preset.pinned ? 0 : 1 });
-    setPresets((prev) =>
-      prev
-        .map((p) => (p.id === preset.id ? updated : p))
-        .sort((a, b) => b.pinned - a.pinned || a.order_index - b.order_index),
-    );
+    setMutateError(null);
+    try {
+      const updated = await updatePreset(preset.id, { pinned: preset.pinned ? 0 : 1 });
+      setPresets((prev) =>
+        prev
+          .map((p) => (p.id === preset.id ? updated : p))
+          .sort((a, b) => b.pinned - a.pinned || a.order_index - b.order_index),
+      );
+    } catch {
+      setMutateError(t('presets.mutateError'));
+    }
   }
 
   async function duplicate(preset: Preset) {
-    const copy = await createPreset({
-      name: `${preset.name} copy`,
-      sets: preset.sets,
-      work_sec: preset.work_sec,
-      rest_sec: preset.rest_sec,
-    });
-    setPresets((prev) => [...prev, copy]);
+    setMutateError(null);
+    try {
+      const copy = await createPreset({
+        name: `${preset.name} copy`,
+        sets: preset.sets,
+        work_sec: preset.work_sec,
+        rest_sec: preset.rest_sec,
+      });
+      setPresets((prev) => [...prev, copy]);
+    } catch {
+      setMutateError(t('presets.mutateError'));
+    }
   }
 
   async function remove(id: string) {
-    await deletePreset(id);
-    setPresets((prev) => prev.filter((p) => p.id !== id));
-    setDeleteId(null);
+    setMutateError(null);
+    try {
+      await deletePreset(id);
+      setPresets((prev) => prev.filter((p) => p.id !== id));
+      setDeleteId(null);
+    } catch {
+      setMutateError(t('presets.mutateError'));
+    }
   }
 
   function startRename(preset: Preset) {
@@ -79,9 +100,14 @@ export function PresetsDrawer({ open, onClose }: Props) {
 
   async function commitRename() {
     if (!renameId || !renameValue.trim()) return;
-    const updated = await updatePreset(renameId, { name: renameValue.trim() });
-    setPresets((prev) => prev.map((p) => (p.id === renameId ? updated : p)));
-    setRenameId(null);
+    setMutateError(null);
+    try {
+      const updated = await updatePreset(renameId, { name: renameValue.trim() });
+      setPresets((prev) => prev.map((p) => (p.id === renameId ? updated : p)));
+      setRenameId(null);
+    } catch {
+      setMutateError(t('presets.mutateError'));
+    }
   }
 
   return (
@@ -106,6 +132,11 @@ export function PresetsDrawer({ open, onClose }: Props) {
         </div>
 
         <div className="presets-drawer-list scroll">
+          {mutateError && (
+            <p className="presets-drawer-error" role="alert">
+              {mutateError}
+            </p>
+          )}
           {loading && <p className="presets-drawer-empty">{t('presets.loading')}</p>}
           {!loading && fetchError && (
             <p className="presets-drawer-error">{t('presets.loadError')}</p>

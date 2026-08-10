@@ -1622,6 +1622,12 @@ button.settings-link {
   text-align: center;
   margin: 24px 0;
 }
+.presets-drawer-error {
+  font-size: 14px;
+  color: var(--danger);
+  text-align: center;
+  margin: 16px 0;
+}
 .preset-card {
   flex-direction: row;
   align-items: center;

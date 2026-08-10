@@ -174,6 +174,58 @@ describe('PresetsDrawer', () => {
     await waitFor(() => expect(updatePreset).toHaveBeenCalledWith('p1', { name: 'Quads' }));
   });
 
+  it('surfaces an error and leaves the pin unchanged when togglePin fails', async () => {
+    vi.mocked(listPresets).mockResolvedValueOnce([PRESET]);
+    vi.mocked(updatePreset).mockRejectedValueOnce(new Error('store full'));
+    renderDrawer();
+    await waitFor(() => screen.getByText('Legs'));
+    const pinButton = screen.getByRole('button', { name: /pin preset/i });
+    fireEvent.click(pinButton);
+    await waitFor(() => expect(screen.getByText(/could not update presets/i)).toBeTruthy());
+    // Pin did not flip — the button still offers to pin (not unpin).
+    expect(screen.getByRole('button', { name: /pin preset/i })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /unpin preset/i })).toBeNull();
+  });
+
+  it('surfaces an error and adds no card when duplicate fails', async () => {
+    vi.mocked(listPresets).mockResolvedValueOnce([PRESET]);
+    vi.mocked(createPreset).mockRejectedValueOnce(new Error('store full'));
+    renderDrawer();
+    await waitFor(() => screen.getByText('Legs'));
+    fireEvent.click(screen.getByRole('button', { name: /duplicate legs/i }));
+    await waitFor(() => expect(screen.getByText(/could not update presets/i)).toBeTruthy());
+    // No copy appeared.
+    expect(screen.queryByText('Legs copy')).toBeNull();
+    expect(screen.getAllByText('Legs')).toHaveLength(1);
+  });
+
+  it('surfaces an error and keeps the row when delete fails', async () => {
+    vi.mocked(listPresets).mockResolvedValueOnce([PRESET]);
+    vi.mocked(deletePreset).mockRejectedValueOnce(new Error('store full'));
+    renderDrawer();
+    await waitFor(() => screen.getByText('Legs'));
+    fireEvent.click(screen.getByRole('button', { name: /delete legs/i }));
+    fireEvent.click(screen.getByRole('button', { name: /confirm delete/i }));
+    await waitFor(() => expect(screen.getByText(/could not update presets/i)).toBeTruthy());
+    // Row still present.
+    expect(screen.getByText('Legs')).toBeTruthy();
+  });
+
+  it('surfaces an error and keeps the old name when rename fails', async () => {
+    vi.mocked(listPresets).mockResolvedValueOnce([PRESET]);
+    vi.mocked(updatePreset).mockRejectedValueOnce(new Error('store full'));
+    renderDrawer();
+    await waitFor(() => screen.getByText('Legs'));
+    fireEvent.click(screen.getByRole('button', { name: /rename legs/i }));
+    const input = screen.getByRole('textbox', { name: /rename preset/i });
+    fireEvent.change(input, { target: { value: 'Quads' } });
+    fireEvent.click(screen.getByRole('button', { name: /save rename/i }));
+    await waitFor(() => expect(screen.getByText(/could not update presets/i)).toBeTruthy());
+    // Rename did not apply; the input stays open for a retry.
+    expect(screen.queryByText('Quads')).toBeNull();
+    expect(screen.getByRole('textbox', { name: /rename preset/i })).toBeTruthy();
+  });
+
   it('Escape key in rename input cancels without saving', async () => {
     vi.mocked(listPresets).mockResolvedValueOnce([PRESET]);
     renderDrawer();
