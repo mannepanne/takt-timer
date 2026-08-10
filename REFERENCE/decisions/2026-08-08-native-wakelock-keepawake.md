@@ -1,6 +1,6 @@
 # ADR: Native wake lock is backed by a Capacitor keep-awake plugin
 
-**Date:** 2026-08-08 (amended 2026-08-09 when 07e landed)
+**Date:** 2026-08-08 (amended 2026-08-09 when 07e landed; 2026-08-10 when #131 landed)
 **Status:** Active
 
 ---
@@ -35,11 +35,22 @@ Full readings: [SPECIFICATIONS/07a-spikes.md](../../SPECIFICATIONS/07a-spikes.md
 
 **Web has the same latent behaviour — deliberately out of 07e's scope.** The spike's stated rationale ("on web that's self-limiting") is weaker than it reads: on a cold load that lands on Home with a stale `running` stopwatch, the document _is_ visible, so `navigator.wakeLock.request()` would be granted on web too. The _decision_ (a deliberate native re-acquire policy) stands; the _rationale_ does not for that case. 07e's acceptance criteria forbid changing the web path, so the equivalent web tidy-up (scope the rehydrated re-acquire to the Timer screen on web as well) is tracked separately, not folded in here.
 
+## #131 landed (2026-08-10): web adopts option (a), the policy is now platform-independent
+
+The web tidy-up deferred above shipped in #131. Web now follows the **same** option (a) policy as native, so there is no longer a platform branch in either call site:
+
+- The launch re-acquire in `useStopwatchMachine` (previously web-only, gated `!isNativePlatform()`) is **removed outright**. Neither platform re-grabs the lock for a rehydrated `running` phase at mount — that mount fires on whatever route the app loads on, and re-grabbing there was the #131 bug (screen held on Home/Settings/presets).
+- `Timer.tsx`'s `stopwatch-screen` hold is **no longer gated** on `isNativePlatform()`; it runs on both platforms. It is now the _only_ thing holding the screen for the rehydrated-running case on web as well as native.
+
+Consequently the "native-only branch, inert on web via `isNativePlatform()`" framing in items 3 and the trade-offs below is superseded: the rehydrated-stopwatch policy is one uniform code path with `isNativePlatform()` gone from `useStopwatchMachine.ts` and `Timer.tsx`. An active session started this session is unchanged on both platforms — the reducer's `stopwatch` owner still holds regardless of screen.
+
+The one place web and native genuinely differ remains the platform primitive, not this policy: `navigator.wakeLock` auto-releases on tab-hide (so the visibility→visible reacquire in `useStopwatchMachine` matters on web, now carried solely by the `stopwatch-screen` owner), whereas keep-awake never auto-releases. The same-session off-screen hold noted above is likewise unchanged and still intended on both platforms.
+
 **4. Real-machine confirmation.** Spike 1 used a bare shell. 07e's device verification (Magnus, real hardware) confirms the hold survives when the actual reducer dispatches acquire/release, and that a forgotten running stopwatch does not keep the screen awake on an unrelated screen.
 
 ## Trade-offs accepted
 
-A second wake-lock backing now exists (web `navigator.wakeLock`, native keep-awake) behind one seam. The native backing is real code, not a config flip — accepted because it keeps both call sites (`useTimerMachine`, `useStopwatchMachine`) and `wakeLock.ts`'s convergence logic unchanged. The stale-lock policy adds one native-only branch to `Timer.tsx` and `useStopwatchMachine.ts` (both inert on web via `isNativePlatform()`), accepted as the minimum surface that makes "on screen ⇒ awake, off screen ⇒ may sleep" true for the rehydrated case.
+A second wake-lock backing now exists (web `navigator.wakeLock`, native keep-awake) behind one seam. The native backing is real code, not a config flip — accepted because it keeps both call sites (`useTimerMachine`, `useStopwatchMachine`) and `wakeLock.ts`'s convergence logic unchanged. The stale-lock policy originally added one native-only branch to `Timer.tsx` and `useStopwatchMachine.ts` (both inert on web via `isNativePlatform()`); **as of #131 those branches are gone and the policy is one uniform path on both platforms** (see the amendment above), which is a net simplification — "on screen ⇒ awake, off screen ⇒ may sleep" for the rehydrated case now holds identically on web and native.
 
 ---
 

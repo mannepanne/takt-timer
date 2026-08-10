@@ -5,17 +5,13 @@ import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import * as wakeLock from '@/lib/wakeLock';
-import { isNativePlatform } from '@/lib/platform';
 
 import { persistState } from './persistence';
 import { useStopwatchMachine } from './useStopwatchMachine';
 
-vi.mock('@/lib/platform', () => ({ isNativePlatform: vi.fn(() => false) }));
-
 describe('useStopwatchMachine', () => {
   afterEach(() => {
     vi.restoreAllMocks();
-    vi.mocked(isNativePlatform).mockReturnValue(false);
     vi.useRealTimers();
     localStorage.clear();
     Object.defineProperty(document, 'visibilityState', {
@@ -160,28 +156,21 @@ describe('useStopwatchMachine', () => {
       expect(result.current.state.phase).toBe('idle');
     });
 
-    it('re-acquires the wake lock on mount when the rehydrated phase is running (web)', () => {
-      const acquireSpy = vi.spyOn(wakeLock, 'acquire').mockResolvedValue();
-      persistState({ phase: 'running', accumulatedMs: 0, startedAtMs: 0 });
-      renderHook(() => useStopwatchMachine());
-      expect(acquireSpy).toHaveBeenCalledWith('stopwatch');
-    });
-
-    it('does NOT re-acquire the wake lock at launch on native, even when rehydrated running (07e)', () => {
-      // Native keep-awake isn't self-limiting like navigator.wakeLock, so a stale running stopwatch
-      // must not pin the screen at app launch — the lock is tied to the Timer screen instead
-      // (Timer.tsx's 'stopwatch-screen' owner). This is the stale-lock policy's load-bearing gate.
-      vi.mocked(isNativePlatform).mockReturnValue(true);
+    it('does NOT re-acquire the wake lock at launch when rehydrated running (07e native, #131 web)', () => {
+      // A rehydrated running stopwatch must not pin the screen at app launch — the mount fires on
+      // whatever route the app loads on (Home/Settings/presets), and re-grabbing the lock there is
+      // exactly the #131 bug. The rehydrated-running hold is tied to the Timer screen being shown
+      // instead (Timer.tsx's 'stopwatch-screen' owner). Platform-independent: no launch re-acquire
+      // on web or native.
       const acquireSpy = vi.spyOn(wakeLock, 'acquire').mockResolvedValue();
       persistState({ phase: 'running', accumulatedMs: 0, startedAtMs: 0 });
       renderHook(() => useStopwatchMachine());
       expect(acquireSpy).not.toHaveBeenCalled();
     });
 
-    it('the native skip is launch-only — a later resume still re-acquires the stopwatch owner', () => {
-      // Guards against a future refactor over-broadening the native launch-skip into disabling the
+    it('the launch skip does not disable the stopwatch owner — a later resume still re-acquires it', () => {
+      // Guards against a future refactor over-broadening the launch-skip into disabling the
       // stopwatch's own wake lock: the reducer's acquireWakeLock effect must still fire on resume.
-      vi.mocked(isNativePlatform).mockReturnValue(true);
       const acquireSpy = vi.spyOn(wakeLock, 'acquire').mockResolvedValue();
       const { result } = renderHook(() => useStopwatchMachine());
       act(() => result.current.start());

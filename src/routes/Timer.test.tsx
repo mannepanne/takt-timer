@@ -15,6 +15,32 @@ import { Timer } from './Timer';
 
 vi.mock('@/lib/platform', () => ({ isNativePlatform: vi.fn(() => false) }));
 
+// A fake navigator.wakeLock for the integration test that exercises the real wakeLock module
+// (owner set + reacquire) rather than spying its functions. Mirrors src/lib/wakeLock.test.ts.
+function createFakeSentinel() {
+  const listeners: Array<() => void> = [];
+  return {
+    released: false,
+    release: vi.fn(async function (this: { released: boolean }) {
+      this.released = true;
+    }),
+    addEventListener: vi.fn((_type: 'release', cb: () => void) => listeners.push(cb)),
+    _fireRelease() {
+      listeners.forEach((l) => l());
+    },
+  };
+}
+
+function installWakeLock(
+  request: (type: 'screen') => Promise<ReturnType<typeof createFakeSentinel>>,
+) {
+  Object.defineProperty(navigator, 'wakeLock', { configurable: true, value: { request } });
+}
+
+function uninstallWakeLock() {
+  delete (navigator as { wakeLock?: unknown }).wakeLock;
+}
+
 function wrapper({ children }: { children: React.ReactNode }) {
   return (
     <I18nProvider>
@@ -46,6 +72,8 @@ describe('Timer route', () => {
     vi.mocked(isNativePlatform).mockReturnValue(false);
     vi.useRealTimers();
     localStorage.clear();
+    wakeLock.__resetWakeLockForTest();
+    uninstallWakeLock();
   });
 
   it('shows 0:00 and a Start button when idle', () => {
@@ -127,13 +155,16 @@ describe('Timer route', () => {
     expect(screen.getByText('0:00')).not.toHaveAttribute('aria-live');
   });
 
-  describe('native screen keep-awake (07e stale-lock policy)', () => {
+  describe('screen keep-awake while the Timer screen is shown (07e native, #131 web)', () => {
+    // Platform-independent: the Timer.tsx screen-scoped hold is no longer gated on isNativePlatform,
+    // so these run on the default (web) path — the case #131 fixes. Native behaves identically (the
+    // keep-awake backing is covered in wakeLock-platform-native.test.ts).
+
     it('holds the screen on mount when the stopwatch is ALREADY running (rehydrated), with no click', () => {
-      // The load-bearing path: on native the launch re-acquire in useStopwatchMachine is skipped,
-      // so when the user reopens the app to a still-running stopwatch and lands on the Timer screen,
-      // Timer.tsx's mount effect is the ONLY thing keeping the screen on. If this regresses the
-      // phone sleeps mid-set and the suite would otherwise stay green.
-      vi.mocked(isNativePlatform).mockReturnValue(true);
+      // The load-bearing path: the launch re-acquire in useStopwatchMachine is gone, so when the
+      // user reopens the app to a still-running stopwatch and lands on the Timer screen, Timer.tsx's
+      // mount effect is the ONLY thing keeping the screen on. If this regresses the screen sleeps
+      // mid-set and the suite would otherwise stay green.
       persistState({ phase: 'running', accumulatedMs: 0, startedAtMs: 0 });
       const acquireSpy = vi.spyOn(wakeLock, 'acquire').mockResolvedValue();
       renderTimer();
@@ -142,7 +173,6 @@ describe('Timer route', () => {
     });
 
     it('holds the screen (stopwatch-screen owner) while running on this screen, releasing on leave', () => {
-      vi.mocked(isNativePlatform).mockReturnValue(true);
       const acquireSpy = vi.spyOn(wakeLock, 'acquire').mockResolvedValue();
       const releaseSpy = vi.spyOn(wakeLock, 'release').mockResolvedValue();
       const { unmount } = renderTimer();
@@ -151,14 +181,13 @@ describe('Timer route', () => {
       expect(acquireSpy).toHaveBeenCalledWith('stopwatch-screen');
 
       // Leaving the Timer screen must drop the screen-scoped hold so a running stopwatch can't
-      // pin the screen awake on Settings/presets.
+      // pin the screen awake on Home/Settings/presets.
       releaseSpy.mockClear();
       unmount();
       expect(releaseSpy).toHaveBeenCalledWith('stopwatch-screen');
     });
 
     it('releases the screen hold when the running stopwatch is paused on this screen', () => {
-      vi.mocked(isNativePlatform).mockReturnValue(true);
       vi.spyOn(wakeLock, 'acquire').mockResolvedValue();
       const releaseSpy = vi.spyOn(wakeLock, 'release').mockResolvedValue();
       renderTimer();
@@ -168,16 +197,70 @@ describe('Timer route', () => {
       expect(releaseSpy).toHaveBeenCalledWith('stopwatch-screen');
     });
 
-    it('does not touch the screen-scoped owner on web — navigator.wakeLock path is unchanged', () => {
-      // isNativePlatform() defaults to false (web); the Timer screen must make no stopwatch-screen
-      // wake-lock calls, leaving the shared reducer/useStopwatchMachine path byte-identical.
+    it('web now scopes the hold to the Timer screen — the #131 fix (was: web never touched it)', () => {
+      // Before #131 the web Timer made no stopwatch-screen calls and relied on the launch
+      // re-acquire, which pinned the screen on Home. Now web uses the same screen-scoped owner as
+      // native, so starting a stopwatch here acquires it and leaving releases it.
       const acquireSpy = vi.spyOn(wakeLock, 'acquire').mockResolvedValue();
       const releaseSpy = vi.spyOn(wakeLock, 'release').mockResolvedValue();
       const { unmount } = renderTimer();
       act(() => fireEvent.click(screen.getByRole('button', { name: 'Start' })));
+      expect(acquireSpy).toHaveBeenCalledWith('stopwatch-screen');
       unmount();
-      expect(acquireSpy).not.toHaveBeenCalledWith('stopwatch-screen');
-      expect(releaseSpy).not.toHaveBeenCalledWith('stopwatch-screen');
+      expect(releaseSpy).toHaveBeenCalledWith('stopwatch-screen');
+    });
+
+    it('cold-load to Home (not Timer) with a rehydrated running stopwatch acquires no lock — the #131 scenario', async () => {
+      // #131's exact scenario: the app cold-loads onto Home (StopwatchProvider mounts
+      // useStopwatchMachine at app root, rehydrating a running stopwatch), but Timer isn't mounted.
+      // With the launch re-acquire gone, nothing requests the screen lock — proving the bug (screen
+      // held on Home) is fixed. Uses the real wakeLock module, not a spy.
+      let calls = 0;
+      installWakeLock(async () => {
+        calls++;
+        return createFakeSentinel();
+      });
+      persistState({ phase: 'running', accumulatedMs: 0, startedAtMs: 0 });
+      render(
+        <MemoryRouter initialEntries={['/']}>
+          <Routes>
+            <Route path="/" element={<LocationProbe />} />
+            <Route path="/timer" element={<Timer />} />
+          </Routes>
+        </MemoryRouter>,
+        { wrapper },
+      );
+      await act(async () => {});
+      expect(screen.getByTestId('path')).toHaveTextContent('/'); // on Home, Timer not mounted
+      expect(calls).toBe(0); // no launch re-acquire — the screen is not pinned on Home
+    });
+
+    it('a rehydrated running stopwatch reacquires the screen lock on hide→visible (via stopwatch-screen)', async () => {
+      // The one place web ≠ native: navigator.wakeLock auto-releases on tab-hide (keep-awake never
+      // does). With the launch re-acquire gone, the reacquire-on-return is carried SOLELY by the
+      // stopwatch-screen owner. This exercises the real wakeLock module (owner set + reacquire),
+      // not a spy, to prove the owner is present so the reacquire actually re-requests the lock.
+      let calls = 0;
+      const first = createFakeSentinel();
+      const second = createFakeSentinel();
+      installWakeLock(async () => (calls++ === 0 ? first : second));
+      persistState({ phase: 'running', accumulatedMs: 0, startedAtMs: 0 });
+      renderTimer();
+
+      // Mount acquired the screen lock once (rehydrated running, shown on Timer).
+      await act(async () => {});
+      expect(calls).toBe(1);
+
+      // Browser auto-releases on hide, then the tab returns to visible.
+      act(() => first._fireRelease());
+      await act(async () => {
+        Object.defineProperty(document, 'visibilityState', {
+          configurable: true,
+          value: 'visible',
+        });
+        document.dispatchEvent(new Event('visibilitychange'));
+      });
+      expect(calls).toBe(2); // reacquired because stopwatch-screen is still an owner
     });
   });
 });

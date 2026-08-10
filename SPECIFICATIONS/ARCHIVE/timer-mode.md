@@ -77,6 +77,8 @@ This needs no new derivation logic and carries no drift risk: `accumulatedMs`/`s
 
 **Wake lock on rehydrate.** A reload is a fresh JS context — no platform wake lock is held even if the rehydrated phase is `running`. `useStopwatchMachine` re-acquires it explicitly on mount when the rehydrated phase is `running`, rather than waiting for a phase transition that won't happen until the user next interacts with the controls.
 
+> _Superseded by #131 (2026-08-10): this launch re-acquire has since been removed (it pinned the screen awake on a cold load to Home). The rehydrated-running hold is now scoped to the Timer screen being shown — see the [wake-lock ADR](../../REFERENCE/decisions/2026-08-08-native-wakelock-keepawake.md) "#131 landed" amendment. Left in place as the original archived rationale._
+
 Full reasoning and alternatives: [ADR 2026-08-02, Addendum](../../REFERENCE/decisions/2026-08-02-timer-mode-provider-scoped-state.md#addendum-localstorage-persistence-for-reloadrestart-survival).
 
 ### Render cadence lives in the route, not the provider

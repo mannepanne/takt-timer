@@ -33,6 +33,7 @@ Back `src/lib/wakeLock.ts` with a native keep-awake path so both callers — the
 - [ ] Both callers work unchanged at their call sites; the owner-keyed convergence (lock released only when the owner set empties) still holds with the synthetic sentinel.
 - [ ] A forgotten running stopwatch does **not** hold the screen awake on unrelated screens (Settings, presets) — the stale-lock policy is enforced.
 - [ ] Web behaviour unchanged: `wakeLock.ts` on web still uses `navigator.wakeLock`; `Run.tsx` and the stopwatch behave exactly as today; existing Vitest suite passes.
+  - **Superseded by #131 (2026-08-10):** this "web unchanged" constraint was deliberately scoped to keep 07e native-only, but it left the same rehydrated-stopwatch trap latent on web (a cold load to Home with a stale `running` stopwatch pinned the screen). #131 extended option (a) to web — the `isNativePlatform()` gate is gone from `useStopwatchMachine.ts` and `Timer.tsx`, so the on-screen-only policy is now uniform. The web `navigator.wakeLock` _primitive_ is still what backs the seam on web; only the rehydrated re-acquire policy changed. See the wake-lock ADR's "#131 landed" amendment.
 
 ## Testing
 

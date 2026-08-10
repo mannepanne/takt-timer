@@ -10,7 +10,6 @@ import { ProgressRing } from '@/components/ProgressRing';
 import { TopBar } from '@/components/TopBar';
 import { useI18n } from '@/i18n/context';
 import { fmtTime } from '@/lib/format';
-import { isNativePlatform } from '@/lib/platform';
 import { ringProgress } from '@/lib/stopwatch/machine';
 import { useElapsedMs, useStopwatch } from '@/lib/stopwatch/context';
 import { acquire, release } from '@/lib/wakeLock';
@@ -20,7 +19,7 @@ const RING_POLL_MS = 200;
 
 // A distinct wake-lock owner from the stopwatch reducer's 'stopwatch': this one tracks the Timer
 // screen being on-screen, that one tracks an active session. Two independent wanters, one owner
-// each — the owner set converges them (07e stale-lock policy).
+// each — the owner set converges them (stale-lock policy).
 const SCREEN_WAKE_LOCK_OWNER = 'stopwatch-screen';
 
 export function Timer() {
@@ -33,14 +32,16 @@ export function Timer() {
   const toggle = running ? pause : paused ? resume : start;
   const toggleLabel = running ? t('timer.pause') : paused ? t('timer.resume') : t('timer.start');
 
-  // Native only (07e): keep-awake is not self-limiting like navigator.wakeLock, so a rehydrated
-  // `running` stopwatch must not pin the screen on at app launch (handled by skipping the launch
-  // re-acquire in useStopwatchMachine). Instead, hold the screen only while the running stopwatch
-  // is actually shown here, and release on leave — so a forgotten running stopwatch can't keep the
-  // screen awake on Settings/presets. On web this is inert (isNativePlatform() is false), leaving
-  // the existing navigator.wakeLock behaviour byte-identical.
+  // Hold the screen only while a running stopwatch is actually shown here, releasing on leave — so
+  // a rehydrated `running` stopwatch the user forgot to reset can't pin the screen awake on
+  // Home/Settings/presets. The launch re-acquire in useStopwatchMachine is deliberately gone, so
+  // this screen-scoped hold is the only thing keeping the screen on for the rehydrated case; an
+  // active session started this session is additionally covered by the reducer's `stopwatch` owner.
+  // Same policy on web and native (07e native, #131 web): on native keep-awake isn't self-limiting,
+  // and on web navigator.wakeLock, though auto-released on hide, is still granted on a visible
+  // unrelated screen — so both needed the on-screen scoping.
   useEffect(() => {
-    if (!isNativePlatform() || !running) return;
+    if (!running) return;
     void acquire(SCREEN_WAKE_LOCK_OWNER);
     return () => {
       void release(SCREEN_WAKE_LOCK_OWNER);
