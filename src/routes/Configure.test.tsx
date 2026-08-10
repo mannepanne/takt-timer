@@ -147,4 +147,54 @@ describe('Configure route', () => {
     expect(state.session).toEqual({ sets: 5, workSec: 45, restSec: 15 });
     expect(state.session.name).toBeUndefined();
   });
+
+  describe('heard transcript hint (native voice handoff)', () => {
+    function renderWithState(state: unknown) {
+      render(
+        <MemoryRouter initialEntries={[{ pathname: '/configure', state }]}>
+          <Routes>
+            <Route path="/configure" element={<Configure />} />
+          </Routes>
+        </MemoryRouter>,
+        { wrapper },
+      );
+    }
+
+    it('shows "Heard: …" when a valid session and transcript are handed off', () => {
+      renderWithState({
+        session: { sets: 3, workSec: 60, restSec: 30 },
+        transcript: 'three sets of one minute, thirty seconds rest',
+      });
+      expect(screen.getByText(/heard:/i)).toBeInTheDocument();
+      expect(screen.getByText('three sets of one minute, thirty seconds rest')).toBeInTheDocument();
+    });
+
+    it('does not show the hint when the session is malformed (would misattribute defaults)', () => {
+      renderWithState({ session: { sets: 'bogus' }, transcript: 'three sets of one minute' });
+      expect(screen.queryByText(/heard:/i)).not.toBeInTheDocument();
+    });
+
+    it('does not show the hint when no transcript is present (web path)', () => {
+      renderWithState({ session: { sets: 3, workSec: 60, restSec: 30 } });
+      expect(screen.queryByText(/heard:/i)).not.toBeInTheDocument();
+    });
+
+    it('ignores a non-string transcript', () => {
+      renderWithState({ session: { sets: 3, workSec: 60, restSec: 30 }, transcript: { evil: 1 } });
+      expect(screen.queryByText(/heard:/i)).not.toBeInTheDocument();
+    });
+
+    it('ignores a whitespace-only transcript (defensive against a forged state)', () => {
+      renderWithState({ session: { sets: 3, workSec: 60, restSec: 30 }, transcript: '   ' });
+      expect(screen.queryByText(/heard:/i)).not.toBeInTheDocument();
+    });
+
+    it('caps a runaway transcript at 120 chars with an ellipsis', () => {
+      const long = 'word '.repeat(60).trim(); // 299 chars
+      renderWithState({ session: { sets: 3, workSec: 60, restSec: 30 }, transcript: long });
+      const shown = screen.getByText(/^word .*…$/);
+      // 120 kept chars + the ellipsis.
+      expect(shown.textContent).toHaveLength(121);
+    });
+  });
 });

@@ -28,6 +28,7 @@ const strings = {
   'configure.heading': { en: 'Build a session', sv: 'Bygg ett pass' },
   'configure.hint': { en: 'Tap any chip to edit.', sv: 'Tryck på ett nummer för att redigera.' },
   'configure.start': { en: 'Start', sv: 'Starta' },
+  'configure.heard': { en: 'Heard:', sv: 'Hörde:' },
 
   // ── Interpretation ───────────────────────────────────────────────────
   'interpretation.sets': { en: 'Sets', sv: 'Set' },

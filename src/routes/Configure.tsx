@@ -1,5 +1,6 @@
 // ABOUT: Configure route — edit a session's sets/work/rest via the Interpretation chips.
-// ABOUT: Accepts a pre-populated session via location.state.session (voice handoff) and
+// ABOUT: Accepts a pre-populated session via location.state.session (voice handoff), plus an
+// ABOUT: optional location.state.transcript rendered as a native-only "Heard: …" hint, and
 // ABOUT: falls back to DEFAULT_SESSION when opened directly from Home. Start navigates to /run.
 
 import { useState } from 'react';
@@ -38,15 +39,31 @@ function asSession(value: unknown): Session | null {
   return { sets: obj.sets, workSec: obj.workSec, restSec: obj.restSec };
 }
 
+// Native voice passes the heard transcript alongside the session so we can show a "Heard: …" hint
+// — the mitigation for a confident-but-misheard parse the parser can't catch. Validate it to a
+// bounded, non-empty string (React escapes it; the cap keeps a runaway dictation from pushing the
+// chips off a small screen). Web never passes it, so the hint is native-only in practice.
+const TRANSCRIPT_MAX = 120;
+function asTranscript(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const text = value.trim();
+  if (!text) return null;
+  return text.length > TRANSCRIPT_MAX ? `${text.slice(0, TRANSCRIPT_MAX)}…` : text;
+}
+
 export function Configure() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const location = useLocation();
   // Voice handoff lands a parsed session in location.state. Clamp happens inside
   // Interpretation's Stepper bounds — zod enforced the server-side envelope already.
-  const initialSession =
-    asSession((location.state as { session?: unknown } | null)?.session) ?? DEFAULT_SESSION;
+  const state = location.state as { session?: unknown; transcript?: unknown } | null;
+  const handoffSession = asSession(state?.session);
+  const initialSession = handoffSession ?? DEFAULT_SESSION;
   const [session, setSession] = useState<Session>(initialSession);
+  // Gate the hint on a valid handed-off session: showing "Heard: …" above the DEFAULT_SESSION
+  // chips (when the session was malformed) would misattribute defaults to the utterance.
+  const heard = handoffSession ? asTranscript(state?.transcript) : null;
 
   const start = () => {
     // Unlock audio on this user gesture so the first beep works on iOS Safari.
@@ -69,6 +86,11 @@ export function Configure() {
           <div className="eyebrow configure-intro-eyebrow">{t('configure.title')}</div>
           <h1 className="configure-intro-title">{t('configure.heading')}</h1>
           <p className="configure-intro-hint">{t('configure.hint')}</p>
+          {heard && (
+            <p className="configure-heard">
+              {t('configure.heard')} <span className="configure-heard-text">{heard}</span>
+            </p>
+          )}
         </div>
 
         <Interpretation value={session} onChange={setSession} />

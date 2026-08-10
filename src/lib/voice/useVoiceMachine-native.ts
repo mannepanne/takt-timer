@@ -94,7 +94,12 @@ export function useVoiceMachine(): VoiceApi {
           return;
 
         case 'navigateToConfigure':
-          navigate('/configure', { state: { session: effect.session } });
+          // Native-only: the transcript rides alongside the session so Configure can show what was
+          // heard. The web path deliberately stays session-only (it has a transient parsing overlay
+          // that already surfaces the transcript); Configure gates the hint on a valid session.
+          navigate('/configure', {
+            state: { session: effect.session, transcript: effect.transcript },
+          });
           return;
 
         case 'openAppSettings':

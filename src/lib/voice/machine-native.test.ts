@@ -35,15 +35,30 @@ describe('machine-native', () => {
     expect(next).toEqual({ phase: 'listening', startedAtMs: 123 });
   });
 
-  it('a confident transcript navigates to Configure with the exact parsed session', () => {
+  it('a confident transcript navigates to Configure with the exact parsed session + transcript', () => {
     const { next, effects } = step(listening, {
       type: 'transcript',
       text: 'three sets of one minute, thirty seconds rest',
     });
     expect(next).toEqual({ phase: 'idle' });
     expect(effects).toEqual([
-      { type: 'navigateToConfigure', session: { sets: 3, workSec: 60, restSec: 30 } },
+      {
+        type: 'navigateToConfigure',
+        session: { sets: 3, workSec: 60, restSec: 30 },
+        transcript: 'three sets of one minute, thirty seconds rest',
+      },
     ]);
+  });
+
+  it('carries the trimmed transcript, not the raw padded text', () => {
+    const { effects } = step(listening, {
+      type: 'transcript',
+      text: '  three sets of one minute, thirty seconds rest  ',
+    });
+    expect(effects[0]).toMatchObject({
+      type: 'navigateToConfigure',
+      transcript: 'three sets of one minute, thirty seconds rest',
+    });
   });
 
   it('an unparseable transcript falls back to manual (never guesses), keeping the transcript', () => {

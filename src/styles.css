@@ -1126,6 +1126,17 @@ button.settings-link {
   margin-top: 10px;
   line-height: 1.5;
 }
+.configure-heard {
+  font-size: 14px;
+  color: var(--ink-3);
+  margin-top: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.configure-heard-text {
+  color: var(--ink);
+  font-style: italic;
+}
 .configure-actions {
   padding: 0 24px 32px;
   display: flex;
