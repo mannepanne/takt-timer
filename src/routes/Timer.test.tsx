@@ -38,7 +38,7 @@ function installWakeLock(
 }
 
 function uninstallWakeLock() {
-  Object.defineProperty(navigator, 'wakeLock', { configurable: true, value: undefined });
+  delete (navigator as { wakeLock?: unknown }).wakeLock;
 }
 
 function wrapper({ children }: { children: React.ReactNode }) {
@@ -208,6 +208,31 @@ describe('Timer route', () => {
       expect(acquireSpy).toHaveBeenCalledWith('stopwatch-screen');
       unmount();
       expect(releaseSpy).toHaveBeenCalledWith('stopwatch-screen');
+    });
+
+    it('cold-load to Home (not Timer) with a rehydrated running stopwatch acquires no lock — the #131 scenario', async () => {
+      // #131's exact scenario: the app cold-loads onto Home (StopwatchProvider mounts
+      // useStopwatchMachine at app root, rehydrating a running stopwatch), but Timer isn't mounted.
+      // With the launch re-acquire gone, nothing requests the screen lock — proving the bug (screen
+      // held on Home) is fixed. Uses the real wakeLock module, not a spy.
+      let calls = 0;
+      installWakeLock(async () => {
+        calls++;
+        return createFakeSentinel();
+      });
+      persistState({ phase: 'running', accumulatedMs: 0, startedAtMs: 0 });
+      render(
+        <MemoryRouter initialEntries={['/']}>
+          <Routes>
+            <Route path="/" element={<LocationProbe />} />
+            <Route path="/timer" element={<Timer />} />
+          </Routes>
+        </MemoryRouter>,
+        { wrapper },
+      );
+      await act(async () => {});
+      expect(screen.getByTestId('path')).toHaveTextContent('/'); // on Home, Timer not mounted
+      expect(calls).toBe(0); // no launch re-acquire — the screen is not pinned on Home
     });
 
     it('a rehydrated running stopwatch reacquires the screen lock on hide→visible (via stopwatch-screen)', async () => {
