@@ -291,6 +291,10 @@ const strings = {
   'presets.duplicate': { en: 'Duplicate {name}', sv: 'Duplicera {name}' },
   'presets.delete.aria': { en: 'Delete {name}', sv: 'Ta bort {name}' },
   'presets.delete.confirm': { en: 'Confirm delete', sv: 'Bekräfta borttagning' },
+  'presets.mutateError': {
+    en: 'Could not update presets. Please try again.',
+    sv: 'Det gick inte att uppdatera förinställningarna. Försök igen.',
+  },
 
   // ── Save preset sheet ─────────────────────────────────────────────────
   'savePreset.title': { en: 'Save as preset', sv: 'Spara som förinställning' },
