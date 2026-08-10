@@ -2,6 +2,7 @@
 // ABOUT: Language is persisted in localStorage (takt.lang.v1); authenticated users also sync to D1 via the settings endpoint.
 
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { isNativePlatform } from '@/lib/platform';
 import strings, { type Lang, type StringKey } from './strings';
 import { detectLanguage } from './detect';
 
@@ -36,7 +37,14 @@ function storeLang(lang: Lang): void {
 }
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLangState] = useState<Lang>(() => readStoredLang() ?? detectLanguage());
+  // The Android app is English-only: native voice recognises/parses English only (07f), so a
+  // Swedish UI would just funnel users into a mic that can't understand them. Force English on
+  // native regardless of stored or device-detected language. This is init-only; it stays the
+  // single *effective* language because nothing else writes it on native — the Settings toggle
+  // is hidden and the D1 settings sync is native-gated, so setLang('sv') is never reached.
+  const [lang, setLangState] = useState<Lang>(() =>
+    isNativePlatform() ? 'en' : (readStoredLang() ?? detectLanguage()),
+  );
 
   const setLang = useCallback((next: Lang) => {
     storeLang(next);
