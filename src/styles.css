@@ -1628,6 +1628,10 @@ button.settings-link {
   text-align: center;
   margin: 16px 0;
 }
+.presets-drawer-error--banner {
+  padding: 0 16px;
+  margin: 12px 0 0;
+}
 .preset-card {
   flex-direction: row;
   align-items: center;

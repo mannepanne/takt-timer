@@ -226,6 +226,21 @@ describe('PresetsDrawer', () => {
     expect(screen.getByRole('textbox', { name: /rename preset/i })).toBeTruthy();
   });
 
+  it('clears the error banner when a retried mutation succeeds', async () => {
+    vi.mocked(listPresets).mockResolvedValueOnce([PRESET]);
+    vi.mocked(updatePreset)
+      .mockRejectedValueOnce(new Error('store full'))
+      .mockResolvedValueOnce({ ...PRESET, pinned: 1 });
+    renderDrawer();
+    await waitFor(() => screen.getByText('Legs'));
+    fireEvent.click(screen.getByRole('button', { name: /pin preset/i }));
+    await waitFor(() => expect(screen.getByText(/could not update presets/i)).toBeTruthy());
+    // Retry: the second click succeeds, so the banner clears and the pin flips.
+    fireEvent.click(screen.getByRole('button', { name: /pin preset/i }));
+    await waitFor(() => expect(screen.queryByText(/could not update presets/i)).toBeNull());
+    expect(screen.getByRole('button', { name: /unpin preset/i })).toBeTruthy();
+  });
+
   it('Escape key in rename input cancels without saving', async () => {
     vi.mocked(listPresets).mockResolvedValueOnce([PRESET]);
     renderDrawer();

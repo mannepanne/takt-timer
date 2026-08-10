@@ -131,15 +131,21 @@ export function PresetsDrawer({ open, onClose }: Props) {
           </button>
         </div>
 
+        {/* Outside the scrollable list so a mutation failure stays visible even when the user
+            has scrolled down to a row near the bottom — otherwise the banner would appear
+            off-screen at the top, reproducing the very "nothing happened" dead end this fixes. */}
+        {mutateError && (
+          <p className="presets-drawer-error presets-drawer-error--banner" role="alert">
+            {mutateError}
+          </p>
+        )}
+
         <div className="presets-drawer-list scroll">
-          {mutateError && (
-            <p className="presets-drawer-error" role="alert">
-              {mutateError}
-            </p>
-          )}
           {loading && <p className="presets-drawer-empty">{t('presets.loading')}</p>}
           {!loading && fetchError && (
-            <p className="presets-drawer-error">{t('presets.loadError')}</p>
+            <p className="presets-drawer-error" role="alert">
+              {t('presets.loadError')}
+            </p>
           )}
           {!loading && !fetchError && presets.length === 0 && (
             <p className="presets-drawer-empty">{t('presets.empty')}</p>
