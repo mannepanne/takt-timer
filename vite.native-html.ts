@@ -19,6 +19,13 @@ export const NATIVE_FONT_FILES = [
 // (that stops the local WebView app loading at all). `connect-src 'none'` makes any stray app-level
 // fetch — e.g. a relative `/api/...` that resolves against the local WebView origin — fail loudly,
 // backing up the OS-level guarantee of a manifest with no INTERNET permission.
+//
+// `style-src` keeps 'unsafe-inline' here even though the web CSP dropped it (#21): the native build
+// injects NATIVE_FONT_STYLE as an inline <style> block for the self-hosted @font-face, and a literal
+// <style> element IS policed by style-src (unlike React's CSSOM style={{…}}, which isn't). Web has
+// no inline <style> — it loads fonts via an external <link>. Do NOT copy the web drop here without
+// first moving the @font-face into the bundled stylesheet, or native fonts silently fail to load.
+// Dropping it on native is tracked as issue #144.
 export const NATIVE_CSP = [
   "default-src 'self'",
   "script-src 'self'",

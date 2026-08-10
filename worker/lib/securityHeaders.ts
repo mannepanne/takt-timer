@@ -1,12 +1,13 @@
-// ABOUT: Applies a baseline security header set to every outbound response.
-// ABOUT: Tightened further in Phase 6; this set is safe for a content-only shell.
+// ABOUT: Applies a baseline security header set (CSP, HSTS, Referrer-Policy, nosniff,
+// ABOUT: Permissions-Policy) to every outbound response, without overwriting upstream-set headers.
 
 const CSP_DIRECTIVES: Array<[string, string]> = [
   ['default-src', "'self'"],
   ['script-src', "'self' https://static.cloudflareinsights.com"],
-  // 'unsafe-inline' on style-src is required while Home.tsx uses inline style objects.
-  // Tracked as GitHub issue #21. Remove when inline styles are refactored to CSS classes.
-  ['style-src', "'self' https://fonts.googleapis.com 'unsafe-inline'"],
+  // No 'unsafe-inline': the app's React style={{…}} props set styles via the CSSOM, which
+  // style-src does not police; the only literal style= attributes were the <noscript> fallback in
+  // index.html, now ported to CSS classes. fonts.googleapis.com is the external font stylesheet.
+  ['style-src', "'self' https://fonts.googleapis.com"],
   ['font-src', "'self' https://fonts.gstatic.com"],
   ['img-src', "'self' data:"],
   ['connect-src', "'self' https://cloudflareinsights.com"],

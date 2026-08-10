@@ -17,6 +17,17 @@ describe('transformNativeHtml', () => {
     expect(webHtml).toMatch(/cloudflareinsights\.com/);
   });
 
+  it('the web entry has no inline style= attributes or <style> blocks (guards the #21 CSP drop)', () => {
+    // The web CSP drops 'unsafe-inline' from style-src, which is only safe while index.html carries
+    // no literal style= attribute and no <style> block (React's style={{…}} goes through the CSSOM,
+    // which style-src doesn't police — but served markup does). Reintroducing either would only
+    // surface as a runtime CSP violation in a browser; this fails the build instead. Note the native
+    // build deliberately DOES inject a <style> for @font-face and keeps 'unsafe-inline' — that's the
+    // transformed output, not this source entry.
+    expect(webHtml).not.toMatch(/\sstyle=/);
+    expect(webHtml).not.toMatch(/<style[\s>]/);
+  });
+
   it('strips every Google Fonts host from the native output', () => {
     expect(out).not.toMatch(/fonts\.googleapis\.com/);
     expect(out).not.toMatch(/fonts\.gstatic\.com/);

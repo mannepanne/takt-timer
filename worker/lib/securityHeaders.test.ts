@@ -23,6 +23,15 @@ describe('applySecurityHeaders', () => {
     expect(csp).toContain("object-src 'none'");
   });
 
+  it("does not allow 'unsafe-inline' or 'unsafe-eval' anywhere in the CSP (#21)", () => {
+    // React style={{…}} sets styles via the CSSOM, which style-src does not police, so the app
+    // needs no 'unsafe-inline' on style-src. Guards against it being reintroduced by habit.
+    const csp = applySecurityHeaders(new Response('hi')).headers.get('Content-Security-Policy');
+    expect(csp).not.toContain('unsafe-inline');
+    expect(csp).not.toContain('unsafe-eval');
+    expect(csp).toContain("style-src 'self' https://fonts.googleapis.com");
+  });
+
   it('does not overwrite headers that the upstream response already set', () => {
     const upstream = new Response('hi', {
       headers: { 'Referrer-Policy': 'no-referrer' },
