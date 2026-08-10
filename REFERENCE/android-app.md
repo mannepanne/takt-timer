@@ -187,6 +187,8 @@ On native, the web voice pipeline (`MicButton` → `useVoiceMachine` → `POST /
 
 **Fail-safe by design:** every low-confidence/failed parse, unavailable recogniser, or denied permission routes to the manual/Interpretation screen (`/configure`) — **never a silent or wrong auto-configuration**. The parser never guesses a missing field.
 
+**English-only UI follows from English-only voice.** Because the recogniser and parser only handle English, the whole native app is forced to English: `I18nProvider` pins `lang` to `'en'` on `isNativePlatform()` (ignoring stored and device-detected language — a Swedish phone reports `sv-SE` via `navigator.language` in the WebView, which would otherwise strand the user in a Swedish UI), and the Settings language toggle is hidden. The web app keeps full Swedish. See [i18n.md](./i18n.md) "Language detection and persistence" for the startup priority.
+
 **Two device-confirmed recogniser quirks (workarounds live in `recognizer.ts` / the native hook):**
 
 - **Service-rebind race — the "second tap fails" bug.** Android tears down the speech service after each recognition, and `@capacitor-community/speech-recognition` reuses one cached `SpeechRecognizer` without recreating it. So the first `start()` after a completed recognition can lose the service binding and fail in ~20 ms — before the mic opens — surfaced as a generic "Didn't understand" (logcat: `RemoteSpeechRecognitionService: Connection to speech recognition service lost` / `Service is unbinding`). A real result or no-match only happens after seconds of listening, so `recognizeOnce()` treats a sub-1s failure as the race and **retries once after a 250 ms settle**. Do not remove this without re-testing repeated back-to-back voice sessions on device.

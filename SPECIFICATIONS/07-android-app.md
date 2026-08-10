@@ -55,7 +55,7 @@ The per-area detail that used to live inline here (exact files, the async-preset
 - Any account system, passkeys, or cloud sync for the Android build.
 - Play Billing / in-app purchases — using the store's flat paid-app price instead.
 - Automated CI deploy pipeline to Play Console — v1 ships via manual upload.
-- Voice support for languages other than English. Note this is a _parser_ constraint, not a recogniser one: since we accept the system recogniser's online path, Google could transcribe other languages, but the local intent parser is English-only for v1. Multilingual voice is a future option, not a v1 goal; Swedish-speaking users use manual entry (fully faithful) or English voice.
+- Voice support for languages other than English. Note this is a _parser_ constraint, not a recogniser one: since we accept the system recogniser's online path, Google could transcribe other languages, but the local intent parser is English-only for v1. Multilingual voice is a future option, not a v1 goal. Because voice is English-only, the **whole native UI is English-only** — `I18nProvider` forces `'en'` on native and the Settings language toggle is hidden (a Swedish UI over an English-only mic is a dead-end); Swedish-speaking users use the (English) manual/Interpretation entry, which is fully faithful. The web app keeps full Swedish.
 - An Android foreground service to keep timers ticking/beeping while backgrounded — the stopwatch's timestamp model already covers "kept running," and the interval timer stays best-effort (see keep-awake decision).
 
 ### Resolved decisions

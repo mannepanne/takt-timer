@@ -39,8 +39,9 @@ function storeLang(lang: Lang): void {
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   // The Android app is English-only: native voice recognises/parses English only (07f), so a
   // Swedish UI would just funnel users into a mic that can't understand them. Force English on
-  // native regardless of stored or device-detected language — the Settings language toggle is
-  // hidden there too, so this is the single source of the native language.
+  // native regardless of stored or device-detected language. This is init-only; it stays the
+  // single *effective* language because nothing else writes it on native — the Settings toggle
+  // is hidden and the D1 settings sync is native-gated, so setLang('sv') is never reached.
   const [lang, setLangState] = useState<Lang>(() =>
     isNativePlatform() ? 'en' : (readStoredLang() ?? detectLanguage()),
   );
