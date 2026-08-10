@@ -25,6 +25,7 @@ export const NATIVE_FONT_FILES = [
 // <style> element IS policed by style-src (unlike React's CSSOM style={{…}}, which isn't). Web has
 // no inline <style> — it loads fonts via an external <link>. Do NOT copy the web drop here without
 // first moving the @font-face into the bundled stylesheet, or native fonts silently fail to load.
+// Dropping it on native is tracked as issue #144.
 export const NATIVE_CSP = [
   "default-src 'self'",
   "script-src 'self'",

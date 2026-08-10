@@ -1,5 +1,5 @@
-// ABOUT: Applies a baseline security header set to every outbound response.
-// ABOUT: Tightened further in Phase 6; this set is safe for a content-only shell.
+// ABOUT: Applies a baseline security header set (CSP, HSTS, Referrer-Policy, nosniff,
+// ABOUT: Permissions-Policy) to every outbound response, without overwriting upstream-set headers.
 
 const CSP_DIRECTIVES: Array<[string, string]> = [
   ['default-src', "'self'"],
