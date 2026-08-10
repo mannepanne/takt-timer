@@ -114,6 +114,8 @@ X-Takt-Lang: sv
 - Unknown or absent values are silently ignored — the hint is advisory.
 - Older clients that do not send the header continue to work without change.
 
+**Why it exists:** Without a language hint, iOS Safari's Whisper path transcribes Swedish with Icelandic phonology ("åtta" → "ótta", "tio" → "tíu") on roughly half of Swedish phrases, producing wrong numbers (TD-016). Forwarding the UI language as `input.language` tells Whisper the language up front instead of letting it guess, resolving the misclassification at source on the happy path. The `SUPPORTED_LANGUAGES` gate deliberately keeps accepting the Nordic cousins (`is`, `no`, `da`, …) as a safety net: on the rare clip where the hint doesn't take, the misclassification can still surface, and a wrong-but-editable parse on the Interpretation screen is a better failure than a hard "language unsupported" reject.
+
 ---
 
 ## Rate-limit bypass
