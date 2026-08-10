@@ -6,7 +6,6 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { isNativePlatform } from '@/lib/platform';
 import { acquire, reacquireIfNeeded, release } from '@/lib/wakeLock';
 
 import { elapsedMs, initial, step } from './machine';
@@ -53,20 +52,13 @@ export function useStopwatchMachine(): StopwatchMachineApi {
     }
   }, []);
 
-  // A reload is a fresh JS context — no platform wake lock is held yet even though the
-  // rehydrated phase may say `running`. Re-acquire once on mount; further transitions
-  // are already covered by runEffects() above.
-  //
-  // Web only. On native, keep-awake is NOT self-limiting the way navigator.wakeLock is, so a
-  // stopwatch left `running` days ago would re-grab the screen on every app launch and hold it
-  // across unrelated screens (Settings, presets). The native rehydrated-running lock is instead
-  // tied to the Timer screen being on-screen — see Timer.tsx's `stopwatch-screen` owner (07e).
-  useEffect(() => {
-    if (!isNativePlatform() && state.phase === 'running') {
-      void acquire(WAKE_LOCK_OWNER);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // No launch re-acquire for a rehydrated `running` phase. A reload is a fresh JS context with no
+  // platform lock held, but re-grabbing it on mount (which happens at app load, on whatever route)
+  // would pin the screen awake on Home/Settings/presets for a stopwatch the user forgot to reset.
+  // Instead the rehydrated-running hold is tied to the Timer screen actually being shown — see
+  // Timer.tsx's `stopwatch-screen` owner. An active session started this session is unaffected:
+  // the reducer's `acquireWakeLock` effect (runEffects above) still holds `stopwatch` regardless of
+  // screen. This policy is identical on web and native (07e native, #131 web).
 
   const start = useCallback(() => send({ type: 'start', now: Date.now() }), [send]);
   const pause = useCallback(() => send({ type: 'pause', now: Date.now() }), [send]);
@@ -75,8 +67,8 @@ export function useStopwatchMachine(): StopwatchMachineApi {
 
   // No visibility-driven *state* transitions — this machine is explicitly meant to keep
   // running while backgrounded. On the web the browser auto-releases the wake lock on hide, so
-  // it needs reacquiring on return; on native keep-awake never auto-releases (07e), making this
-  // a harmless no-op there. Kept unconditional so the web path is byte-identical.
+  // it needs reacquiring on return (only ever effective when an owner is still held); on native
+  // keep-awake never auto-releases, making this a harmless no-op there.
   useEffect(() => {
     const handler = () => {
       if (document.visibilityState === 'visible') {
