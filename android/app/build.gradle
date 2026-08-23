@@ -1,5 +1,15 @@
 apply plugin: 'com.android.application'
 
+// Release signing is driven by a gitignored keystore.properties (see REFERENCE/android-app.md).
+// The file and the keystore it points at are NEVER committed — losing them after first release
+// makes the app un-updatable under the same listing. When the file is absent (fresh clone, CI,
+// debug-only work), release builds fall back to unsigned so the project still builds.
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
 android {
     namespace = "org.hultberg.takt"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -16,8 +26,23 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            if (keystorePropertiesFile.exists()) {
+                storeFile rootProject.file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
+        }
+    }
     buildTypes {
         release {
+            // Only sign when the keystore is configured; otherwise the release build stays unsigned
+            // (won't upload to Play, but keeps a fresh clone / CI buildable).
+            if (keystorePropertiesFile.exists()) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

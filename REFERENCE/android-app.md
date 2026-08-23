@@ -224,6 +224,75 @@ Honest limits (documented, not bugs): the confirm guards only the literal back g
 
 ---
 
+## Part 6 — Signing & release (signed AAB, from 07h)
+
+Google Play requires a **signed Android App Bundle (`.aab`)**, not the debug APK. Signing is driven by a **gitignored** `android/keystore.properties` that points at a keystore file (also gitignored) — so no signing secret ever enters the repo. When the file is absent (fresh clone, CI, debug work), release builds fall back to unsigned and the project still builds.
+
+### One-way doors (read first)
+
+- **The upload keystore is unrecoverable.** After the first Play release, every update must be signed with the **same** key. Lose the `.jks` or its passwords and you can never update the app under this listing — you'd have to publish a brand-new listing under a new application ID. **Back it up outside the repo** (password manager + an offline copy).
+- **`versionCode` only ever goes up.** Play rejects an upload whose `versionCode` is ≤ the highest already uploaded to any track. Bump it every upload (see below).
+- **`android:allowBackup="false"`** is set deliberately (`AndroidManifest.xml`) so uninstall/reinstall returns to zero state. Don't flip it without re-checking the "reinstall wipes data" criterion.
+
+### One-time: generate the keystore (Magnus runs this — you hold the password)
+
+The password is **yours**; run this yourself so I never see it. It prompts for a store password (choose a strong one, save it to your password manager), then some identity fields (any sensible values), then the key password (press Enter to reuse the store password — simplest):
+
+```bash
+keytool -genkeypair -v \
+  -keystore android/takt-release.jks \
+  -alias takt \
+  -keyalg RSA -keysize 2048 -validity 10000 \
+  -storetype PKCS12
+```
+
+Then create `android/keystore.properties` from the template and fill in your passwords:
+
+```bash
+cp android/keystore.properties.example android/keystore.properties
+# then edit android/keystore.properties — set storePassword / keyPassword to what you chose
+```
+
+Both `android/takt-release.jks` and `android/keystore.properties` are gitignored. **Back both up now**, before building anything.
+
+> **Play App Signing:** Google's default (recommended, on by default for new apps) is that Play holds the _app signing key_ and re-signs your uploads; the key you generate above is the _upload key_. If you ever lose the upload key, Google support can reset it — but only if Play App Signing is enabled, which is why we keep the default. Enrol when you first create the app on the console.
+
+### Build a signed AAB
+
+```bash
+export JAVA_HOME="$(/usr/libexec/java_home -v 21)"
+export ANDROID_HOME="$HOME/Library/Android/sdk"
+
+pnpm build:aab
+# → android/app/build/outputs/bundle/release/app-release.aab   (this is what you upload)
+```
+
+`build:aab` runs `cap:sync` (native Vite build + copy into `android/`) then Gradle's `bundleRelease`. If `keystore.properties` is present the AAB is signed; if not, it's unsigned (and Play will reject it).
+
+### Verify before uploading
+
+```bash
+# Confirm the merged manifest is clean (no INTERNET, recogniser <queries> present).
+# Runs against a debug APK, whose manifest merge is identical to release here (minify off):
+pnpm cap:sync && cd android && ./gradlew assembleDebug && cd .. && pnpm android:check
+
+# Confirm the AAB is actually signed:
+jarsigner -verify -verbose android/app/build/outputs/bundle/release/app-release.aab | tail -3
+```
+
+### Bump the version for each upload
+
+In `android/app/build.gradle` (`defaultConfig`): increment `versionCode` by 1 every upload; set `versionName` to the human-facing version (e.g. `"1.0"`, `"1.1"`). First release ships as `versionCode 1` / `versionName "1.0"` (already set).
+
+### Upload to the closed-testing track
+
+1. Play Console → **Takt** → **Testing → Closed testing** → create/enter a track → **Create new release**.
+2. Enrol in **Play App Signing** when prompted (keep the default).
+3. Upload `app-release.aab`, add release notes, roll out to the track.
+4. Add testers (see Part 1), share the opt-in link, and the **14-day clock** starts once ≥12 are opted in.
+
+---
+
 ## Cross-references
 
 - [SPECIFICATIONS/07-android-app.md](../SPECIFICATIONS/07-android-app.md) — the umbrella spec (north star, architecture, risks).

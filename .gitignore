@@ -24,6 +24,8 @@ out/
 # Android signing keystores (NEVER commit — Play publishing secret, created in 07h)
 *.jks
 *.keystore
+# Signing config pointing at the keystore + its passwords (template committed as .example)
+android/keystore.properties
 
 # Environment files (NEVER commit secrets!)
 .env
