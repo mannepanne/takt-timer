@@ -49,6 +49,9 @@ export function App() {
                   <Route path="/complete" element={<Complete />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/privacy" element={<Privacy />} />
+                  {/* Stable public URLs per platform (Play submits /privacy/android). */}
+                  <Route path="/privacy/web" element={<Privacy variant="web" />} />
+                  <Route path="/privacy/android" element={<Privacy variant="android" />} />
                   <Route path="/timer" element={<Timer />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>

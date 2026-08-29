@@ -8,9 +8,16 @@ import { TopBar } from '@/components/TopBar';
 import { useI18n } from '@/i18n/context';
 import { isNativePlatform } from '@/lib/platform';
 
-export function Privacy() {
+interface PrivacyProps {
+  // Force which policy to show, independent of the running platform. `/privacy/web` and
+  // `/privacy/android` set this so each has a stable public URL (e.g. the one submitted to
+  // Google Play). Omitted at `/privacy`, which falls back to the running platform.
+  variant?: 'web' | 'android';
+}
+
+export function Privacy({ variant }: PrivacyProps = {}) {
   const { t, lang } = useI18n();
-  const native = isNativePlatform();
+  const native = variant ? variant === 'android' : isNativePlatform();
   const navigate = useNavigate();
   const location = useLocation();
   const returnSlide = (location.state as { returnSlide?: number } | null)?.returnSlide;

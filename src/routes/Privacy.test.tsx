@@ -41,6 +41,35 @@ describe('native copy fork (07g)', () => {
   });
 });
 
+describe('forced variant (stable public URLs)', () => {
+  afterEach(() => vi.mocked(isNativePlatform).mockReturnValue(false));
+
+  function renderVariant(variant: 'web' | 'android') {
+    return render(
+      <MemoryRouter>
+        <I18nProvider>
+          <Privacy variant={variant} />
+        </I18nProvider>
+      </MemoryRouter>,
+    );
+  }
+
+  it('variant="android" shows the on-device copy even when running on web', () => {
+    vi.mocked(isNativePlatform).mockReturnValue(false);
+    renderVariant('android');
+    expect(screen.getByRole('heading', { name: /voice input/i })).toBeInTheDocument();
+    expect(screen.getByText(/stored only on this device/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Cloudflare/i)).not.toBeInTheDocument();
+  });
+
+  it('variant="web" shows the server/Cloudflare copy even when running on native', () => {
+    vi.mocked(isNativePlatform).mockReturnValue(true);
+    renderVariant('web');
+    expect(screen.getAllByText(/Cloudflare/i).length).toBeGreaterThan(0);
+    expect(screen.queryByRole('heading', { name: /voice input/i })).not.toBeInTheDocument();
+  });
+});
+
 describe('Privacy page', () => {
   it('renders the privacy promise heading', () => {
     renderPrivacy();
