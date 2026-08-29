@@ -84,6 +84,12 @@ describe('forced variant (stable public URLs)', () => {
       '/privacy/android',
     );
   });
+
+  it('renders no cross-link inside the native app (would show contradictory web copy)', () => {
+    vi.mocked(isNativePlatform).mockReturnValue(true);
+    renderVariant('android');
+    expect(screen.queryByRole('link', { name: /privacy policy\?/i })).not.toBeInTheDocument();
+  });
 });
 
 describe('Privacy page', () => {

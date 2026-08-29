@@ -254,7 +254,7 @@ cp android/keystore.properties.example android/keystore.properties
 # then edit android/keystore.properties — set storePassword / keyPassword to what you chose
 ```
 
-Both `android/takt-release.jks` and `android/keystore.properties` are gitignored. **Back both up now**, before building anything.
+Both `android/takt-release.jks` and `android/keystore.properties` are gitignored. **Back both up now**, before building anything. They're gitignored but still inside the working tree, so a `git clean -xdf` would delete the unrecoverable upload key — the off-machine backup (password manager + offline copy) is what actually protects you. If you prefer, `storeFile` can point at an absolute path **outside** the repo (`rootProject.file()` resolves it as-is); the backup matters more than the location.
 
 > **Play App Signing:** Google's default (recommended, on by default for new apps) is that Play holds the _app signing key_ and re-signs your uploads; the key you generate above is the _upload key_. If you ever lose the upload key, Google support can reset it — but only if Play App Signing is enabled, which is why we keep the default. Enrol when you first create the app on the console.
 

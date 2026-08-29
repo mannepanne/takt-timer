@@ -26,7 +26,12 @@ interface PrivacyProps {
 
 export function Privacy({ variant }: PrivacyProps = {}) {
   const { t, lang } = useI18n();
+  // Which policy to render (content) vs. whether we're physically running natively (the cross-link).
+  // These are distinct: /privacy/web must render the web policy even inside the native bundle for
+  // its public URL, but the native app must never present an in-app link to the web policy —
+  // that would show account/Cloudflare copy the native build contradicts.
   const native = variant ? variant === 'android' : isNativePlatform();
+  const runningNative = isNativePlatform();
   const navigate = useNavigate();
   const location = useLocation();
   const returnSlide = (location.state as { returnSlide?: number } | null)?.returnSlide;
@@ -55,21 +60,25 @@ export function Privacy({ variant }: PrivacyProps = {}) {
 
         <h1 className="privacy-heading">{t('privacy.heading')}</h1>
 
-        <p className="privacy-crosslink">
-          {native ? (
-            <Link to="/privacy/web" className="privacy-link">
-              {lang === 'sv'
-                ? 'Letar du efter integritetspolicyn för Takt-webbappen?'
-                : 'Looking for the Takt web app privacy policy?'}
-            </Link>
-          ) : (
-            <Link to="/privacy/android" className="privacy-link">
-              {lang === 'sv'
-                ? 'Letar du efter integritetspolicyn för Takt Android-appen?'
-                : 'Looking for the Takt Android app privacy policy?'}
-            </Link>
-          )}
-        </p>
+        {/* Cross-link only on the public web URLs; never inside the native app, where linking to
+            the web policy would surface account/Cloudflare copy the native build contradicts. */}
+        {!runningNative && (
+          <p className="privacy-crosslink">
+            {native ? (
+              <Link to="/privacy/web" className="privacy-link">
+                {lang === 'sv'
+                  ? 'Letar du efter integritetspolicyn för Takt-webbappen?'
+                  : 'Looking for the Takt web app privacy policy?'}
+              </Link>
+            ) : (
+              <Link to="/privacy/android" className="privacy-link">
+                {lang === 'sv'
+                  ? 'Letar du efter integritetspolicyn för Takt Android-appen?'
+                  : 'Looking for the Takt Android app privacy policy?'}
+              </Link>
+            )}
+          </p>
+        )}
 
         {native ? (
           <>
