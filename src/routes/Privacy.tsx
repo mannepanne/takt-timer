@@ -1,12 +1,21 @@
 // ABOUT: Privacy policy page — bilingual (English and Swedish).
 // ABOUT: Headings via t(); paragraph copy inline JSX conditioned on lang to keep strings.ts lean.
 
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 
 import { Icon } from '@/components/icons';
 import { TopBar } from '@/components/TopBar';
 import { useI18n } from '@/i18n/context';
 import { isNativePlatform } from '@/lib/platform';
+
+// Bare `/privacy` redirects to the canonical variant for the running platform, so the obvious URL
+// always resolves (web → /privacy/web) while the in-app native link still reaches the Android
+// policy. Location state (e.g. onboarding's returnSlide) is forwarded through the redirect.
+export function PrivacyRedirect() {
+  const location = useLocation();
+  const target = isNativePlatform() ? '/privacy/android' : '/privacy/web';
+  return <Navigate to={target} replace state={location.state} />;
+}
 
 interface PrivacyProps {
   // Force which policy to show, independent of the running platform. `/privacy/web` and
@@ -45,6 +54,22 @@ export function Privacy({ variant }: PrivacyProps = {}) {
         <div className="eyebrow privacy-eyebrow">{t('privacy.eyebrow')}</div>
 
         <h1 className="privacy-heading">{t('privacy.heading')}</h1>
+
+        <p className="privacy-crosslink">
+          {native ? (
+            <Link to="/privacy/web" className="privacy-link">
+              {lang === 'sv'
+                ? 'Letar du efter integritetspolicyn för Takt-webbappen?'
+                : 'Looking for the Takt web app privacy policy?'}
+            </Link>
+          ) : (
+            <Link to="/privacy/android" className="privacy-link">
+              {lang === 'sv'
+                ? 'Letar du efter integritetspolicyn för Takt Android-appen?'
+                : 'Looking for the Takt Android app privacy policy?'}
+            </Link>
+          )}
+        </p>
 
         {native ? (
           <>

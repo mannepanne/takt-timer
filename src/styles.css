@@ -1942,6 +1942,10 @@ button.settings-link {
 .privacy-link {
   color: var(--accent);
 }
+.privacy-crosslink {
+  margin: -8px 0 24px;
+  font-size: 14px;
+}
 
 /* ───────── Timer (count-up stopwatch) ───────── */
 .timer-body {

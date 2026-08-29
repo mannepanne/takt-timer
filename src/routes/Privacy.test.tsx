@@ -68,6 +68,22 @@ describe('forced variant (stable public URLs)', () => {
     expect(screen.getAllByText(/Cloudflare/i).length).toBeGreaterThan(0);
     expect(screen.queryByRole('heading', { name: /voice input/i })).not.toBeInTheDocument();
   });
+
+  it('the android page cross-links to the web policy', () => {
+    renderVariant('android');
+    expect(screen.getByRole('link', { name: /Takt web app privacy policy/i })).toHaveAttribute(
+      'href',
+      '/privacy/web',
+    );
+  });
+
+  it('the web page cross-links to the android policy', () => {
+    renderVariant('web');
+    expect(screen.getByRole('link', { name: /Takt Android app privacy policy/i })).toHaveAttribute(
+      'href',
+      '/privacy/android',
+    );
+  });
 });
 
 describe('Privacy page', () => {

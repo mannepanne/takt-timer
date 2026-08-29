@@ -20,6 +20,28 @@ describe('App', () => {
     ).toBeInTheDocument();
   });
 
+  it('redirects /privacy to the web policy variant', () => {
+    render(
+      <MemoryRouter initialEntries={['/privacy']}>
+        <App />
+      </MemoryRouter>,
+    );
+    // The web variant is what renders after the redirect — it cross-links to the Android policy.
+    expect(screen.getByRole('link', { name: /Takt Android app privacy policy/i })).toHaveAttribute(
+      'href',
+      '/privacy/android',
+    );
+  });
+
+  it('renders the Android privacy policy at /privacy/android', () => {
+    render(
+      <MemoryRouter initialEntries={['/privacy/android']}>
+        <App />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole('heading', { name: /voice input/i })).toBeInTheDocument();
+  });
+
   it('renders the Timer route at /timer', () => {
     render(
       <MemoryRouter initialEntries={['/timer']}>
