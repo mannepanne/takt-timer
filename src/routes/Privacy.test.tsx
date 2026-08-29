@@ -41,6 +41,57 @@ describe('native copy fork (07g)', () => {
   });
 });
 
+describe('forced variant (stable public URLs)', () => {
+  afterEach(() => vi.mocked(isNativePlatform).mockReturnValue(false));
+
+  function renderVariant(variant: 'web' | 'android') {
+    return render(
+      <MemoryRouter>
+        <I18nProvider>
+          <Privacy variant={variant} />
+        </I18nProvider>
+      </MemoryRouter>,
+    );
+  }
+
+  it('variant="android" shows the on-device copy even when running on web', () => {
+    vi.mocked(isNativePlatform).mockReturnValue(false);
+    renderVariant('android');
+    expect(screen.getByRole('heading', { name: /voice input/i })).toBeInTheDocument();
+    expect(screen.getByText(/stored only on this device/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Cloudflare/i)).not.toBeInTheDocument();
+  });
+
+  it('variant="web" shows the server/Cloudflare copy even when running on native', () => {
+    vi.mocked(isNativePlatform).mockReturnValue(true);
+    renderVariant('web');
+    expect(screen.getAllByText(/Cloudflare/i).length).toBeGreaterThan(0);
+    expect(screen.queryByRole('heading', { name: /voice input/i })).not.toBeInTheDocument();
+  });
+
+  it('the android page cross-links to the web policy', () => {
+    renderVariant('android');
+    expect(screen.getByRole('link', { name: /Takt web app privacy policy/i })).toHaveAttribute(
+      'href',
+      '/privacy/web',
+    );
+  });
+
+  it('the web page cross-links to the android policy', () => {
+    renderVariant('web');
+    expect(screen.getByRole('link', { name: /Takt Android app privacy policy/i })).toHaveAttribute(
+      'href',
+      '/privacy/android',
+    );
+  });
+
+  it('renders no cross-link inside the native app (would show contradictory web copy)', () => {
+    vi.mocked(isNativePlatform).mockReturnValue(true);
+    renderVariant('android');
+    expect(screen.queryByRole('link', { name: /privacy policy\?/i })).not.toBeInTheDocument();
+  });
+});
+
 describe('Privacy page', () => {
   it('renders the privacy promise heading', () => {
     renderPrivacy();

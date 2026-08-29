@@ -1,16 +1,37 @@
 // ABOUT: Privacy policy page — bilingual (English and Swedish).
 // ABOUT: Headings via t(); paragraph copy inline JSX conditioned on lang to keep strings.ts lean.
 
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 
 import { Icon } from '@/components/icons';
 import { TopBar } from '@/components/TopBar';
 import { useI18n } from '@/i18n/context';
 import { isNativePlatform } from '@/lib/platform';
 
-export function Privacy() {
+// Bare `/privacy` redirects to the canonical variant for the running platform, so the obvious URL
+// always resolves (web → /privacy/web) while the in-app native link still reaches the Android
+// policy. Location state (e.g. onboarding's returnSlide) is forwarded through the redirect.
+export function PrivacyRedirect() {
+  const location = useLocation();
+  const target = isNativePlatform() ? '/privacy/android' : '/privacy/web';
+  return <Navigate to={target} replace state={location.state} />;
+}
+
+interface PrivacyProps {
+  // Force which policy to show, independent of the running platform. `/privacy/web` and
+  // `/privacy/android` set this so each has a stable public URL (e.g. the one submitted to
+  // Google Play). Omitted at `/privacy`, which falls back to the running platform.
+  variant?: 'web' | 'android';
+}
+
+export function Privacy({ variant }: PrivacyProps = {}) {
   const { t, lang } = useI18n();
-  const native = isNativePlatform();
+  // Which policy to render (content) vs. whether we're physically running natively (the cross-link).
+  // These are distinct: /privacy/web must render the web policy even inside the native bundle for
+  // its public URL, but the native app must never present an in-app link to the web policy —
+  // that would show account/Cloudflare copy the native build contradicts.
+  const native = variant ? variant === 'android' : isNativePlatform();
+  const runningNative = isNativePlatform();
   const navigate = useNavigate();
   const location = useLocation();
   const returnSlide = (location.state as { returnSlide?: number } | null)?.returnSlide;
@@ -38,6 +59,26 @@ export function Privacy() {
         <div className="eyebrow privacy-eyebrow">{t('privacy.eyebrow')}</div>
 
         <h1 className="privacy-heading">{t('privacy.heading')}</h1>
+
+        {/* Cross-link only on the public web URLs; never inside the native app, where linking to
+            the web policy would surface account/Cloudflare copy the native build contradicts. */}
+        {!runningNative && (
+          <p className="privacy-crosslink">
+            {native ? (
+              <Link to="/privacy/web" className="privacy-link">
+                {lang === 'sv'
+                  ? 'Letar du efter integritetspolicyn för Takt-webbappen?'
+                  : 'Looking for the Takt web app privacy policy?'}
+              </Link>
+            ) : (
+              <Link to="/privacy/android" className="privacy-link">
+                {lang === 'sv'
+                  ? 'Letar du efter integritetspolicyn för Takt Android-appen?'
+                  : 'Looking for the Takt Android app privacy policy?'}
+              </Link>
+            )}
+          </p>
+        )}
 
         {native ? (
           <>

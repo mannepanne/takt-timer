@@ -17,6 +17,8 @@
     "fonts:copy": "node scripts/copy-fonts.mjs",
     "cap:sync": "pnpm build:native && cap sync android",
     "android:check": "node scripts/check-android-manifest.mjs",
+    "build:aab": "pnpm cap:sync && ./android/gradlew -p android bundleRelease",
+    "store:assets": "node store-assets/generate.mjs",
     "deploy": "pnpm build && wrangler deploy",
     "worker:dev": "wrangler dev",
     "typecheck": "tsc -b",

@@ -2,8 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- allowBackup=false is a deliberate 07h decision: all local data (takt.presets.v1 /
+         takt.history.v1 / takt.stopwatch.v1) is WebView localStorage under this umbrella. Android
+         Auto Backup would otherwise silently restore it across a reinstall with no app network call,
+         breaking the "uninstall/reinstall returns to zero state" acceptance criterion. -->
     <application
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"

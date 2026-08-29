@@ -29,8 +29,9 @@ This is the **critical path**. Google requires new personal developer accounts t
 
 4. **Create the app entry in Play Console** (can happen once the account exists, before the build is final):
    - App name **Takt**, default language, "app" (not game), **paid**.
-   - You'll later fill: store listing (copy + screenshots — I'll draft these), **privacy policy URL**, **Data Safety** form, content rating questionnaire, target audience.
-   - The **Data Safety** form is a legal attestation. It must say: no account/personal data collected; and that **voice input may be processed by Google's speech-recognition service** (pending a policy check on whether a user-invoked system recogniser counts as app-collected data — declare conservatively if unclear). I'll prep the exact answers under `07h`. **Source of truth (as of 07g):** the native `Privacy.tsx` copy now states these facts concretely (local-only storage; audio handed to the phone's recogniser, which may involve Google; Takt never records/stores/sends audio). Fill the Data Safety form to **match that copy** — the privacy page is authoritative, not the other way round.
+   - You'll later fill: store listing (copy + screenshots — in `store-assets/`), **privacy policy URL**, **Data Safety** form, content rating questionnaire, target audience.
+   - **Privacy policy URL (07h):** submit **`https://takt.hultberg.org/privacy/android`** — the Android-specific policy. The web app keeps its own at `/privacy/web`, and `/privacy` still auto-resolves by platform for the in-app link. All three render the same `Privacy.tsx`; the `/privacy/{web,android}` routes force the variant so each has a stable public URL a browser (or a Play reviewer) sees correctly. **Do not** submit `/privacy` or `/privacy/web` to Play — they describe the web app (accounts, Cloudflare, analytics) and would contradict the Android Data Safety form.
+   - The **Data Safety** form is a legal attestation. **Resolved stance (07h): declare _no data collected or shared_.** Rationale: Takt's own process transmits nothing off-device (no account, no server, no analytics, `INTERNET` removed); the voice audio is captured and sent by Android's **system speech recogniser** — a separate Google/OS process the user invokes — which is outside the app's Data Safety scope. Answer the deletion question as **on-device** (uninstall / Settings → Apps → Takt → Storage → Clear); there is no account, so no account-deletion URL. Everything else (location, contacts, financial, health, messages, photos, app activity, device IDs, ads/tracking) is **None**. This matches the native `Privacy.tsx` copy, which still transparently discloses the OS voice path — keep the two consistent, privacy page authoritative.
 
 5. **Set the price to £0.99.** Note: Play allows **paid→free** later but restricts **free→paid**. So £0.99 is a floor you can drop but not re-raise — don't launch free intending to charge later.
 
@@ -221,6 +222,75 @@ The pinned validation corpus lives in `src/lib/voice-local/fixtures/phrase-corpu
   - Back while the confirm dialog is open dismisses the dialog (and resumes the timer if the dialog paused it).
 
 Honest limits (documented, not bugs): the confirm guards only the literal back gesture — HOME/app-switch already pauses an interval session silently, and the interval session is not persisted, so OS process-eviction while backgrounded loses it regardless.
+
+---
+
+## Part 6 — Signing & release (signed AAB, from 07h)
+
+Google Play requires a **signed Android App Bundle (`.aab`)**, not the debug APK. Signing is driven by a **gitignored** `android/keystore.properties` that points at a keystore file (also gitignored) — so no signing secret ever enters the repo. When the file is absent (fresh clone, CI, debug work), release builds fall back to unsigned and the project still builds.
+
+### One-way doors (read first)
+
+- **The upload keystore is unrecoverable.** After the first Play release, every update must be signed with the **same** key. Lose the `.jks` or its passwords and you can never update the app under this listing — you'd have to publish a brand-new listing under a new application ID. **Back it up outside the repo** (password manager + an offline copy).
+- **`versionCode` only ever goes up.** Play rejects an upload whose `versionCode` is ≤ the highest already uploaded to any track. Bump it every upload (see below).
+- **`android:allowBackup="false"`** is set deliberately (`AndroidManifest.xml`) so uninstall/reinstall returns to zero state. Don't flip it without re-checking the "reinstall wipes data" criterion.
+
+### One-time: generate the keystore (Magnus runs this — you hold the password)
+
+The password is **yours**; run this yourself so I never see it. It prompts for a store password (choose a strong one, save it to your password manager), then some identity fields (any sensible values), then the key password (press Enter to reuse the store password — simplest):
+
+```bash
+keytool -genkeypair -v \
+  -keystore android/takt-release.jks \
+  -alias takt \
+  -keyalg RSA -keysize 2048 -validity 10000 \
+  -storetype PKCS12
+```
+
+Then create `android/keystore.properties` from the template and fill in your passwords:
+
+```bash
+cp android/keystore.properties.example android/keystore.properties
+# then edit android/keystore.properties — set storePassword / keyPassword to what you chose
+```
+
+Both `android/takt-release.jks` and `android/keystore.properties` are gitignored. **Back both up now**, before building anything. They're gitignored but still inside the working tree, so a `git clean -xdf` would delete the unrecoverable upload key — the off-machine backup (password manager + offline copy) is what actually protects you. If you prefer, `storeFile` can point at an absolute path **outside** the repo (`rootProject.file()` resolves it as-is); the backup matters more than the location.
+
+> **Play App Signing:** Google's default (recommended, on by default for new apps) is that Play holds the _app signing key_ and re-signs your uploads; the key you generate above is the _upload key_. If you ever lose the upload key, Google support can reset it — but only if Play App Signing is enabled, which is why we keep the default. Enrol when you first create the app on the console.
+
+### Build a signed AAB
+
+```bash
+export JAVA_HOME="$(/usr/libexec/java_home -v 21)"
+export ANDROID_HOME="$HOME/Library/Android/sdk"
+
+pnpm build:aab
+# → android/app/build/outputs/bundle/release/app-release.aab   (this is what you upload)
+```
+
+`build:aab` runs `cap:sync` (native Vite build + copy into `android/`) then Gradle's `bundleRelease`. If `keystore.properties` is present the AAB is signed; if not, it's unsigned (and Play will reject it).
+
+### Verify before uploading
+
+```bash
+# Confirm the merged manifest is clean (no INTERNET, recogniser <queries> present).
+# Runs against a debug APK, whose manifest merge is identical to release here (minify off):
+pnpm cap:sync && cd android && ./gradlew assembleDebug && cd .. && pnpm android:check
+
+# Confirm the AAB is actually signed:
+jarsigner -verify -verbose android/app/build/outputs/bundle/release/app-release.aab | tail -3
+```
+
+### Bump the version for each upload
+
+In `android/app/build.gradle` (`defaultConfig`): increment `versionCode` by 1 every upload; set `versionName` to the human-facing version (e.g. `"1.0"`, `"1.1"`). First release ships as `versionCode 1` / `versionName "1.0"` (already set).
+
+### Upload to the closed-testing track
+
+1. Play Console → **Takt** → **Testing → Closed testing** → create/enter a track → **Create new release**.
+2. Enrol in **Play App Signing** when prompted (keep the default).
+3. Upload `app-release.aab`, add release notes, roll out to the track.
+4. Add testers (see Part 1), share the opt-in link, and the **14-day clock** starts once ≥12 are opted in.
 
 ---
 

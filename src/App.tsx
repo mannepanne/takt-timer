@@ -17,7 +17,7 @@ import { Configure } from '@/routes/Configure';
 import { Home } from '@/routes/Home';
 import { NotFound } from '@/routes/NotFound';
 import { Onboarding, hasSeenOnboarding, markOnboardingSeen } from '@/routes/Onboarding';
-import { Privacy } from '@/routes/Privacy';
+import { Privacy, PrivacyRedirect } from '@/routes/Privacy';
 import { Run } from '@/routes/Run';
 import { Settings } from '@/routes/Settings';
 import { Timer } from '@/routes/Timer';
@@ -48,7 +48,11 @@ export function App() {
                   <Route path="/run" element={<Run />} />
                   <Route path="/complete" element={<Complete />} />
                   <Route path="/settings" element={<Settings />} />
-                  <Route path="/privacy" element={<Privacy />} />
+                  {/* Bare /privacy redirects to the platform's canonical variant below. */}
+                  <Route path="/privacy" element={<PrivacyRedirect />} />
+                  {/* Stable public URLs per platform (Play submits /privacy/android). */}
+                  <Route path="/privacy/web" element={<Privacy variant="web" />} />
+                  <Route path="/privacy/android" element={<Privacy variant="android" />} />
                   <Route path="/timer" element={<Timer />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
