@@ -115,15 +115,15 @@ export const PHRASE_CORPUS: CorpusEntry[] = [
   // ---- Near-misses (structure recognised, incomplete or out of range) ----
   {
     transcript: 'three sets of one minute',
-    kind: 'near-miss',
-    reason: 'no-rest',
-    note: 'rest omitted — do not silently default it',
+    kind: 'ok',
+    session: { sets: 3, workSec: 60, restSec: 60 },
+    note: 'clean phrase, rest omitted → defaults to 60s (shown, editable, on Configure)',
   },
   {
     transcript: '3 sets of 1 minute 30 seconds',
     kind: 'near-miss',
     reason: 'no-rest',
-    note: 'without "and", minute and second are separate; the trailing 30s is unmarked so rest stays unknown',
+    note: 'without "and", the trailing 30s is a dangling unplaced duration — phrase not fully understood, so no rest default; falls back',
   },
   {
     transcript: 'sets of two minutes with thirty seconds rest',

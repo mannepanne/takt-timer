@@ -71,10 +71,30 @@ describe('machine-native', () => {
     expect(effects).toEqual([]);
   });
 
-  it('a partial transcript (missing rest) falls back rather than defaulting the missing field', () => {
-    // The rejected prototype defaulted missing fields; this must not — a confident-looking wrong
-    // pre-fill on the Configure screen gets tapped through.
-    const { next } = step(listening, { type: 'transcript', text: 'three sets of one minute' });
+  it('a clean transcript that omits rest defaults it to 60s and navigates to Configure', () => {
+    // Rest is the one field with a natural default (ADR 2026-07-26 addendum) — a clean "sets + work"
+    // phrase that just omits rest is completed, not rejected. The default is editable on Configure.
+    const { next, effects } = step(listening, {
+      type: 'transcript',
+      text: 'three sets of one minute',
+    });
+    expect(next).toEqual({ phase: 'idle' });
+    expect(effects).toEqual([
+      {
+        type: 'navigateToConfigure',
+        session: { sets: 3, workSec: 60, restSec: 60 },
+        transcript: 'three sets of one minute',
+      },
+    ]);
+  });
+
+  it('a half-understood transcript (dangling duration) still falls back rather than guessing', () => {
+    // "one minute thirty seconds" without "and" leaves 30s unplaced — the phrase wasn't fully
+    // understood, so no rest default; fall back rather than ship a confident-wrong pre-fill.
+    const { next } = step(listening, {
+      type: 'transcript',
+      text: 'three sets of one minute thirty seconds',
+    });
     expect(next.phase).toBe('parse-error');
   });
 

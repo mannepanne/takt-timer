@@ -13,7 +13,7 @@ import { useI18n } from '@/i18n/context';
 import { prepareAudio } from '@/lib/audio';
 import type { Session } from '@/lib/timer/types';
 
-const DEFAULT_SESSION: Session = { sets: 3, workSec: 60, restSec: 30 };
+const DEFAULT_SESSION: Session = { sets: 3, workSec: 60, restSec: 60 };
 
 // Bounds match the worker-side zod envelope and the Interpretation Stepper limits.
 // Any value outside these ranges — or NaN / Infinity / non-integer — falls back to

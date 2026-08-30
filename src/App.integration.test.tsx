@@ -33,7 +33,7 @@ describe('Integration — Configure → Run → Complete', () => {
     expect(screen.getByRole('heading', { name: /what cadence do you need/i })).toBeInTheDocument();
     await userEvent.click(screen.getByRole('link', { name: /no voice/i }));
 
-    // Configure → Start (with default 3 × 1:00 / 0:30)
+    // Configure → Start (with default 3 × 1:00 / 1:00)
     expect(await screen.findByRole('heading', { name: /build a session/i })).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /^start$/i }));
 
@@ -55,7 +55,7 @@ describe('Integration — Configure → Run → Complete', () => {
     expect(stored).not.toBeNull();
     const parsed = JSON.parse(stored!);
     expect(parsed).toHaveLength(1);
-    expect(parsed[0]).toMatchObject({ sets: 3, workSec: 60, restSec: 30 });
+    expect(parsed[0]).toMatchObject({ sets: 3, workSec: 60, restSec: 60 });
 
     // "Run it again" goes back to /run (guarded by 400ms pointer-events:none — retry until ready).
     await waitFor(
