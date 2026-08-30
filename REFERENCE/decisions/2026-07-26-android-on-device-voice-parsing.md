@@ -104,7 +104,7 @@ Given those differences, proceeding is a reasonable bet — but it is a bet, not
 
 Both keep the dangerous cases — where the user said more than we captured — from producing a doubly-wrong confident session (wrong work and/or spurious rest). The second signal specifically covers the "ASR drops/mangles a unit" failure class [ADR 2026-04-20](./2026-04-20-llama-primary-ndjson-streaming.md) documented. So `no-rest` remains a live, reachable failure reason, narrowed to half-understood phrases. Combined with the #134 "Heard: …" hint, a wrong parse stays visible rather than silent.
 
-**Scope:** native English local parser only (`src/lib/voice-local/parser.ts`). The web Whisper + Llama pipeline is a different engine under [ADR 2026-04-20](./2026-04-20-llama-primary-ndjson-streaming.md) and is unchanged.
+**Scope:** the deterministic guard above is the native English local parser (`src/lib/voice-local/parser.ts`). The **60 s "unspecified rest" default is product-wide**, though: the web Whisper + Llama pipeline ([ADR 2026-04-20](./2026-04-20-llama-primary-ndjson-streaming.md)) was aligned in the same push — its system prompt (`worker/api/voice/llama.ts`) now instructs "default rest to 60 if none mentioned; 0 only on an explicit no-rest". Note the difference in guarantee: native is a hard deterministic rule, web is an LLM instruction the model follows in the overwhelming majority of cases but not with parser-level certainty. Both surface the value on Configure/Interpretation for confirmation.
 
 ---
 

@@ -47,7 +47,7 @@ If the input doesn't describe a valid interval session, output:
 
 Rules:
 - workSec is the work duration of each set in SECONDS (convert minutes, "one minute" = 60).
-- restSec is the REST between sets in seconds (0 if none mentioned).
+- restSec is the REST between sets in seconds. If no rest is mentioned, default to 60. Use 0 ONLY when the user explicitly says there is no rest (e.g. "no rest", "without rest", "no break", "utan vila").
 - "half a minute" = 30 seconds, "quarter of a minute" = 15.
 - Swedish numerals: ett=1, två=2, tre=3, fyra=4, fem=5, sex=6, sju=7, åtta=8, nio=9, tio=10, tjugo=20, trettio=30, fyrtio=40, femtio=50, sextio=60, sjuttio=70, åttio=80, nittio=90. Compounds: trettiofem=35, fyrtiofem=45, etc.
 - Swedish units: minut/minuter=minutes, sekund/sekunder=seconds, vila/paus=rest, set/omgång(ar)=sets.
@@ -70,7 +70,10 @@ Input: "Fem set om fyrtiofem sekunder och femton sekunder vila"
 Output: {"sets":5,"workSec":45,"restSec":15}
 
 Input: "One set, one minute, three times"
-Output: {"sets":3,"workSec":60,"restSec":0}
+Output: {"sets":3,"workSec":60,"restSec":60}
+
+Input: "Four sets of thirty seconds, no rest"
+Output: {"sets":4,"workSec":30,"restSec":0}
 
 Input: "banana kayak helicopter"
 Output: {"error":"not-a-session"}`;

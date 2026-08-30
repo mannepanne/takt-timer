@@ -162,12 +162,13 @@ describe('parseWithLlama', () => {
 
   it('"X times" phrasing resolves to sets=X (rule + example in system prompt)', async () => {
     // Regression guard: the system prompt teaches Llama that "three times" wins over "one set".
-    // The mock simulates what the model should return after the prompt fix.
-    const { ai } = makeAi(['{"sets":3,"workSec":60,"restSec":0}']);
+    // The mock simulates what the model should return after the prompt fix — rest unmentioned, so
+    // it defaults to 60 (see the "default rest" rule); sets=3 is the point under test.
+    const { ai } = makeAi(['{"sets":3,"workSec":60,"restSec":60}']);
     const result = await parseWithLlama(ai, 'One set, one minute, three times');
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.session).toEqual({ sets: 3, workSec: 60, restSec: 0 });
+      expect(result.session).toEqual({ sets: 3, workSec: 60, restSec: 60 });
     }
   });
 
