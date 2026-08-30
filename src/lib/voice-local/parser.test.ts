@@ -67,6 +67,16 @@ describe('parseIntent — default rest', () => {
     if (!result.ok) expect(result.reason).toBe('no-rest');
   });
 
+  it('does NOT default rest when a bare number was dropped (unit likely lost by the recogniser)', () => {
+    // "thirty rest" — the speaker gave a rest value but its unit didn't survive; defaulting to 60
+    // would silently discard "thirty" and ship a confident-wrong rest. Fall back instead.
+    const droppedUnit = parseIntent('three sets of one minute, thirty rest');
+    expect(droppedUnit.ok).toBe(false);
+    // "one minute fifteen" — "fifteen" is an unaccounted bare number (likely meant 1:15 work).
+    const bareTrailing = parseIntent('three sets of one minute fifteen');
+    expect(bareTrailing.ok).toBe(false);
+  });
+
   it('does NOT default rest when core intent (sets or work) is missing', () => {
     // A bare "two sets" must not become a confident 2×?/60s — work is still required.
     const noWork = parseIntent('two sets');

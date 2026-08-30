@@ -185,6 +185,29 @@ function collectDurations(tokens: string[]): Duration[] {
   return durations;
 }
 
+// True when a real number appears that we couldn't account for — one not followed by a unit (so it
+// never became a duration) and not naming a set/round count. It flags a value the speaker uttered
+// that the grammar dropped: the "thirty" in "one minute thirty" (meant 1:30) or in "thirty rest"
+// (a rest value whose unit the recogniser lost). Such a phrase wasn't fully understood, so the rest
+// default must be suppressed rather than shipping a confident-wrong session. Articles ("a"/"an",
+// worth 1 only before a unit) are excluded via STRICT_NUMBER_WORDS so "start a workout" isn't numeric.
+function hasUnaccountedNumber(tokens: string[]): boolean {
+  let i = 0;
+  while (i < tokens.length) {
+    const tok = tokens[i];
+    const isStrictNumber = /^\d+$/.test(tok) || STRICT_NUMBER_WORDS.has(tok);
+    const num = isStrictNumber ? readNumberAt(tokens, i) : null;
+    if (num) {
+      const after = tokens[num.next];
+      if (unitAt(after) === null && !/^(set|sets|round|rounds)$/.test(after ?? '')) return true;
+      i = num.next;
+    } else {
+      i++;
+    }
+  }
+  return false;
+}
+
 const WORK_MARKERS = new Set(['of', 'for', 'on', 'work']);
 
 function isRestDuration(tokens: string[], d: Duration): boolean {
@@ -242,19 +265,22 @@ export function parseIntent(transcript: string): ParseResult {
   const explicitNoRest = NO_REST_RE.test(normalised);
 
   const workSec = workDur?.seconds;
-  // A duration we parsed but couldn't place (e.g. the "thirty" in "one minute thirty seconds", which
-  // only merges into work via "and") means the phrase wasn't fully understood — don't default rest there.
+  // The rest default applies only to a phrase we fully understood. Two things mark "not fully
+  // understood": a parsed duration left unplaced (the "thirty seconds" in "one minute thirty seconds",
+  // which only merges into work via "and"), or a bare number the grammar dropped (the "thirty" in
+  // "one minute thirty" or "thirty rest"). Either way we fall back rather than default — a
+  // half-understood phrase must never yield a confident-wrong session.
   const hasUnplacedDuration = durations.some((d) => d !== workDur && d !== restDur);
+  const phraseFullyUnderstood = !hasUnplacedDuration && !hasUnaccountedNumber(tokens);
   const coreComplete = sets !== undefined && workSec !== undefined;
   // Rest priority: an explicitly marked rest duration, then explicit "no rest" (a confident zero),
-  // then the 60s default — but the default applies only to an otherwise-clean phrase (core present,
-  // nothing dangling). A half-understood phrase yields `undefined` and falls back rather than guessing.
-  // Rest is never inferred from a leftover unmarked number.
+  // then the 60s default — but the default applies only when the core is present and the whole phrase
+  // parsed cleanly. Rest is never inferred from a leftover unmarked number.
   const restSec = restDur
     ? restDur.seconds
     : explicitNoRest
       ? 0
-      : coreComplete && !hasUnplacedDuration
+      : coreComplete && phraseFullyUnderstood
         ? DEFAULT_REST_SEC
         : undefined;
 

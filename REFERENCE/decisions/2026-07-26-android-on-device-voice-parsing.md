@@ -97,7 +97,12 @@ Given those differences, proceeding is a reasonable bet — but it is a bet, not
 
 **Why:** a closed tester said _"two sets of one minute"_ and hit the fallback ("Couldn't make a session from that…"). That's a natural, common phrasing, and rejecting it for a missing secondary parameter is worse UX than filling a visible, adjustable default. This does **not** reopen the "never guess" principle: sets and work — the core intent — are still never fabricated. Rest is a secondary field with a genuine natural default, shown for confirmation, not silently baked in.
 
-**Safety guard — the default is suppressed when the phrase wasn't fully understood.** If any parsed duration is left _unplaced_ (e.g. the `30` in "one minute thirty seconds", which only merges into work via "and"), the default does **not** apply and the phrase falls back. This keeps the dangerous case — where the user likely meant `1:30` work — from producing a doubly-wrong confident session (wrong work + spurious rest). So `no-rest` remains a live, reachable failure reason, just narrowed to half-understood phrases. Combined with the #134 "Heard: …" hint, a wrong parse stays visible rather than silent.
+**Safety guard — the default is suppressed when the phrase wasn't fully understood.** Two signals mark a phrase as not-fully-understood, and either one suppresses the default (the phrase falls back instead):
+
+1. **An unplaced parsed duration** — a `number + unit` we parsed but couldn't attribute to work or rest (e.g. the `30 seconds` in "one minute thirty seconds", which only merges into work via "and").
+2. **An unaccounted bare number** — a spoken number the grammar dropped because it wasn't followed by a unit or a set/round word (e.g. the `thirty` in "one minute thirty", likely meant `1:30`; or in "thirty rest", a rest value whose unit the recogniser lost).
+
+Both keep the dangerous cases — where the user said more than we captured — from producing a doubly-wrong confident session (wrong work and/or spurious rest). The second signal specifically covers the "ASR drops/mangles a unit" failure class [ADR 2026-04-20](./2026-04-20-llama-primary-ndjson-streaming.md) documented. So `no-rest` remains a live, reachable failure reason, narrowed to half-understood phrases. Combined with the #134 "Heard: …" hint, a wrong parse stays visible rather than silent.
 
 **Scope:** native English local parser only (`src/lib/voice-local/parser.ts`). The web Whisper + Llama pipeline is a different engine under [ADR 2026-04-20](./2026-04-20-llama-primary-ndjson-streaming.md) and is unchanged.
 
