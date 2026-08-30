@@ -197,12 +197,12 @@ On native, the web voice pipeline (`MicButton` → `useVoiceMachine` → `POST /
 
 ### Supported parser grammar (v1, `src/lib/voice-local/parser.ts`)
 
-Conservative closed grammar — returns a confident `{ sets, workSec, restSec }` **only when all three are present**, otherwise falls back:
+Conservative closed grammar — returns a confident `{ sets, workSec, restSec }` when **sets and work are present**; a clean phrase that omits **rest** gets a **60 s default** (editable on the Configure screen — see [ADR 2026-07-26 addendum](decisions/2026-07-26-android-on-device-voice-parsing.md)). Anything else — sets or work missing, or a phrase not fully understood — falls back:
 
 - **Set count:** `<number> sets|rounds` ("three sets", "5 rounds"). `reps` is deliberately **not** accepted (rep-based work is Timer mode's job).
 - **Durations:** `<number> minute(s)|min|second(s)|sec`, or `mm:ss` ("90 seconds", "2 min", "1:30"). A compound merges only when joined by "and" ("one minute **and** thirty seconds"). A bare number with no unit is never a duration.
 - **Numbers:** digits, or English words 0–99 incl. compounds ("forty five"); "a"/"an" = 1 before a unit.
-- **Work markers:** `of` / `for` / `on` / `work`. **Rest markers:** `rest` / `break` / `off` / `between` / `in between`, plus explicit `no rest` / `without rest` / `no break` → `restSec: 0`. Rest wins when a duration carries both.
+- **Work markers:** `of` / `for` / `on` / `work`. **Rest markers:** `rest` / `break` / `off` / `between` / `in between`, plus explicit `no rest` / `without rest` / `no break` → `restSec: 0`. Rest wins when a duration carries both. **Rest is optional:** with no rest marker on an otherwise-clean phrase, `restSec` defaults to 60 s; a dangling unplaced duration (e.g. the `30` in "one minute thirty seconds", which only merges via "and") suppresses the default and falls back instead.
 - **Rejected (fall back, never guess):** decimals / thousands separators ("2.5 minutes"), an `mm:ss` seconds component ≥ 60, sets outside 1–99, durations outside 1–3600 s.
 - **Known safe limits:** recogniser homophones ("for"→"four", "to"→"two") are **not** mapped to numbers, so they fall back rather than mis-configure.
 

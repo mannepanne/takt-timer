@@ -1,7 +1,7 @@
 # ADR: On-device, English-only voice parsing for the Android release
 
 **Date:** 2026-07-26
-**Status:** Active — see the 2026-08-02 addendum, which supersedes the "zero network, ever" framing for the recogniser (the local parser decision stands).
+**Status:** Active — see the 2026-08-02 addendum (supersedes the "zero network, ever" recogniser framing; local parser stands) and the 2026-08-30 addendum (rest defaults to 60 s on a clean phrase).
 
 ---
 
@@ -88,6 +88,18 @@ Given those differences, proceeding is a reasonable bet — but it is a bet, not
 **Implementation landed (07f, 2026-08-09):** the recogniser is `@capacitor-community/speech-recognition` (single-shot `start()` → best transcript; `available()`/`checkPermissions()`/`requestPermissions()` for the availability + `RECORD_AUDIO` gate), and the permanent-denial recovery deep-link is `capacitor-native-settings`. Confirmed on a built APK: the speech plugin contributes both `RECORD_AUDIO` **and** the `RecognitionService` `<queries>` block via manifest merge (no manual manifest edit), and — the spike's open question — the merged manifest still has **no `INTERNET`**, so Takt invokes the recogniser without it. `scripts/check-android-manifest.mjs` now asserts all three (INTERNET absent; RECORD_AUDIO + `<queries>` present) so a later `cap sync` can't silently drop them. The web build is unchanged (the swap is a build-time alias, invisible to the Vitest/web path). The parser's supported grammar is documented in [REFERENCE/android-app.md](../android-app.md) Part 4.
 
 **Partial mitigation for the open parser-accuracy risk (07f follow-up, 2026-08-10, #134):** the "transcript noise defeating a closed-grammar parser" failure mode above has a subtype the fail-safe fallback can't catch — a _confident but misheard_ parse ("fifty" heard as "fifteen"), which parses cleanly and wrong. A confident native parse now carries the heard transcript to Configure, rendered as a read-only "Heard: …" hint so the user can sanity-check it against the editable numbers. This narrows, but does not close, the risk — it turns a silent wrong pre-fill into a visible one; the risk stays open-eyed as written above.
+
+---
+
+## Addendum: rest defaults to 60 s on an otherwise-clean phrase (2026-08-30, post-launch tester feedback)
+
+**Decision refined:** the original "confident parse only when sets, work **and rest** are all present" rule is narrowed. Rest — and rest **only** — now defaults to **60 s** when a phrase names sets and work cleanly but says nothing about rest. Sets and work remain hard-required (a phrase missing either still falls back to manual). The default is surfaced on the Configure screen like any parsed value and is editable via its pill.
+
+**Why:** a closed tester said _"two sets of one minute"_ and hit the fallback ("Couldn't make a session from that…"). That's a natural, common phrasing, and rejecting it for a missing secondary parameter is worse UX than filling a visible, adjustable default. This does **not** reopen the "never guess" principle: sets and work — the core intent — are still never fabricated. Rest is a secondary field with a genuine natural default, shown for confirmation, not silently baked in.
+
+**Safety guard — the default is suppressed when the phrase wasn't fully understood.** If any parsed duration is left _unplaced_ (e.g. the `30` in "one minute thirty seconds", which only merges into work via "and"), the default does **not** apply and the phrase falls back. This keeps the dangerous case — where the user likely meant `1:30` work — from producing a doubly-wrong confident session (wrong work + spurious rest). So `no-rest` remains a live, reachable failure reason, just narrowed to half-understood phrases. Combined with the #134 "Heard: …" hint, a wrong parse stays visible rather than silent.
+
+**Scope:** native English local parser only (`src/lib/voice-local/parser.ts`). The web Whisper + Llama pipeline is a different engine under [ADR 2026-04-20](./2026-04-20-llama-primary-ndjson-streaming.md) and is unchanged.
 
 ---
 

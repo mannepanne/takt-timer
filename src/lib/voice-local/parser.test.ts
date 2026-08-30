@@ -44,6 +44,40 @@ describe('parseIntent — confidence contract', () => {
   });
 });
 
+describe('parseIntent — default rest', () => {
+  it('defaults rest to 60s when a clean phrase names sets and work but omits rest', () => {
+    expect(parseIntent('two sets of one minute')).toEqual({
+      ok: true,
+      session: { sets: 2, workSec: 60, restSec: 60 },
+    });
+  });
+
+  it('applies the default regardless of order/phrasing, as long as the phrase is clean', () => {
+    expect(parseIntent('for one minute, three rounds')).toEqual({
+      ok: true,
+      session: { sets: 3, workSec: 60, restSec: 60 },
+    });
+  });
+
+  it('does NOT default rest when a duration is left dangling (phrase not fully understood)', () => {
+    // "one minute thirty seconds" without "and" leaves 30s unplaced — safer to fall back than to
+    // silently drop it and inject a default. See ADR 2026-07-26 addendum.
+    const result = parseIntent('two sets of one minute thirty seconds');
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reason).toBe('no-rest');
+  });
+
+  it('does NOT default rest when core intent (sets or work) is missing', () => {
+    // A bare "two sets" must not become a confident 2×?/60s — work is still required.
+    const noWork = parseIntent('two sets');
+    expect(noWork.ok).toBe(false);
+    if (!noWork.ok) expect(noWork.reason).toBe('no-work');
+    // No numbers-as-structure at all → the default must not manufacture a session.
+    const noNumbers = parseIntent('start my workout please');
+    expect(noNumbers.ok).toBe(false);
+  });
+});
+
 describe('parseIntent — number handling', () => {
   it('reads compound tens+unit number words', () => {
     expect(parseIntent('three sets of forty five seconds, ten seconds rest')).toEqual({

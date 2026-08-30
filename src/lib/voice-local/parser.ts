@@ -1,6 +1,6 @@
 // ABOUT: On-device English intent parser — turns a speech transcript into a ParsedSession.
-// ABOUT: Closed-grammar, conservative: only reports a confident parse when sets, work and rest
-// ABOUT: are all present; anything missing or ambiguous falls back to manual entry (never a guess).
+// ABOUT: Closed-grammar, conservative: needs sets and work explicitly; rest defaults to 60s when an
+// ABOUT: otherwise-clean phrase omits it, else missing/ambiguous input falls back to manual (never a guess).
 
 import type { ParsedSession } from '@/lib/voice/types';
 
@@ -14,7 +14,7 @@ export type ParseFailureReason =
   | 'unparseable' // a number word appeared but no usable structure formed
   | 'no-sets' // set count missing
   | 'no-work' // work duration missing
-  | 'no-rest' // rest duration missing (and no explicit "no rest")
+  | 'no-rest' // rest missing on a phrase we can't safely default (e.g. a dangling unplaced duration)
   | 'out-of-range'; // a field parsed but sits outside sane bounds
 
 export type ParseResult =
@@ -25,6 +25,11 @@ export type ParseResult =
 // "200 sets"), not to police what a real session may contain.
 const MAX_SETS = 99;
 const MAX_DURATION_SEC = 3600;
+
+// Rest is the one field with a natural default: when a phrase names sets and work cleanly but says
+// nothing about rest, we fill 60s rather than fail. Sets and work are the core intent and still
+// hard-fail when missing; rest is secondary and the default is shown, editable, on the Configure screen.
+const DEFAULT_REST_SEC = 60;
 
 // Number words. 'a'/'an' count as 1 *for reading a value* (so "a minute" is 60), but
 // are excluded from STRICT_NUMBER_WORDS below, which decides whether a transcript
@@ -237,9 +242,21 @@ export function parseIntent(transcript: string): ParseResult {
   const explicitNoRest = NO_REST_RE.test(normalised);
 
   const workSec = workDur?.seconds;
-  // Rest is only taken from an explicitly marked duration or an explicit "no rest" —
-  // never inferred from a leftover unmarked number.
-  const restSec = restDur ? restDur.seconds : explicitNoRest ? 0 : undefined;
+  // A duration we parsed but couldn't place (e.g. the "thirty" in "one minute thirty seconds", which
+  // only merges into work via "and") means the phrase wasn't fully understood — don't default rest there.
+  const hasUnplacedDuration = durations.some((d) => d !== workDur && d !== restDur);
+  const coreComplete = sets !== undefined && workSec !== undefined;
+  // Rest priority: an explicitly marked rest duration, then explicit "no rest" (a confident zero),
+  // then the 60s default — but the default applies only to an otherwise-clean phrase (core present,
+  // nothing dangling). A half-understood phrase yields `undefined` and falls back rather than guessing.
+  // Rest is never inferred from a leftover unmarked number.
+  const restSec = restDur
+    ? restDur.seconds
+    : explicitNoRest
+      ? 0
+      : coreComplete && !hasUnplacedDuration
+        ? DEFAULT_REST_SEC
+        : undefined;
 
   const found = [sets !== undefined, workSec !== undefined, restSec !== undefined].filter(
     Boolean,
