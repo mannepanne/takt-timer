@@ -16,7 +16,7 @@ function RunStateProbe() {
 }
 
 describe('Configure route', () => {
-  it('renders with default 3 × 1:00 / 0:30', () => {
+  it('renders with default 3 × 1:00 / 1:00', () => {
     render(
       <MemoryRouter initialEntries={['/configure']}>
         <Routes>
@@ -43,7 +43,7 @@ describe('Configure route', () => {
     );
     await userEvent.click(screen.getByRole('button', { name: /^start$/i }));
     const state = JSON.parse(screen.getByTestId('nav-state').textContent ?? '{}');
-    expect(state.session).toEqual({ sets: 3, workSec: 60, restSec: 30 });
+    expect(state.session).toEqual({ sets: 3, workSec: 60, restSec: 60 });
   });
 
   it('Back link goes to Home', () => {
@@ -99,7 +99,7 @@ describe('Configure route', () => {
     );
     await userEvent.click(screen.getByRole('button', { name: /^start$/i }));
     const state = JSON.parse(screen.getByTestId('nav-state').textContent ?? '{}');
-    expect(state.session).toEqual({ sets: 3, workSec: 60, restSec: 30 });
+    expect(state.session).toEqual({ sets: 3, workSec: 60, restSec: 60 });
   });
 
   it.each([
@@ -122,7 +122,7 @@ describe('Configure route', () => {
     );
     await userEvent.click(screen.getByRole('button', { name: /^start$/i }));
     const state = JSON.parse(screen.getByTestId('nav-state').textContent ?? '{}');
-    expect(state.session).toEqual({ sets: 3, workSec: 60, restSec: 30 });
+    expect(state.session).toEqual({ sets: 3, workSec: 60, restSec: 60 });
   });
 
   it('strips unexpected fields (e.g. name) from location.state — Phase 3 never emits them', async () => {
