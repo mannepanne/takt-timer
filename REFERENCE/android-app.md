@@ -36,6 +36,7 @@ This is the **critical path**. Google requires new personal developer accounts t
 5. **Set the price to £0.99.** Note: Play allows **paid→free** later but restricts **free→paid**. So £0.99 is a floor you can drop but not re-raise — don't launch free intending to charge later.
 
 6. **Run the closed test** — upload a signed build to the closed-testing track, get your ≥12 testers opted in, and let the **14-day clock** run. Only after that can you apply for production access.
+   - **Status (12 Sep 2026): underway.** ≥12 testers are opted in and the 14-day clock started on **12 Sep 2026**. Earliest eligibility to apply for production access is **26 Sep 2026**, provided ≥12 testers stay _continuously_ opted in for the whole window (Google counts continuous participation — if the count drops below 12 the clock can stall). Keep testers warm (a real session or two beats a dormant install) and avoid disruptive mid-test uploads that reset engagement.
 
 ### What I'll prepare for you (just ask when you reach each)
 
