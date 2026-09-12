@@ -11,6 +11,14 @@ Auto-loaded when working with files in this directory. Completed implementation 
 - **[05-i18n-settings-onboarding.md](./05-i18n-settings-onboarding.md)** — ✅ English + Swedish, Settings screen, Onboarding flow, Privacy policy.
 - **[06-admin-and-launch.md](./06-admin-and-launch.md)** — ✅ Admin backend (Access-gated), dashboard, user delete, retention purge cron, security headers (A+), observability, soft launch.
 
+## Post-launch features
+
+Unnumbered specs that shipped after the six phases went live.
+
+- **[consolidate-settings-account.md](./consolidate-settings-account.md)** — ✅ Settings and Account merged behind a single Home entry point.
+- **[timer-mode.md](./timer-mode.md)** — ✅ Count-up stopwatch for rep-based exercises.
+- **[dark-mode.md](./dark-mode.md)** — ✅ System / Light / Dark appearance for web and Android: design tokens, Settings control, native status bar / navigation bar / window / splash (#157, #158, #160).
+
 ---
 
 **Note:** Archived specs are historical record. For current implementation details, see `REFERENCE/` documentation.

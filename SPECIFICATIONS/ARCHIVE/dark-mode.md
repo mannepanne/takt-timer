@@ -14,7 +14,7 @@ A three-state **Appearance** control in Settings — **System / Light / Dark** �
 
 Why three states and not an on/off switch: the gym case is precisely "my phone is in light mode but I want Takt dark right now". System-default keeps the polite behaviour for everyone who doesn't care; the explicit states cover the people who asked.
 
-Dark mode is a **second set of values for the existing design tokens**, not a second stylesheet. The prototype port ([ADR 2026-04-19](../REFERENCE/decisions/2026-04-19-port-prototype-css.md)) left the whole design keyed off `--paper`, `--ink`, `--rule`, `--accent` and friends on `:root`, and the accent-colour feature already proves the runtime mechanism (`applyAccentCss()` in `src/lib/settings/context.tsx` sets custom properties on `document.documentElement`). Theme is the same pattern with one attribute instead of three properties.
+Dark mode is a **second set of values for the existing design tokens**, not a second stylesheet. The prototype port ([ADR 2026-04-19](../../REFERENCE/decisions/2026-04-19-port-prototype-css.md)) left the whole design keyed off `--paper`, `--ink`, `--rule`, `--accent` and friends on `:root`, and the accent-colour feature already proves the runtime mechanism (`applyAccentCss()` in `src/lib/settings/context.tsx` sets custom properties on `document.documentElement`). Theme is the same pattern with one attribute instead of three properties.
 
 ### Out of scope
 
@@ -198,7 +198,7 @@ There is no migration, no schema/query change, no `/api/me/settings` change, no 
 
 ### Native: status bar, window, splash, and the WebView's idea of "dark"
 
-Following Phase 7's existing seams and rules ([android-app.md](../REFERENCE/android-app.md) Part 3 — any plugin install is followed by `pnpm android:check`, because manifest-merge is where `INTERNET` could sneak back). The test device is the OnePlus on **Android 16**; record that in `android-app.md`, because several items below depend on it.
+Following Phase 7's existing seams and rules ([android-app.md](../../REFERENCE/android-app.md) Part 3 — any plugin install is followed by `pnpm android:check`, because manifest-merge is where `INTERNET` could sneak back). The test device is the OnePlus on **Android 16**; record that in `android-app.md`, because several items below depend on it.
 
 1. **Status bar via `@capacitor/status-bar` (v8), behind a seam.** `src/lib/status-bar.ts` is a web no-op; `src/lib/status-bar-native.ts` wraps the plugin and is aliased in `vite.config.ts` exactly like `wakeLock-platform` / `app-lifecycle`, so the plugin never enters the web bundle. `SettingsProvider` calls `setStatusBarAppearance(resolvedTheme)` whenever `resolvedTheme` changes and on foreground resume. The seam calls `setStyle`, `setBackgroundColor(resolvedPaper)`, and the in-app `NavigationBar` plugin (the status-bar plugin leaves the navigation bar on its launch-time OS theme — found on device):
    - `setStyle` is the real path on Android 15+/16, where edge-to-edge is enforced by the _device's_ OS version (not `targetSdk`), the bar is transparent over the page, and only icon contrast matters. Note the plugin's naming: `Style.Dark` means _light icons for a dark background_ — the seam maps `'dark' → Style.Dark`, `'light' → Style.Light`, and the unit test pins that inversion so nobody "fixes" it.
