@@ -12,15 +12,13 @@
   --ink-3: #4a5160;
   --ink-muted: var(--ink-3);
   --ink-faint: rgba(14, 17, 22, 0.1);
-  --mute: #8a92a0;
+  --mute: #636b78;
   --rule: #e0ded6;
   --rule-strong: #cfccc2;
   --accent: #4ea47a;
   --accent-deep: #23764e;
   --accent-soft: rgba(78, 164, 122, 0.14);
   --on-accent: #ffffff;
-  --success: #2f8f5c;
-  --warn: #c86b1a;
   --danger: #c4423b;
   --danger-soft: rgba(196, 66, 59, 0.08);
   --danger-deep: color-mix(in srgb, var(--danger) 85%, black);
@@ -40,12 +38,13 @@
   --radius: 16px;
   --radius-lg: 22px;
 
-  --shadow-soft: 0 1px 2px rgba(14, 17, 22, 0.04), 0 8px 24px rgba(14, 17, 22, 0.04);
   --shadow-lift: 0 2px 6px rgba(14, 17, 22, 0.06), 0 20px 50px rgba(14, 17, 22, 0.1);
   --shadow-pop: 0 12px 32px rgba(14, 17, 22, 0.18);
   --shadow-sheet: 0 20px 60px rgba(0, 0, 0, 0.18);
   --shadow-drawer: 0 -10px 40px rgba(0, 0, 0, 0.08);
   --shadow-knob: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-mic: 0 1px 2px rgba(14, 17, 22, 0.08);
+  --shadow-toast: 0 10px 30px rgba(0, 0, 0, 0.25);
   --frame-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 40px 120px rgba(0, 0, 0, 0.6);
 
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -56,8 +55,9 @@
 /* Dark appearance. Selected by stamping data-theme="dark" on <html> — resolved in JS (System follows
    prefers-color-scheme; Light/Dark are explicit), never by a media query here, so the dark values
    live in exactly one place. Elevation inverts: surfaces are lighter than the page and shadows give
-   way to hairline rings. Accent shades are not overridden here — applyAccentCss() writes the
-   dark-derived --accent-deep / --accent-soft inline. */
+   way to hairline rings. Accent shades are deliberately absent: the theme resolver
+   (applyAccentCss()) owns --accent-deep / --accent-soft and writes the dark-derived values inline,
+   where a stylesheet rule could only lose to it. */
 :root[data-theme='dark'] {
   --paper: #101214;
   --paper-2: #171a1e;
@@ -67,13 +67,14 @@
   --ink-2: #d9d7d0;
   --ink-3: #b0aea6;
   --ink-faint: rgba(255, 255, 255, 0.12);
-  --mute: #7d8592;
+  --mute: #858d9a;
   --rule: #262a30;
   --rule-strong: #343941;
-  --success: #4fbf7f;
-  --warn: #e08a3a;
   --danger: #e0605a;
   --danger-soft: rgba(224, 96, 90, 0.16);
+  /* The danger hover darkens in both themes, against the "elevation inverts" rule above: it carries
+     a white icon (.icon-btn-danger-confirm), and a lighter red drops that icon below 3:1. */
+  --danger-deep: color-mix(in srgb, var(--danger) 85%, black);
 
   --fill: #2a2f36;
   --fill-hover: #353b43;
@@ -84,11 +85,12 @@
   --backdrop: rgba(0, 0, 0, 0.5);
   --backdrop-strong: rgba(0, 0, 0, 0.65);
 
-  --shadow-soft: 0 0 0 1px rgba(255, 255, 255, 0.05);
   --shadow-lift: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 20px 50px rgba(0, 0, 0, 0.5);
   --shadow-pop: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 12px 32px rgba(0, 0, 0, 0.5);
   --shadow-sheet: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 20px 60px rgba(0, 0, 0, 0.6);
   --shadow-drawer: 0 -1px 0 rgba(255, 255, 255, 0.06);
+  --shadow-mic: 0 0 0 1px rgba(255, 255, 255, 0.08);
+  --shadow-toast: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 10px 30px rgba(0, 0, 0, 0.5);
   --frame-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 40px 120px rgba(0, 0, 0, 0.6);
 
   color-scheme: dark;
@@ -561,8 +563,8 @@ input {
   color: var(--mute);
 }
 .preset-card .star-btn.on svg {
-  color: var(--accent);
-  fill: var(--accent);
+  color: var(--accent-deep);
+  fill: var(--accent-deep);
 }
 
 /* Input (number) */
@@ -587,7 +589,7 @@ input {
 .settings-link {
   font-size: 14px;
   font-weight: 500;
-  color: var(--accent);
+  color: var(--accent-deep);
   text-decoration: none;
 }
 .settings-link:hover {
@@ -904,7 +906,7 @@ button.settings-link {
   place-items: center;
   cursor: pointer;
   border: none;
-  box-shadow: var(--shadow-knob);
+  box-shadow: var(--shadow-mic);
   transition:
     transform 0.15s ease,
     background 0.15s ease;
@@ -1435,7 +1437,7 @@ button.settings-link {
   color: var(--on-fill);
   border-radius: 12px;
   font-size: 14px;
-  box-shadow: var(--shadow-pop);
+  box-shadow: var(--shadow-toast);
   z-index: 90;
 }
 
@@ -1856,7 +1858,7 @@ button.settings-link {
 .onboarding-privacy-link {
   font-size: 14px;
   font-weight: 500;
-  color: var(--accent);
+  color: var(--accent-deep);
   text-decoration: none;
 }
 .onboarding-privacy-link:hover {
@@ -1905,7 +1907,7 @@ button.settings-link {
   margin: 0;
 }
 .privacy-link {
-  color: var(--accent);
+  color: var(--accent-deep);
 }
 .privacy-crosslink {
   margin: -8px 0 24px;

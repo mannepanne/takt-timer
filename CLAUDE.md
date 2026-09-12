@@ -111,6 +111,10 @@ _Note: CLAUDE.md files are kept short (<300 lines). Details live in subdirectory
 - Minimal — prefer self-documenting code.
 - Explain non-obvious decisions, hidden constraints, subtle invariants.
 
+### Colour tokens
+
+- Every colour in `src/styles.css` goes through a custom property on `:root`; the dark appearance is a second value set on `:root[data-theme='dark']`. `src/styles.test.ts` fails on any literal outside the token blocks. Text-on-surface pairs must clear WCAG AA — `pnpm contrast:check`. See [REFERENCE/theming.md](./REFERENCE/theming.md).
+
 ## Development workflow
 
 **CRITICAL: ALL code changes require a feature branch + PR. Zero exceptions.**
