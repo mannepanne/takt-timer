@@ -34,8 +34,8 @@ Dark mode is a **second set of values for the existing design tokens**, not a se
 - **No flash on load, on either platform:** a dark-mode user never sees a white frame on cold start, reload, or PWA launch on web, nor between splash dismissal and first paint on Android. This is a hard criterion, not a nice-to-have — it is the one place a dark-mode implementation reads as cheap.
 - **Every surface follows.** Cards, chips, sheets, the voice overlay and its scrim, the drawer backdrop, toasts, toggles, the settings screen, the run screen, the count-in, the complete screen, the Timer/stopwatch screen, onboarding, privacy. There is no "mostly dark" — a single white card on a dark screen fails acceptance.
 - **Ink-filled elements invert deliberately, not automatically.** The primary CTA, the progress-bar fill, set dots, toasts and the active segment of a toggle are "ink on paper" today; in dark they must not become blinding off-white blocks. See the sixth sweep group.
-- **Accents stay recognisable.** Lichen is still green, coral still coral. Their _usage_ shifts: on dark surfaces the "deep" shade (used for small icons and text) is a lighter tint of the accent rather than a darker one, and the "soft" tint is stronger so it remains visible. **Light mode's accent values do not change at all.**
-- **Contrast passes, in both appearances.** Every text pair actually used in the app meets WCAG AA 4.5:1 and every icon-on-fill pair meets 3:1, in light and in dark, with no exemptions. Verified by a script, not by eye. The light palette shipped with several pairs below AA (`--mute`, accent-coloured link text, three `deep` shades on the soft tint); rather than carry them as exemptions, PR 1 fixes them — see "Light-mode changes" under the sweep.
+- **Accents stay recognisable.** Lichen is still green, coral still coral. Their _usage_ shifts: on dark surfaces the "deep" shade (used for small icons and text) is a lighter tint of the accent rather than a darker one, and the "soft" tint is stronger so it remains visible. Light mode's accent `main` and `soft` values do not change; four `deep` shades are darkened slightly for AA (see "Light-mode changes").
+- **Contrast passes, in both appearances.** Every text pair actually used in the app meets WCAG AA 4.5:1 and every icon-on-fill pair meets 3:1, in light and in dark, with no exemptions. Verified by a script, not by eye. The light palette shipped with several pairs below AA (`--mute`, accent-coloured link text, four `deep` shades on the soft tint); rather than carry them as exemptions, PR 1 fixes them — see "Light-mode changes" under the sweep.
 - **Android status bar** icons stay legible: light icons over the dark app, dark icons over the light app — including when the user's explicit choice differs from the OS.
 - **Android splash and window background** follow the _OS_ appearance (they render before any JS runs, so they cannot follow an in-app override). A user who forces Dark on a light-mode phone sees a light splash for a few hundred milliseconds, then dark. Accepted and documented.
 - **Older Android (API < 29, Android 7–9):** the WebView cannot report `prefers-color-scheme`, so `system` resolves to `light`. Explicit `dark` still works fully (it's our attribute, not the media query). Accepted; `minSdk` is 24 and these devices are a rounding error, but the spec says it out loud.
@@ -68,7 +68,11 @@ Dark mode is a **second set of values for the existing design tokens**, not a se
   --shadow-sheet: 0 20px 60px rgba(0, 0, 0, 0.18);
   --shadow-drawer: 0 -10px 40px rgba(0, 0, 0, 0.08);
   --shadow-knob: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-mic: 0 1px 2px rgba(14, 17, 22, 0.08);
+  --shadow-toast: 0 10px 30px rgba(0, 0, 0, 0.25);
   --frame-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 40px 120px rgba(0, 0, 0, 0.6);
+  /* AA fix to the shipped palette: was #8a92a0 (2.85:1 on paper) */
+  --mute: #636b78;
   color-scheme: light;
 }
 :root[data-theme='dark'] {
@@ -78,11 +82,9 @@ Dark mode is a **second set of values for the existing design tokens**, not a se
   --ink: #f5f4f0;
   --ink-2: #d9d7d0;
   --ink-3: #b0aea6;
-  --mute: #7d8592;
+  --mute: #858d9a;
   --rule: #262a30;
   --rule-strong: #343941;
-  --success: #4fbf7f;
-  --warn: #e08a3a;
   --danger: #e0605a;
   --fill: #2a2f36;
   --fill-hover: #353b43;
@@ -94,11 +96,17 @@ Dark mode is a **second set of values for the existing design tokens**, not a se
   --danger-soft: rgba(224, 96, 90, 0.16);
   --surface-subtle: rgba(255, 255, 255, 0.06);
   --ink-faint: rgba(255, 255, 255, 0.12);
-  --shadow-soft: 0 0 0 1px rgba(255, 255, 255, 0.05);
+  --danger-deep: color-mix(
+    in srgb,
+    var(--danger) 85%,
+    black
+  ); /* darkens in both themes: carries a white icon */
   --shadow-lift: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 20px 50px rgba(0, 0, 0, 0.5);
   --shadow-pop: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 12px 32px rgba(0, 0, 0, 0.5);
   --shadow-sheet: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 20px 60px rgba(0, 0, 0, 0.6);
   --shadow-drawer: 0 -1px 0 rgba(255, 255, 255, 0.06);
+  --shadow-mic: 0 0 0 1px rgba(255, 255, 255, 0.08);
+  --shadow-toast: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 10px 30px rgba(0, 0, 0, 0.5);
   --frame-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 40px 120px rgba(0, 0, 0, 0.6);
   color-scheme: dark;
 }
