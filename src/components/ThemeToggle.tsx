@@ -34,7 +34,7 @@ export function ThemeToggle({ value, resolved, onChange }: Props) {
       </div>
       {value === 'system' && (
         <p className="theme-toggle-caption">
-          {t('settings.theme.resolved', { mode: t(`settings.theme.${resolved}` as StringKey) })}
+          {t(`settings.theme.currently.${resolved}` as StringKey)}
         </p>
       )}
     </div>

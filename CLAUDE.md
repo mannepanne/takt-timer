@@ -75,6 +75,7 @@ Development is organised into six sequential phases. Each phase has its own spec
 How-it-works documentation and operational reference:
 
 - [testing-strategy.md](./REFERENCE/testing-strategy.md) — TDD, Vitest, coverage targets, what to mock.
+- [theming.md](./REFERENCE/theming.md) — design tokens, the dark palette, how appearance is resolved, the colour-literal lint test, `pnpm contrast:check`.
 - [environment-setup.md](./REFERENCE/environment-setup.md) — Cloudflare account, Wrangler, D1/KV/Workers AI setup.
 - [android-app.md](./REFERENCE/android-app.md) — Phase 7 getting-started: Play Console admin track (developer account, merchant profile, testers, the 14-day closed-testing gate) and the macOS Android dev-environment setup; grows into the build/release reference as `07a`–`07h` land.
 - [troubleshooting.md](./REFERENCE/troubleshooting.md) — common issues (populated as we encounter them).

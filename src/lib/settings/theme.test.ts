@@ -85,6 +85,19 @@ describe('resolveTheme / prefersDark', () => {
     expect(prefersDark()).toBe(true);
   });
 
+  it('subscribeSystemTheme is a no-op where matchMedia is unavailable', () => {
+    const original = window.matchMedia;
+    Object.defineProperty(window, 'matchMedia', { configurable: true, value: undefined });
+    try {
+      const off = subscribeSystemTheme(() => {
+        throw new Error('should never fire');
+      });
+      expect(() => off()).not.toThrow();
+    } finally {
+      Object.defineProperty(window, 'matchMedia', { configurable: true, value: original });
+    }
+  });
+
   it('subscribeSystemTheme fires on change and unsubscribes cleanly', () => {
     const seen: boolean[] = [];
     const off = subscribeSystemTheme((dark) => seen.push(dark));

@@ -137,7 +137,7 @@ describe('Settings route', () => {
   it('appearance defaults to System with a caption of what it resolves to', () => {
     renderSettings();
     expect(screen.getByRole('radio', { name: 'System' })).toHaveAttribute('aria-checked', 'true');
-    expect(screen.getByText('Currently Light')).toBeInTheDocument();
+    expect(screen.getByText('Currently light')).toBeInTheDocument();
   });
 
   it('choosing Dark checks it, drops the caption, persists, and shows the saved toast', async () => {

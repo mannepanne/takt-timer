@@ -40,7 +40,7 @@ describe('ThemeToggle', () => {
     const { rerender } = render(<ThemeToggle value="system" resolved="dark" onChange={vi.fn()} />, {
       wrapper,
     });
-    expect(screen.getByText('Currently Dark')).toBeInTheDocument();
+    expect(screen.getByText('Currently dark')).toBeInTheDocument();
     rerender(
       <I18nProvider>
         <ThemeToggle value="dark" resolved="dark" onChange={vi.fn()} />

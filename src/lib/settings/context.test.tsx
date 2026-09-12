@@ -201,6 +201,18 @@ describe('appearance mode', () => {
     expect([...metas].every((m) => m.content === '#101214')).toBe(true);
   });
 
+  it('Dark → System restores the light document and metas on a light phone', () => {
+    const { result } = renderHook(() => useSettings(), { wrapper });
+    act(() => result.current.setThemeMode('dark'));
+    expect(root().dataset.theme).toBe('dark');
+    act(() => result.current.setThemeMode('system'));
+    expect(result.current.resolvedTheme).toBe('light');
+    expect(root().dataset.theme).toBe('light');
+    const metas = document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]');
+    expect([...metas].every((m) => m.content === '#f5f4f0')).toBe(true);
+    expect(localStorage.getItem('takt.theme.v1')).toBe('system');
+  });
+
   it('system follows the OS live, without a reload', () => {
     const { result } = renderHook(() => useSettings(), { wrapper });
     act(() => setPrefersDark(true));

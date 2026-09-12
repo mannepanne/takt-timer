@@ -331,7 +331,9 @@ const strings = {
   'settings.theme.system': { en: 'System', sv: 'System' },
   'settings.theme.light': { en: 'Light', sv: 'Ljust' },
   'settings.theme.dark': { en: 'Dark', sv: 'Mörkt' },
-  'settings.theme.resolved': { en: 'Currently {mode}', sv: 'Just nu {mode}' },
+  // Caption under System: dedicated lowercase strings rather than the capitalised radio labels.
+  'settings.theme.currently.light': { en: 'Currently light', sv: 'Just nu ljust' },
+  'settings.theme.currently.dark': { en: 'Currently dark', sv: 'Just nu mörkt' },
   'settings.saved': { en: 'Saved', sv: 'Sparat' },
   'home.settings': { en: 'Settings', sv: 'Inställningar' },
 
