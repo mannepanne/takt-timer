@@ -34,6 +34,14 @@ Selection is by the `data-theme` attribute on `<html>`, resolved in JS. There is
 
 Thin indicators — the 3px progress-bar fill, set dots, the pager pill, the selected-swatch ring — stay on `--ink` on purpose. On dark they read as light marks, which is what an indicator should be; a mid-grey fill would vanish against the dark track.
 
+## How the appearance is resolved
+
+Three modes — `system` (default), `light`, `dark` — stored as `takt.theme.v1` in `localStorage` on each device, never synced (appearance is a per-device preference). `src/lib/settings/theme.ts` holds the pure helpers; `SettingsProvider` resolves the mode against `prefers-color-scheme` — live, and again whenever the app returns to the foreground — and calls `applyThemeToDocument()`, which stamps `data-theme` on `<html>` and points every `<meta name="theme-color">` at the matching `--paper`.
+
+Before any of that runs, `public/theme-init.js` — a blocking classic script in `<head>` — does the same resolution from the stored key and the media query and stamps the attribute, so a dark-mode user never sees a light first frame. It is external rather than inline because neither CSP has nonce/hash machinery; `theme-init.test.ts` keeps its storage key and media query in step with `theme.ts`. Decision record: [ADR 2026-09-12](./decisions/2026-09-12-theme-resolution.md).
+
+The Settings control is `ThemeToggle` (a radiogroup sharing the language toggle's look); under System it captions what the phone currently resolves to.
+
 ## Accent colours are the resolver's job
 
 The six accents in `src/lib/settings/accents.ts` carry hand-authored light `deep` and `soft` values. `applyAccentCss(accentId, resolvedTheme)` writes `--accent`, `--accent-deep` and `--accent-soft` inline on `<html>`: the authored values in light, and on dark `color-mix(in srgb, main 72%, white)` / `color-mix(in srgb, main 24%, transparent)`. Inline always wins the cascade, so a stylesheet override of those three tokens could only lose — which is why the dark block has none.
