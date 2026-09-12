@@ -7,6 +7,8 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        // In-app plugins must be registered before the bridge is created in super.onCreate.
+        registerPlugin(NavigationBarPlugin.class);
         super.onCreate(savedInstanceState);
         // The WebView's own background before the page paints. A resource lookup is night-aware,
         // which the static capacitor.config.ts backgroundColor cannot be; without this the WebView

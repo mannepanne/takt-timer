@@ -121,8 +121,9 @@ export default defineConfig(({ mode }) => {
               // exitApp) is @capacitor/app; swap the seam so the plugin stays out of the web bundle
               // and the web keeps DOM visibilitychange (07g).
               '@/lib/app-lifecycle': path.resolve(__dirname, './src/lib/app-lifecycle-native.ts'),
-              // Native status bar follows the resolved appearance via @capacitor/status-bar; swap
-              // the seam so the plugin stays out of the web bundle (dark mode, PR 3).
+              // Native system bars follow the resolved appearance via @capacitor/status-bar and the
+              // in-app NavigationBar plugin; swap the seam so neither reaches the web bundle
+              // (dark mode, #154).
               '@/lib/status-bar': path.resolve(__dirname, './src/lib/status-bar-native.ts'),
               // Native has no VitePWA and therefore no `virtual:pwa-register` module; alias it to a
               // no-op stub so the bare import in main.tsx resolves at build time.

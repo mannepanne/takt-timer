@@ -87,18 +87,25 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [soundOn, setSoundOnState] = useState<boolean>(readStoredSound);
   const [themeMode, setThemeModeState] = useState<ThemeMode>(readStoredTheme);
   const [systemDark, setSystemDark] = useState<boolean>(prefersDark);
+  // Bumped on every return to the foreground, so effects keyed on it re-run even when nothing
+  // else changed — the OS can restyle the system bars while the app is backgrounded.
+  const [foregroundTick, setForegroundTick] = useState(0);
   const resolvedTheme = resolveTheme(themeMode, systemDark);
 
   // Follow the OS live while in System mode; the subscription is cheap enough to keep always, and
   // an explicit mode simply ignores the value. On return to the foreground re-read it too — the
   // OS may have flipped while the app was backgrounded without a change event reaching the
-  // WebView (the app-lifecycle seam maps this to appStateChange on native).
+  // WebView (the app-lifecycle seam maps this to appStateChange on native). One subscription: both
+  // state updates batch into a single render, so anything downstream applies exactly once.
   useEffect(() => subscribeSystemTheme(setSystemDark), []);
   useEffect(
     () =>
       subscribeAppVisibility(
         () => {},
-        () => setSystemDark(prefersDark()),
+        () => {
+          setSystemDark(prefersDark());
+          setForegroundTick((t) => t + 1);
+        },
       ),
     [],
   );
@@ -107,15 +114,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     applyThemeToDocument(resolvedTheme);
   }, [resolvedTheme]);
-  // The system status bar follows too (a no-op on the web). Re-applied on return to the
-  // foreground as well: the OS can restyle the bar while the app is backgrounded.
+  // The system bars follow too (a no-op on the web), re-applied on every return to the foreground.
   useEffect(() => {
     void setStatusBarAppearance(resolvedTheme);
-    return subscribeAppVisibility(
-      () => {},
-      () => void setStatusBarAppearance(resolvedTheme),
-    );
-  }, [resolvedTheme]);
+  }, [resolvedTheme, foregroundTick]);
   useEffect(() => {
     applyAccentCss(accentId, resolvedTheme);
   }, [accentId, resolvedTheme]);

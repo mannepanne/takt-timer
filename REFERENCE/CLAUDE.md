@@ -24,9 +24,9 @@ Cloudflare account setup, Wrangler commands, resource bindings (Worker, D1, KV, 
 
 ### [android-app.md](./android-app.md)
 
-**When to read:** Starting the Phase 7 Play Store admin track (developer account, merchant profile, testers), setting up the local Android toolchain (JDK, Android Studio, SDK, `adb`, phone USB debugging), or — later — the signed-AAB build/release process.
+**When to read:** Anything about the Android app — the Play Console admin track and closed test, the local Android toolchain, building and installing locally, native voice and its parser grammar, the back button and app lifecycle, signing and the closed-track upload, or how appearance (dark mode) reaches the status bar, window and splash.
 
-Living doc. Currently: the Play Console admin track (the 14-day closed-testing critical path) and the macOS Android dev-environment setup that unblocks the `07a` spikes. Build/release and the local voice parser grammar get added as the `07a`–`07h` deliverables land.
+Seven parts, one per concern, plus a device-verification record for the appearance work.
 
 ### [troubleshooting.md](./troubleshooting.md)
 

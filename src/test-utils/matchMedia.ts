@@ -47,6 +47,8 @@ export function setPrefersDark(value: boolean, notify = true): void {
 }
 
 export function installMatchMediaFake(): void {
+  // Root-level tests that opt into the node environment have no window; nothing to install.
+  if (typeof window === 'undefined') return;
   Object.defineProperty(window, 'matchMedia', {
     configurable: true,
     writable: true,

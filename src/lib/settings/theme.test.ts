@@ -4,6 +4,8 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import css from '@/styles.css?raw';
+import nightColours from '../../../android/app/src/main/res/values-night/colors.xml?raw';
+import dayColours from '../../../android/app/src/main/res/values/colors.xml?raw';
 import { setPrefersDark } from '@/test-utils/matchMedia';
 
 import {
@@ -141,5 +143,15 @@ describe('contracts with the stylesheet and the pre-paint script', () => {
 
   it('exports the media query the pre-paint script evaluates', () => {
     expect(DARK_SCHEME_QUERY).toBe('(prefers-color-scheme: dark)');
+  });
+
+  it('matches the Android colour resources that paint before the page does', () => {
+    // The pre-paint window/WebView background and the splash must be the same paper as the app,
+    // or a dark-mode launch flashes a different shade — a bug only a real device would show.
+    const colour = (xml: string, name: string) =>
+      xml.match(new RegExp(`<color name="${name}">(#[0-9a-fA-F]{6})</color>`))?.[1].toLowerCase();
+    expect(colour(dayColours, 'window_background')).toBe(PAPER.light);
+    expect(colour(nightColours, 'window_background')).toBe(PAPER.dark);
+    expect(colour(nightColours, 'splash_background')).toBe(PAPER.dark);
   });
 });

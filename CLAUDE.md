@@ -77,7 +77,7 @@ How-it-works documentation and operational reference:
 - [testing-strategy.md](./REFERENCE/testing-strategy.md) — TDD, Vitest, coverage targets, what to mock.
 - [theming.md](./REFERENCE/theming.md) — design tokens, the dark palette, how appearance is resolved, the colour-literal lint test, `pnpm contrast:check`.
 - [environment-setup.md](./REFERENCE/environment-setup.md) — Cloudflare account, Wrangler, D1/KV/Workers AI setup.
-- [android-app.md](./REFERENCE/android-app.md) — Phase 7 getting-started: Play Console admin track (developer account, merchant profile, testers, the 14-day closed-testing gate) and the macOS Android dev-environment setup; grows into the build/release reference as `07a`–`07h` land.
+- [android-app.md](./REFERENCE/android-app.md) — the Android app end to end: Play Console admin track and closed test, macOS toolchain, local builds, native voice, lifecycle/back button, signing and upload, appearance on native (status bar, window, splash) with its device-verification record.
 - [troubleshooting.md](./REFERENCE/troubleshooting.md) — common issues (populated as we encounter them).
 - [pr-review-workflow.md](./REFERENCE/pr-review-workflow.md) — how to use `/review-spec`, `/review-pr`, `/review-pr-team`.
 - [auth-and-presets-api.md](./REFERENCE/auth-and-presets-api.md) — HTTP contract for auth, presets, sessions, and `/api/me/settings`.
