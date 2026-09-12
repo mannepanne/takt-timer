@@ -81,7 +81,7 @@ Five context providers wrap every route:
 
 - **`I18nProvider`** — English/Swedish, runtime language detection, persisted to `localStorage`.
 - **`SessionProvider`** — WebAuthn passkey auth state, session token management.
-- **`SettingsProvider`** — language preference, accent colour, sound on/off.
+- **`SettingsProvider`** — language preference, accent colour, sound on/off, and the appearance mode (System / Light / Dark). Appearance is resolved live against `prefers-color-scheme` (and re-read when the app returns to the foreground), stamped on `<html>` as `data-theme`, and is the one setting that never syncs to D1 — it's per-device. See [ADR: Appearance is resolved in JS to one `data-theme` attribute](./REFERENCE/decisions/2026-09-12-theme-resolution.md).
 - **`StopwatchProvider`** — the count-up stopwatch's state (phase, elapsed time), lifted above the router so it survives navigating away from `/timer` and back. Also persisted to `localStorage`, so it survives a full page reload or browser restart too. See [ADR: Timer mode's state machine lives above the router](./REFERENCE/decisions/2026-08-02-timer-mode-provider-scoped-state.md).
 - **`PhoneFrame`** — the desktop-browser phone mockup. Invisible on a real phone.
 

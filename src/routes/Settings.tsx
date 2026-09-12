@@ -8,6 +8,7 @@ import { AccentPicker } from '@/components/AccentPicker';
 import { Icon } from '@/components/icons';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { PasskeyPrompt } from '@/components/PasskeyPrompt';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { TopBar } from '@/components/TopBar';
 import { useI18n } from '@/i18n/context';
 import type { Lang } from '@/i18n/strings';
@@ -21,10 +22,20 @@ import { clearHistory } from '@/lib/history';
 import { importLocalHistory } from '@/lib/history-sync';
 import { useSettings } from '@/lib/settings/context';
 import type { AccentId } from '@/lib/settings/accents';
+import type { ThemeMode } from '@/lib/settings/theme';
 
 export function Settings() {
   const { t, setLang } = useI18n();
-  const { accentId, soundOn, setAccent, setSoundOn, putAllSettings } = useSettings();
+  const {
+    accentId,
+    soundOn,
+    themeMode,
+    resolvedTheme,
+    setAccent,
+    setSoundOn,
+    setThemeMode,
+    putAllSettings,
+  } = useSettings();
   const { session, login, refresh } = useSession();
   const navigate = useNavigate();
   const [savedVisible, setSavedVisible] = useState(false);
@@ -106,6 +117,11 @@ export function Settings() {
     triggerSaved();
   }
 
+  function handleThemeChange(mode: ThemeMode) {
+    setThemeMode(mode);
+    triggerSaved();
+  }
+
   function handleReplayOnboarding() {
     clearOnboardingSeen();
     navigate('/');
@@ -146,6 +162,16 @@ export function Settings() {
           <div className="settings-row settings-row--stack">
             <span className="settings-label">{t('settings.accent')}</span>
             <AccentPicker value={accentId} onChange={handleAccentChange} />
+          </div>
+        </section>
+
+        <div className="hairline" />
+
+        {/* Appearance is meaningful on every platform — shown on native too, unlike language. */}
+        <section className="settings-section">
+          <div className="settings-row settings-row--stack">
+            <span className="settings-label">{t('settings.theme')}</span>
+            <ThemeToggle value={themeMode} resolved={resolvedTheme} onChange={handleThemeChange} />
           </div>
         </section>
 

@@ -99,7 +99,7 @@ describe('Settings route', () => {
     vi.mocked(isNativePlatform).mockReturnValue(true);
     renderSettings();
     // Accent/sound still render; the account section and its sign-in CTA do not.
-    expect(screen.getByRole('radiogroup')).toBeInTheDocument();
+    expect(screen.getByRole('radiogroup', { name: /accent/i })).toBeInTheDocument();
     expect(screen.getByRole('switch')).toBeInTheDocument();
     expect(screen.queryByText('Account')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /sign in/i })).not.toBeInTheDocument();
@@ -120,11 +120,36 @@ describe('Settings route', () => {
     expect(screen.getByRole('group')).toBeInTheDocument();
   });
 
-  it('renders language, accent, and sound sections', () => {
+  it('renders language, accent, appearance, and sound sections', () => {
     renderSettings();
     expect(screen.getByRole('group')).toBeInTheDocument();
-    expect(screen.getByRole('radiogroup')).toBeInTheDocument();
+    expect(screen.getByRole('radiogroup', { name: /accent/i })).toBeInTheDocument();
+    expect(screen.getByRole('radiogroup', { name: /appearance/i })).toBeInTheDocument();
     expect(screen.getByRole('switch')).toBeInTheDocument();
+  });
+
+  it('shows the appearance control on native too — appearance is meaningful everywhere', () => {
+    vi.mocked(isNativePlatform).mockReturnValue(true);
+    renderSettings();
+    expect(screen.getByRole('radiogroup', { name: /appearance/i })).toBeInTheDocument();
+  });
+
+  it('appearance defaults to System with a caption of what it resolves to', () => {
+    renderSettings();
+    expect(screen.getByRole('radio', { name: 'System' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByText('Currently light')).toBeInTheDocument();
+  });
+
+  it('choosing Dark checks it, drops the caption, persists, and shows the saved toast', async () => {
+    renderSettings();
+    await userEvent.click(screen.getByRole('radio', { name: 'Dark' }));
+    expect(screen.getByRole('radio', { name: 'Dark' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.queryByText(/currently/i)).not.toBeInTheDocument();
+    expect(localStorage.getItem('takt.theme.v1')).toBe('dark');
+    expect(document.documentElement.dataset.theme).toBe('dark');
+    const toast = screen.getByRole('status');
+    expect(toast).toHaveClass('show');
+    expect(toast).toHaveTextContent(/saved/i);
   });
 
   it('back button navigates away from settings', async () => {

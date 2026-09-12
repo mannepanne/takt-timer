@@ -1710,15 +1710,18 @@ button.settings-link {
   color: var(--ink);
 }
 
-/* Language toggle — segmented control */
-.lang-toggle {
+/* Segmented controls — the language toggle (EN / SV) and the appearance toggle (System / Light /
+   Dark) share one look. */
+.lang-toggle,
+.theme-toggle {
   display: flex;
   border-radius: 999px;
   border: 1px solid var(--rule-strong);
   overflow: hidden;
   background: var(--paper-2);
 }
-.lang-toggle-btn {
+.lang-toggle-btn,
+.theme-toggle-btn {
   padding: 7px 16px;
   font-size: 14px;
   font-weight: 500;
@@ -1728,9 +1731,18 @@ button.settings-link {
     color 140ms var(--ease);
   color: var(--ink-3);
 }
-.lang-toggle-btn.active {
+.lang-toggle-btn.active,
+.theme-toggle-btn.active {
   background: var(--fill);
   color: var(--on-fill);
+}
+.theme-toggle-wrap {
+  padding-top: 10px;
+}
+.theme-toggle-caption {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
 }
 
 /* Accent colour picker */

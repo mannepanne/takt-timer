@@ -327,6 +327,13 @@ const strings = {
   'settings.accent.amber': { en: 'Amber', sv: 'Bärnsten' },
   'settings.accent.iris': { en: 'Iris', sv: 'Iris' },
   'settings.accent.slate': { en: 'Slate', sv: 'Skiffer' },
+  'settings.theme': { en: 'Appearance', sv: 'Utseende' },
+  'settings.theme.system': { en: 'System', sv: 'System' },
+  'settings.theme.light': { en: 'Light', sv: 'Ljust' },
+  'settings.theme.dark': { en: 'Dark', sv: 'Mörkt' },
+  // Caption under System: dedicated lowercase strings rather than the capitalised radio labels.
+  'settings.theme.currently.light': { en: 'Currently light', sv: 'Just nu ljust' },
+  'settings.theme.currently.dark': { en: 'Currently dark', sv: 'Just nu mörkt' },
   'settings.saved': { en: 'Saved', sv: 'Sparat' },
   'home.settings': { en: 'Settings', sv: 'Inställningar' },
 

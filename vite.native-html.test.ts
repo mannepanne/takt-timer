@@ -60,6 +60,14 @@ describe('transformNativeHtml', () => {
     expect(out).toContain('/src/main.tsx');
   });
 
+  it('keeps the pre-paint appearance resolver and the appearance metas', () => {
+    // An external script under 'self' on both CSPs — the strip must not touch it, and the
+    // colour-scheme / theme-color metas are what make the WebView treat the page as dark-aware.
+    expect(out).toContain('<script src="/theme-init.js"></script>');
+    expect(out).toContain('name="color-scheme"');
+    expect(out.match(/name="theme-color"/g)).toHaveLength(2);
+  });
+
   it('the self-hosted fonts the @font-face references are committed in public/fonts/', () => {
     // public/fonts/ is the source of truth (the native build's buildStart guard fails without them).
     for (const file of NATIVE_FONT_FILES) {

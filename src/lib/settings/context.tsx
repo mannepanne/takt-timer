@@ -1,13 +1,26 @@
-// ABOUT: React context providing accent colour and sound-on/off state.
-// ABOUT: Persists to localStorage immediately; syncs to D1 for authenticated users.
+// ABOUT: React context providing appearance mode, accent colour and sound-on/off state.
+// ABOUT: Persists to localStorage immediately; accent and sound also sync to D1 for authenticated
+// ABOUT: users. Appearance never syncs — it is a per-device preference.
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { useI18n } from '@/i18n/context';
 import { apiFetch } from '@/lib/apiFetch';
+import { subscribeAppVisibility } from '@/lib/app-lifecycle';
 import { useSession } from '@/lib/auth/session';
 import { isNativePlatform } from '@/lib/platform';
 import { DEFAULT_ACCENT_ID, findAccent, type AccentId } from './accents';
+import {
+  applyThemeToDocument,
+  darkAccentShades,
+  prefersDark,
+  readStoredTheme,
+  resolveTheme,
+  subscribeSystemTheme,
+  writeStoredTheme,
+  type ResolvedTheme,
+  type ThemeMode,
+} from './theme';
 
 const ACCENT_KEY = 'takt.accent.v1';
 const SOUND_KEY = 'takt.sound.v1';
@@ -35,19 +48,28 @@ function readStoredSound(): boolean {
   return true;
 }
 
-function applyAccentCss(accentId: AccentId) {
+// Accent shades are written inline on <html>, where they beat any stylesheet rule — which is why
+// the dark token block carries none. Light uses the hand-authored shades; dark derives lighter
+// ones from the main colour, so the accent stays recognisable while its text/icon shade lifts.
+function applyAccentCss(accentId: AccentId, theme: ResolvedTheme) {
   const accent = findAccent(accentId);
+  const shades = theme === 'dark' ? darkAccentShades(accent.main) : accent;
   const root = document.documentElement;
   root.style.setProperty('--accent', accent.main);
-  root.style.setProperty('--accent-deep', accent.deep);
-  root.style.setProperty('--accent-soft', accent.soft);
+  root.style.setProperty('--accent-deep', shades.deep);
+  root.style.setProperty('--accent-soft', shades.soft);
 }
 
 export interface SettingsContextValue {
   accentId: AccentId;
   soundOn: boolean;
+  /** The chosen appearance mode. */
+  themeMode: ThemeMode;
+  /** What the mode currently resolves to — System follows the OS, and can change live. */
+  resolvedTheme: ResolvedTheme;
   setAccent: (id: AccentId) => void;
   setSoundOn: (on: boolean) => void;
+  setThemeMode: (mode: ThemeMode) => void;
   /** Call after setLang() to persist the new language to D1. Pass the new lang explicitly
    *  because React state updates from setLang are async. */
   putAllSettings: (overrides?: { language?: string }) => void;
@@ -62,11 +84,31 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   const [accentId, setAccentId] = useState<AccentId>(readStoredAccent);
   const [soundOn, setSoundOnState] = useState<boolean>(readStoredSound);
+  const [themeMode, setThemeModeState] = useState<ThemeMode>(readStoredTheme);
+  const [systemDark, setSystemDark] = useState<boolean>(prefersDark);
+  const resolvedTheme = resolveTheme(themeMode, systemDark);
 
-  // Apply CSS whenever accent changes.
+  // Follow the OS live while in System mode; the subscription is cheap enough to keep always, and
+  // an explicit mode simply ignores the value. On return to the foreground re-read it too — the
+  // OS may have flipped while the app was backgrounded without a change event reaching the
+  // WebView (the app-lifecycle seam maps this to appStateChange on native).
+  useEffect(() => subscribeSystemTheme(setSystemDark), []);
+  useEffect(
+    () =>
+      subscribeAppVisibility(
+        () => {},
+        () => setSystemDark(prefersDark()),
+      ),
+    [],
+  );
+
+  // Stamp the resolved appearance on the document, then the accent shades that depend on it.
   useEffect(() => {
-    applyAccentCss(accentId);
-  }, [accentId]);
+    applyThemeToDocument(resolvedTheme);
+  }, [resolvedTheme]);
+  useEffect(() => {
+    applyAccentCss(accentId, resolvedTheme);
+  }, [accentId, resolvedTheme]);
 
   // One-shot fetch from server when user authenticates. Platform-gated: native never syncs (07c);
   // settings stay purely localStorage-backed.
@@ -151,9 +193,33 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     [persistToServer],
   );
 
+  // Device-scoped: localStorage only, never the server.
+  const setThemeMode = useCallback((mode: ThemeMode) => {
+    setThemeModeState(mode);
+    writeStoredTheme(mode);
+  }, []);
+
   const value = useMemo(
-    () => ({ accentId, soundOn, setAccent, setSoundOn, putAllSettings }),
-    [accentId, soundOn, setAccent, setSoundOn, putAllSettings],
+    () => ({
+      accentId,
+      soundOn,
+      themeMode,
+      resolvedTheme,
+      setAccent,
+      setSoundOn,
+      setThemeMode,
+      putAllSettings,
+    }),
+    [
+      accentId,
+      soundOn,
+      themeMode,
+      resolvedTheme,
+      setAccent,
+      setSoundOn,
+      setThemeMode,
+      putAllSettings,
+    ],
   );
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
