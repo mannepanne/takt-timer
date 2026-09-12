@@ -1,30 +1,99 @@
 /* Takt — design tokens + base */
-/* Default accent is Lichen. Override at runtime via CSS custom properties on :root. */
+/* Default accent is Lichen. Override at runtime via CSS custom properties on :root.
+   Every colour in this file goes through a token below — src/styles.test.ts enforces it — so the
+   dark block further down is the complete dark appearance, not a partial one. */
 :root {
   --paper: #f5f4f0;
   --paper-2: #edebe4;
+  --surface: #ffffff;
+  --surface-subtle: rgba(14, 17, 22, 0.04);
   --ink: #0e1116;
   --ink-2: #2a2f37;
   --ink-3: #4a5160;
-  --mute: #8a92a0;
+  --ink-muted: var(--ink-3);
+  --ink-faint: rgba(14, 17, 22, 0.1);
+  --mute: #636b78;
   --rule: #e0ded6;
   --rule-strong: #cfccc2;
   --accent: #4ea47a;
   --accent-deep: #23764e;
   --accent-soft: rgba(78, 164, 122, 0.14);
-  --accent-contrast: #ffffff;
-  --success: #2f8f5c;
-  --warn: #c86b1a;
+  --on-accent: #ffffff;
   --danger: #c4423b;
+  --danger-soft: rgba(196, 66, 59, 0.08);
+  --danger-deep: color-mix(in srgb, var(--danger) 85%, black);
+
+  /* Ink-filled elements — primary CTA, run control, toasts, the active toggle segment. On dark a
+     naive inversion turns these into off-white blocks, so they carry their own pair. */
+  --fill: var(--ink);
+  --fill-hover: var(--ink-2);
+  --on-fill: var(--paper);
+
+  --hover-tint: rgba(14, 17, 22, 0.04);
+  --scrim: rgba(245, 244, 240, 0.78);
+  --backdrop: rgba(14, 17, 22, 0.35);
+  --backdrop-strong: rgba(14, 17, 22, 0.55);
 
   --radius-sm: 10px;
   --radius: 16px;
   --radius-lg: 22px;
 
-  --shadow-soft: 0 1px 2px rgba(14, 17, 22, 0.04), 0 8px 24px rgba(14, 17, 22, 0.04);
   --shadow-lift: 0 2px 6px rgba(14, 17, 22, 0.06), 0 20px 50px rgba(14, 17, 22, 0.1);
+  --shadow-pop: 0 12px 32px rgba(14, 17, 22, 0.18);
+  --shadow-sheet: 0 20px 60px rgba(0, 0, 0, 0.18);
+  --shadow-drawer: 0 -10px 40px rgba(0, 0, 0, 0.08);
+  --shadow-knob: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-mic: 0 1px 2px rgba(14, 17, 22, 0.08);
+  --shadow-toast: 0 10px 30px rgba(0, 0, 0, 0.25);
+  --frame-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 40px 120px rgba(0, 0, 0, 0.6);
 
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  color-scheme: light;
+}
+
+/* Dark appearance. Selected by stamping data-theme="dark" on <html> — resolved in JS (System follows
+   prefers-color-scheme; Light/Dark are explicit), never by a media query here, so the dark values
+   live in exactly one place. Elevation inverts: surfaces are lighter than the page and shadows give
+   way to hairline rings. Accent shades are deliberately absent: the theme resolver
+   (applyAccentCss()) owns --accent-deep / --accent-soft and writes the dark-derived values inline,
+   where a stylesheet rule could only lose to it. */
+:root[data-theme='dark'] {
+  --paper: #101214;
+  --paper-2: #171a1e;
+  --surface: #1c2025;
+  --surface-subtle: rgba(255, 255, 255, 0.06);
+  --ink: #f5f4f0;
+  --ink-2: #d9d7d0;
+  --ink-3: #b0aea6;
+  --ink-faint: rgba(255, 255, 255, 0.12);
+  --mute: #858d9a;
+  --rule: #262a30;
+  --rule-strong: #343941;
+  --danger: #e0605a;
+  --danger-soft: rgba(224, 96, 90, 0.16);
+  /* The danger hover darkens in both themes, against the "elevation inverts" rule above: it carries
+     a white icon (.icon-btn-danger-confirm), and a lighter red drops that icon below 3:1. */
+  --danger-deep: color-mix(in srgb, var(--danger) 85%, black);
+
+  --fill: #2a2f36;
+  --fill-hover: #353b43;
+  --on-fill: #f5f4f0;
+
+  --hover-tint: rgba(255, 255, 255, 0.06);
+  --scrim: rgba(16, 18, 20, 0.82);
+  --backdrop: rgba(0, 0, 0, 0.5);
+  --backdrop-strong: rgba(0, 0, 0, 0.65);
+
+  --shadow-lift: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 20px 50px rgba(0, 0, 0, 0.5);
+  --shadow-pop: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 12px 32px rgba(0, 0, 0, 0.5);
+  --shadow-sheet: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 20px 60px rgba(0, 0, 0, 0.6);
+  --shadow-drawer: 0 -1px 0 rgba(255, 255, 255, 0.06);
+  --shadow-mic: 0 0 0 1px rgba(255, 255, 255, 0.08);
+  --shadow-toast: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 10px 30px rgba(0, 0, 0, 0.5);
+  --frame-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 40px 120px rgba(0, 0, 0, 0.6);
+
+  color-scheme: dark;
 }
 
 * {
@@ -90,9 +159,7 @@ input {
 @media (min-width: 480px) {
   .app-viewport {
     border-radius: 28px;
-    box-shadow:
-      0 0 0 1px rgba(255, 255, 255, 0.04),
-      0 40px 120px rgba(0, 0, 0, 0.6);
+    box-shadow: var(--frame-shadow);
   }
 }
 
@@ -127,11 +194,11 @@ input {
 }
 
 .btn-primary {
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--fill);
+  color: var(--on-fill);
 }
 .btn-primary:hover {
-  background: var(--ink-2);
+  background: var(--fill-hover);
 }
 
 .btn-ghost {
@@ -140,12 +207,7 @@ input {
   border: 1px solid var(--rule-strong);
 }
 .btn-ghost:hover {
-  background: rgba(14, 17, 22, 0.03);
-}
-
-.btn-accent {
-  background: var(--accent);
-  color: var(--accent-contrast);
+  background: var(--hover-tint);
 }
 
 /* Chip (for parsed intent) */
@@ -156,7 +218,7 @@ input {
   padding: 14px 18px;
   min-height: 48px;
   border-radius: 999px;
-  background: #ffffff;
+  background: var(--surface);
   border: 1px solid var(--rule);
   font-size: 15px;
   font-weight: 500;
@@ -185,7 +247,7 @@ input {
 .chip.editing {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
-  background: #fff;
+  background: var(--surface);
 }
 
 /* Screens */
@@ -241,7 +303,7 @@ input {
     color 160ms var(--ease);
 }
 .icon-btn:hover {
-  background: rgba(14, 17, 22, 0.04);
+  background: var(--hover-tint);
   color: var(--ink);
 }
 .icon-btn-group {
@@ -431,7 +493,7 @@ input {
   gap: 8px;
   padding: 6px 12px 6px 10px;
   border-radius: 999px;
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--rule);
   font-size: 12px;
   font-weight: 500;
@@ -461,7 +523,7 @@ input {
 
 /* Preset card */
 .preset-card {
-  background: #ffffff;
+  background: var(--surface);
   border: 1px solid var(--rule);
   border-radius: var(--radius);
   padding: 16px 18px;
@@ -501,36 +563,8 @@ input {
   color: var(--mute);
 }
 .preset-card .star-btn.on svg {
-  color: var(--accent);
-  fill: var(--accent);
-}
-
-/* Switch */
-.switch {
-  width: 44px;
-  height: 26px;
-  border-radius: 999px;
-  background: var(--rule-strong);
-  position: relative;
-  transition: background 200ms var(--ease);
-  cursor: pointer;
-}
-.switch.on {
-  background: var(--ink);
-}
-.switch .knob {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 22px;
-  height: 22px;
-  border-radius: 999px;
-  background: #fff;
-  transition: transform 220ms var(--ease);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
-}
-.switch.on .knob {
-  transform: translateX(18px);
+  color: var(--accent-deep);
+  fill: var(--accent-deep);
 }
 
 /* Input (number) */
@@ -555,7 +589,7 @@ input {
 .settings-link {
   font-size: 14px;
   font-weight: 500;
-  color: var(--accent);
+  color: var(--accent-deep);
   text-decoration: none;
 }
 .settings-link:hover {
@@ -659,57 +693,11 @@ button.settings-link {
   gap: 24px;
 }
 
-/* Tweaks panel */
-.tweaks {
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  z-index: 9999;
-  background: #111418;
-  color: #fff;
-  border-radius: 16px;
-  padding: 14px 16px;
-  width: 260px;
-  font-family: 'Figtree', system-ui;
-  font-size: 13px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-  display: none;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-.tweaks.open {
-  display: block;
-}
-.tweaks h3 {
-  margin: 0 0 10px;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.6);
-}
-.tweaks .swatch-row {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.tweaks .swatch {
-  width: 26px;
-  height: 26px;
-  border-radius: 999px;
-  border: 2px solid transparent;
-  cursor: pointer;
-  transition: all 160ms var(--ease);
-}
-.tweaks .swatch.active {
-  border-color: #fff;
-  transform: scale(1.1);
-}
-
 /* Drawer */
 .drawer-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(14, 17, 22, 0.35);
+  background: var(--backdrop);
   opacity: 0;
   pointer-events: none;
   transition: opacity 240ms var(--ease);
@@ -733,7 +721,7 @@ button.settings-link {
   max-height: 80%;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-drawer);
   /* Bottom sheet anchored to the viewport edge — it escapes .screen's safe-area padding, so lift
      its content above the gesture-nav bar on native while the sheet background still meets the
      screen edge. Inert on web (inset is 0). */
@@ -741,27 +729,6 @@ button.settings-link {
 }
 .drawer.open {
   transform: translateY(0) !important;
-}
-
-/* Voice overlay */
-.voice-layer {
-  position: absolute;
-  inset: 0;
-  background: rgba(245, 244, 240, 0.6);
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 240ms var(--ease);
-  z-index: 50;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-.voice-layer.open {
-  opacity: 1;
-  pointer-events: auto;
 }
 
 /* Scroll */
@@ -780,8 +747,8 @@ button.settings-link {
   left: 50%;
   transform: translateX(-50%) translateY(20px);
   bottom: 100px;
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--fill);
+  color: var(--on-fill);
   padding: 12px 18px;
   border-radius: 999px;
   font-size: 14px;
@@ -934,12 +901,12 @@ button.settings-link {
   height: 112px;
   border-radius: 999px;
   background: var(--accent);
-  color: var(--accent-contrast);
+  color: var(--on-accent);
   display: grid;
   place-items: center;
   cursor: pointer;
   border: none;
-  box-shadow: 0 1px 2px rgba(14, 17, 22, 0.08);
+  box-shadow: var(--shadow-mic);
   transition:
     transform 0.15s ease,
     background 0.15s ease;
@@ -972,7 +939,7 @@ button.settings-link {
   gap: 14px;
   padding: 14px 18px;
   border-radius: 16px;
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--rule);
   text-align: left;
   cursor: pointer;
@@ -1205,8 +1172,8 @@ button.settings-link {
 }
 .run-cue-chip {
   padding: 8px 16px;
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--fill);
+  color: var(--on-fill);
   border-radius: 999px;
   font-size: 13px;
   font-weight: 500;
@@ -1227,7 +1194,7 @@ button.settings-link {
   width: 56px;
   height: 56px;
   border-radius: 999px;
-  background: #fff;
+  background: var(--surface);
   color: var(--ink-2);
   border: 1px solid var(--rule);
   display: grid;
@@ -1241,11 +1208,11 @@ button.settings-link {
   width: 76px;
   height: 76px;
   border-radius: 999px;
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--fill);
+  color: var(--on-fill);
   display: grid;
   place-items: center;
-  box-shadow: 0 12px 32px rgba(14, 17, 22, 0.18);
+  box-shadow: var(--shadow-pop);
 }
 .run-sound-toggle {
   width: 44px;
@@ -1265,7 +1232,7 @@ button.settings-link {
 .pause-toast-dialog {
   position: absolute;
   inset: 0;
-  background: rgba(14, 17, 22, 0.55);
+  background: var(--backdrop-strong);
   display: grid;
   place-items: center;
   z-index: 60;
@@ -1364,7 +1331,7 @@ button.settings-link {
 .voice-overlay-scrim {
   position: fixed;
   inset: 0;
-  background: rgba(245, 244, 240, 0.78);
+  background: var(--scrim);
   backdrop-filter: blur(18px) saturate(160%);
   -webkit-backdrop-filter: blur(18px) saturate(160%);
   z-index: 80;
@@ -1387,7 +1354,7 @@ button.settings-link {
   align-items: center;
   gap: 20px;
   text-align: center;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+  box-shadow: var(--shadow-sheet);
 }
 .voice-overlay-title {
   margin: 0;
@@ -1403,7 +1370,7 @@ button.settings-link {
 .voice-overlay-transcript {
   margin: 0;
   padding: 12px 16px;
-  background: var(--surface-subtle, rgba(0, 0, 0, 0.04));
+  background: var(--surface-subtle);
   border-radius: 12px;
   font-style: italic;
   color: var(--ink);
@@ -1415,7 +1382,7 @@ button.settings-link {
   height: 88px;
   border-radius: 999px;
   background: var(--accent);
-  color: var(--accent-ink, #fff);
+  color: var(--on-accent);
   display: grid;
   place-items: center;
   position: relative;
@@ -1437,7 +1404,7 @@ button.settings-link {
   width: 32px;
   height: 32px;
   border-radius: 999px;
-  border: 3px solid var(--ink-faint, rgba(0, 0, 0, 0.1));
+  border: 3px solid var(--ink-faint);
   border-top-color: var(--accent);
   animation: spin 900ms linear infinite;
 }
@@ -1466,11 +1433,11 @@ button.settings-link {
   transform: translateX(-50%);
   max-width: calc(100% - 32px);
   padding: 12px 16px;
-  background: var(--ink);
-  color: var(--paper, #fff);
+  background: var(--fill);
+  color: var(--on-fill);
   border-radius: 12px;
   font-size: 14px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-toast);
   z-index: 90;
 }
 
@@ -1482,22 +1449,22 @@ button.settings-link {
   border: 1px solid var(--danger);
 }
 .btn-danger:hover {
-  background: rgba(196, 66, 59, 0.06);
+  background: var(--danger-soft);
 }
 .icon-btn-danger {
   color: var(--danger);
 }
 .icon-btn-danger:hover {
-  background: rgba(196, 66, 59, 0.08);
+  background: var(--danger-soft);
   color: var(--danger);
 }
 .icon-btn-danger-confirm {
   background: var(--danger);
-  color: #fff;
+  color: var(--on-accent);
 }
 .icon-btn-danger-confirm:hover {
-  background: color-mix(in srgb, var(--danger) 85%, #000);
-  color: #fff;
+  background: var(--danger-deep);
+  color: var(--on-accent);
 }
 
 /* PasskeyPrompt */
@@ -1762,16 +1729,20 @@ button.settings-link {
   color: var(--ink-3);
 }
 .lang-toggle-btn.active {
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--fill);
+  color: var(--on-fill);
 }
 
 /* Accent colour picker */
 .accent-picker {
   display: flex;
-  gap: 10px;
+  /* The row gap leaves room for a wrapped row's names; the bottom padding for the last row's. */
+  gap: 28px 10px;
   flex-wrap: wrap;
-  padding-top: 10px;
+  padding: 10px 0 22px;
+}
+.accent-swatch-wrap {
+  position: relative;
 }
 .accent-swatch {
   width: 36px;
@@ -1793,8 +1764,14 @@ button.settings-link {
 .accent-swatch:active {
   transform: scale(0.95);
 }
-.accent-picker-label {
-  margin-top: 6px;
+/* The selected swatch's name, centred beneath it. Absolutely positioned so a long name ("Bärnsten")
+   can overhang its 36px circle without pushing the neighbours apart. */
+.accent-swatch-name {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
   font-size: 0.8rem;
   color: var(--ink-muted);
 }
@@ -1820,8 +1797,8 @@ button.settings-link {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  background: var(--on-accent);
+  box-shadow: var(--shadow-knob);
   transition: transform 200ms var(--ease);
 }
 .settings-toggle.on .settings-toggle-thumb {
@@ -1891,7 +1868,7 @@ button.settings-link {
 .onboarding-privacy-link {
   font-size: 14px;
   font-weight: 500;
-  color: var(--accent);
+  color: var(--accent-deep);
   text-decoration: none;
 }
 .onboarding-privacy-link:hover {
@@ -1940,7 +1917,7 @@ button.settings-link {
   margin: 0;
 }
 .privacy-link {
-  color: var(--accent);
+  color: var(--accent-deep);
 }
 .privacy-crosslink {
   margin: -8px 0 24px;

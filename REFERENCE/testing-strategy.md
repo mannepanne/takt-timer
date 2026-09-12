@@ -119,6 +119,12 @@ A thin set, not a pyramid inversion. Used at phase boundaries to catch regressio
 - Configure → Run → Complete, in both English and Swedish (Phase 5+).
 - Register → sign out → sign in on a simulated second device (Phase 4+).
 
+### 5. Stylesheet lint tests
+
+A static check over a non-TypeScript asset, run through Vitest so it lives in the same suite. `src/styles.test.ts` imports `styles.css?raw` (typed as a string by `vite/client`, so no Node `fs` types are needed under `src/`) and parses it declaration by declaration, failing on any colour literal outside the two token blocks and a short allow-list, any `var(--x)` with no `:root` definition, any dark-only token, and any `var()` fallback. The parser itself has fixture tests in the same file.
+
+If you trip it by adding a `#fff` or `rgba()`, the fix is almost always a token in `:root` (with a dark counterpart) rather than an allow-list entry. The allow-list is explicit in the test so an intentional exception is a one-line, reviewed change. Full rationale: [theming.md](./theming.md).
+
 ---
 
 ## Mocking strategy

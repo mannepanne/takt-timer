@@ -28,7 +28,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "prepare": "husky"
+    "prepare": "husky",
+    "contrast:check": "node scripts/check-contrast.mjs"
   },
   "dependencies": {
     "@capacitor-community/keep-awake": "^8.0.1",

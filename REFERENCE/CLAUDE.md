@@ -10,6 +10,12 @@ Auto-loaded when working with files in this directory. How-it-works documentatio
 
 Complete testing philosophy, framework setup (Vitest), test categories, coverage requirements, and CI/CD integration.
 
+### [theming.md](./theming.md)
+
+**When to read:** Adding or changing any colour in `src/styles.css`, tripping `src/styles.test.ts`, tuning the dark palette, or checking contrast before a PR.
+
+The design-token families, why every colour must go through `:root`, how the dark palette overrides them, why accent shades are written inline by the theme resolver rather than in the stylesheet, and how to run `pnpm contrast:check`.
+
 ### [environment-setup.md](./environment-setup.md)
 
 **When to read:** Setting up local development, configuring secrets, or deploying to production.

@@ -18,7 +18,7 @@ const ACCENT = '#4EA47A';
 // Full icon: solid background, the "takt" wordmark, a green accent bar. `maskable` adds the inner
 // safe rectangle the PWA maskable purpose expects. `scale` shrinks the wordmark toward the centre
 // so a foreground layer survives Android's circular adaptive-icon mask (the safe zone is ~66%).
-const iconSvg = (size, { maskable = false, transparent = false, scale = 1 } = {}) => {
+const iconSvg = (size, { maskable = false, transparent = false, scale = 1, ink = INK } = {}) => {
   const c = size / 2; // scale the wordmark group about the centre
   return `
 <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
@@ -27,7 +27,7 @@ const iconSvg = (size, { maskable = false, transparent = false, scale = 1 } = {}
   <g transform="translate(${c} ${c}) scale(${scale}) translate(${-c} ${-c})">
     <text x="50%" y="52%" text-anchor="middle" dominant-baseline="middle"
           font-family="Figtree, sans-serif" font-weight="600"
-          font-size="${size * 0.42}" fill="${INK}" letter-spacing="-0.03em">takt</text>
+          font-size="${size * 0.42}" fill="${ink}" letter-spacing="-0.03em">takt</text>
     <rect x="${size * 0.72}" y="${size * 0.36}" width="${size * 0.035}" height="${size * 0.28}"
           fill="${ACCENT}" rx="${size * 0.01}"/>
   </g>
@@ -83,10 +83,17 @@ if (existsSync(androidRes)) {
       resolve(dir, 'ic_launcher_foreground.png'),
     );
   }
-  // Splash logo (transparent), centred by the splash layer-list drawable.
+  // Splash logo (transparent), centred by the splash layer-list drawable. The night variant draws
+  // the wordmark in paper ink so it stays legible on the dark splash_background that values-night
+  // supplies — the default INK would vanish into it.
   await renderPng(
     iconSvg(480, { transparent: true, scale: 0.8 }),
     480,
     resolve(androidRes, 'drawable/splash_logo.png'),
+  );
+  await renderPng(
+    iconSvg(480, { transparent: true, scale: 0.8, ink: BG }),
+    480,
+    resolve(androidRes, 'drawable-night/splash_logo.png'),
   );
 }

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Night override for the splash background only — the dark --paper token. The launcher-icon
+         background (ic_launcher_background, declared in values/) is deliberately NOT overridden:
+         icons do not change with theme. drawable-night/splash_logo.png carries the matching
+         paper-ink wordmark. -->
+    <color name="splash_background">#101214</color>
+</resources>

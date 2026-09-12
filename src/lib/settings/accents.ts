@@ -10,11 +10,15 @@ export type Accent = {
   soft: string;
 };
 
+// `deep` is the light-mode text/icon shade of each accent and is tuned to clear WCAG AA 4.5:1 on
+// every surface it sits on — paper, paper-2, the white surface, and the accent-soft tint
+// (scripts/check-contrast.mjs verifies all four). `main` is the fill colour and is never used
+// as text.
 export const ACCENTS: Accent[] = [
-  { id: 'lichen', main: '#4ea47a', deep: '#23764e', soft: 'rgba(78,164,122,0.14)' },
-  { id: 'coral', main: '#e05c5c', deep: '#b83a3a', soft: 'rgba(224,92,92,0.14)' },
-  { id: 'ocean', main: '#4a8eff', deep: '#1f5fd6', soft: 'rgba(74,142,255,0.14)' },
-  { id: 'amber', main: '#d97c2a', deep: '#a85a10', soft: 'rgba(217,124,42,0.14)' },
+  { id: 'lichen', main: '#4ea47a', deep: '#216f49', soft: 'rgba(78,164,122,0.14)' },
+  { id: 'coral', main: '#e05c5c', deep: '#ab3636', soft: 'rgba(224,92,92,0.14)' },
+  { id: 'ocean', main: '#4a8eff', deep: '#1e5bcd', soft: 'rgba(74,142,255,0.14)' },
+  { id: 'amber', main: '#d97c2a', deep: '#944f0e', soft: 'rgba(217,124,42,0.14)' },
   { id: 'iris', main: '#7c6ef3', deep: '#5246c8', soft: 'rgba(124,110,243,0.14)' },
   { id: 'slate', main: '#5a7fa8', deep: '#3a5f88', soft: 'rgba(90,127,168,0.14)' },
 ];
