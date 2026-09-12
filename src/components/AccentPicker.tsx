@@ -1,5 +1,5 @@
-// ABOUT: Grid of colour swatches for choosing the accent colour.
-// ABOUT: Each swatch emits the chosen AccentId via onChange; aria-checked tracks selection.
+// ABOUT: Row of colour swatches for choosing the accent colour.
+// ABOUT: Each swatch emits the chosen AccentId via onChange; the selected one shows its name beneath it.
 
 import { useI18n } from '@/i18n/context';
 import { ACCENTS, type AccentId } from '@/lib/settings/accents';
@@ -12,30 +12,28 @@ type Props = {
 
 export function AccentPicker({ value, onChange }: Props) {
   const { t } = useI18n();
-  const selectedLabel = t(`settings.accent.${value}` as StringKey);
 
   return (
-    <div className="accent-picker-wrap">
-      <div className="accent-picker" role="radiogroup" aria-label={t('settings.accent')}>
-        {ACCENTS.map((accent) => {
-          const labelKey = `settings.accent.${accent.id}` as StringKey;
-          const label = t(labelKey);
-          return (
+    <div className="accent-picker" role="radiogroup" aria-label={t('settings.accent')}>
+      {ACCENTS.map((accent) => {
+        const label = t(`settings.accent.${accent.id}` as StringKey);
+        const selected = value === accent.id;
+        return (
+          <div key={accent.id} className="accent-swatch-wrap">
             <button
-              key={accent.id}
               type="button"
               role="radio"
-              aria-checked={value === accent.id}
+              aria-checked={selected}
               aria-label={label}
               title={label}
-              className={`accent-swatch${value === accent.id ? ' selected' : ''}`}
+              className={`accent-swatch${selected ? ' selected' : ''}`}
               style={{ '--swatch-color': accent.main } as React.CSSProperties}
               onClick={() => onChange(accent.id)}
             />
-          );
-        })}
-      </div>
-      <p className="accent-picker-label">{selectedLabel}</p>
+            {selected && <span className="accent-swatch-name">{label}</span>}
+          </div>
+        );
+      })}
     </div>
   );
 }

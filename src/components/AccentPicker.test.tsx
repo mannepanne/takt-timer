@@ -41,6 +41,13 @@ describe('AccentPicker', () => {
     expect(screen.getByText('Coral')).toBeInTheDocument();
   });
 
+  it('renders the name inside the selected swatch wrapper, and nowhere else', () => {
+    render(<AccentPicker value="ocean" onChange={vi.fn()} />, { wrapper });
+    const name = screen.getByText('Ocean');
+    expect(name.parentElement).toContainElement(screen.getByRole('radio', { name: /ocean/i }));
+    expect(screen.queryByText('Lichen')).not.toBeInTheDocument();
+  });
+
   it('updates the visible label when the selection changes', async () => {
     const onChange = vi.fn();
     const { rerender } = render(<AccentPicker value="lichen" onChange={onChange} />, { wrapper });

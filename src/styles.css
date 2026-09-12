@@ -1736,9 +1736,13 @@ button.settings-link {
 /* Accent colour picker */
 .accent-picker {
   display: flex;
-  gap: 10px;
+  /* The row gap leaves room for a wrapped row's names; the bottom padding for the last row's. */
+  gap: 28px 10px;
   flex-wrap: wrap;
-  padding-top: 10px;
+  padding: 10px 0 22px;
+}
+.accent-swatch-wrap {
+  position: relative;
 }
 .accent-swatch {
   width: 36px;
@@ -1760,8 +1764,14 @@ button.settings-link {
 .accent-swatch:active {
   transform: scale(0.95);
 }
-.accent-picker-label {
-  margin-top: 6px;
+/* The selected swatch's name, centred beneath it. Absolutely positioned so a long name ("Bärnsten")
+   can overhang its 36px circle without pushing the neighbours apart. */
+.accent-swatch-name {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
   font-size: 0.8rem;
   color: var(--ink-muted);
 }
