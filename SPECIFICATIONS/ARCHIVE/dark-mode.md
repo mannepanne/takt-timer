@@ -1,6 +1,6 @@
 # Dark mode — System / Light / Dark appearance for web and Android
 
-Tracks [issue #154](https://github.com/mannepanne/takt-timer/issues/154). Reviewed with `/review-spec` on 12 Sep 2026; this revision resolves every blocking finding and condition from that review.
+Tracks [issue #154](https://github.com/mannepanne/takt-timer/issues/154). Reviewed with `/review-spec` on 12 Sep 2026; this revision resolves every blocking finding and condition from that review. **Shipped** as #157 (tokens), #158 (setting) and #160 (native chrome), device-verified on the OnePlus (Android 16) and released to the closed track as 1.1.0 (`versionCode` 4). How it works now: [REFERENCE/theming.md](../../REFERENCE/theming.md) and [REFERENCE/android-app.md](../../REFERENCE/android-app.md) Part 7.
 
 ## Problem
 
