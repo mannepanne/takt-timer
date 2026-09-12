@@ -37,6 +37,7 @@
     "@capacitor/android": "^8",
     "@capacitor/app": "^8.1.1",
     "@capacitor/core": "^8",
+    "@capacitor/status-bar": "^8",
     "@simplewebauthn/browser": "^13.3.0",
     "@simplewebauthn/server": "^13.3.0",
     "capacitor-native-settings": "^8.2.0",

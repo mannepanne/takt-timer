@@ -12,6 +12,7 @@ dependencies {
     implementation project(':capacitor-community-keep-awake')
     implementation project(':capacitor-community-speech-recognition')
     implementation project(':capacitor-app')
+    implementation project(':capacitor-status-bar')
     implementation project(':capacitor-native-settings')
 
 }

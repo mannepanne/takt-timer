@@ -9,6 +9,7 @@ import { apiFetch } from '@/lib/apiFetch';
 import { subscribeAppVisibility } from '@/lib/app-lifecycle';
 import { useSession } from '@/lib/auth/session';
 import { isNativePlatform } from '@/lib/platform';
+import { setStatusBarAppearance } from '@/lib/status-bar';
 import { DEFAULT_ACCENT_ID, findAccent, type AccentId } from './accents';
 import {
   applyThemeToDocument,
@@ -105,6 +106,15 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   // Stamp the resolved appearance on the document, then the accent shades that depend on it.
   useEffect(() => {
     applyThemeToDocument(resolvedTheme);
+  }, [resolvedTheme]);
+  // The system status bar follows too (a no-op on the web). Re-applied on return to the
+  // foreground as well: the OS can restyle the bar while the app is backgrounded.
+  useEffect(() => {
+    void setStatusBarAppearance(resolvedTheme);
+    return subscribeAppVisibility(
+      () => {},
+      () => void setStatusBarAppearance(resolvedTheme),
+    );
   }, [resolvedTheme]);
   useEffect(() => {
     applyAccentCss(accentId, resolvedTheme);

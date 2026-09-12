@@ -295,6 +295,27 @@ In `android/app/build.gradle` (`defaultConfig`): increment `versionCode` by 1 ev
 
 ---
 
+## Part 7 — Appearance on native (dark mode)
+
+The web app resolves System / Light / Dark to a `data-theme` attribute ([theming.md](./theming.md), [ADR 2026-09-12](./decisions/2026-09-12-theme-resolution.md)); the native shell runs the same bundle, so the page itself just works. Four native pieces make it feel like an Android app rather than a web page that went dark. **Test device: the OnePlus runs Android 16** — several of these depend on the device's OS version, not `targetSdk`.
+
+1. **Status bar** — `@capacitor/status-bar`, behind the `@/lib/status-bar` seam (`status-bar-native.ts` aliased in `vite.config.ts`, plugin out of the web bundle). `SettingsProvider` calls `setStatusBarAppearance(resolvedTheme)` on every change and on return to the foreground. It calls both `setStyle` and `setBackgroundColor`: on Android 15+/16 edge-to-edge is enforced by the OS, the bar is transparent over the page and only `setStyle` (icon contrast) matters; on Android 13/14 the bar keeps its own DayNight-driven background and `setBackgroundColor` is what keeps "explicit Light on a dark phone" legible. Mind the plugin's naming: `Style.Dark` means _light icons for a dark background_ — the native test pins that inversion.
+2. **Window and WebView background** — `res/values/colors.xml` + `values-night/colors.xml` define `window_background` (light / dark `--paper`); `AppTheme.NoActionBar` uses it as `android:windowBackground`, and `MainActivity.onCreate` applies the same resource to the WebView. Without both, the WebView is white between splash dismissal and the page's first paint — the native half of "no flash". Follows the _OS_ appearance only (it runs before any JS); a user who forces Dark on a light-mode phone sees a paper-coloured frame for a few hundred milliseconds, then dark. Accepted.
+3. **Splash** — `values-night/colors.xml` overrides `splash_background` with the dark paper, and `scripts/gen-icons.mjs` emits `drawable-night/splash_logo.png` with paper-coloured ink so the wordmark stays legible on it. Android picks both night resources automatically. The launcher icon does not change with theme.
+4. **The WebView reporting dark** — `index.html` carries `<meta name="color-scheme" content="light dark">`, and `AppTheme.NoActionBar`'s DayNight parent sets `isLightTheme` from the system `uiMode`. On **API 33+** that is all the WebView needs to make `prefers-color-scheme` follow the OS. On **API 29–32** the docs describe a legacy force-dark path; **no force-dark code is written** — with `targetSdk` 36 that path is superseded, and `FORCE_DARK_AUTO` would switch on the algorithmic darkening the `color-scheme` meta exists to prevent. Verify on a 29–32 device first; only if it empirically fails, reach for `WebSettingsCompat.setAlgorithmicDarkeningAllowed` — never `setForceDark`. Below API 29 the WebView cannot report it, so System resolves to light (explicit Dark still works). `uiMode` is already in the activity's `configChanges`, so an OS theme flip doesn't recreate the activity; the resolver's foreground re-read covers the backgrounded case.
+
+Adding the plugin went through the usual gate: `pnpm add`, `npx cap sync android`, then `pnpm android:check` — still no `INTERNET`, recogniser `<queries>` intact.
+
+### Device checklist (real device, not emulator)
+
+- [ ] System follows the OS toggle live, without restart — and after backgrounding Takt, flipping the OS theme, and returning.
+- [ ] Explicit Dark on a light OS: light status-bar icons over the dark app. Explicit Light on a dark OS: dark icons over the light app.
+- [ ] No white frame between splash dismissal and first paint with the OS in dark mode.
+- [ ] Splash is dark with a legible wordmark when the OS is dark; light when light.
+- [ ] No algorithmic-darkening artefacts (double-inverted images, wrong greys).
+- [ ] Android 13/14 status-bar background and API 29–32 `prefers-color-scheme`: verified if such a device is to hand, otherwise recorded as untested.
+- [ ] Back button, keep-awake, voice, presets unaffected (smoke run).
+
 ## Cross-references
 
 - [SPECIFICATIONS/07-android-app.md](../SPECIFICATIONS/07-android-app.md) — the umbrella spec (north star, architecture, risks).
