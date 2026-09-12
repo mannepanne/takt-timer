@@ -1,6 +1,6 @@
 # Android app — getting started, dev environment, and publishing
 
-> **Living document.** Right now it covers the two things that unblock Phase 7: the **Play Console admin track** (start today — it's the critical path) and the **local Android dev environment** (unblocks the `07a` spikes). Build/release detail (signed AAB steps, keystore backup, the local voice parser's supported grammar) gets added here as the implementation deliverables land — see [SPECIFICATIONS/07-android-app.md](../SPECIFICATIONS/07-android-app.md) and its children `07a`–`07h`.
+> **Living document.** Seven parts: the **Play Console admin track** (Part 1), the **macOS Android dev environment** (Part 2), **building locally** (Part 3), **native voice** (Part 4), **app lifecycle and the back button** (Part 5), **signing and release** (Part 6), and **appearance on native** (Part 7). Specs behind it: [SPECIFICATIONS/07-android-app.md](../SPECIFICATIONS/07-android-app.md) with its children `07a`–`07h`, and [dark-mode.md](../SPECIFICATIONS/dark-mode.md).
 >
 > **A note on exact steps:** Google changes the Play Console UI and its wording often. This guide gives the accurate _shape_ and the _order_ of what's required; where it says "follow the on-screen prompts", trust the live console over any exact menu path written here, because the live console is current and this file may not be.
 
@@ -146,7 +146,7 @@ Once `adb devices` shows your phone, the toolchain is ready and we can scaffold 
 
 ## Part 3 — Building the app locally (from 07b)
 
-The Capacitor scaffold lives in `android/` (checked in; build artefacts are gitignored). The app runs from the **native Vite build variant** — self-hosted fonts, no analytics, a scoped CSP, no service worker, and three **build-time module aliases** (`virtual:pwa-register` → a no-op stub; `@/lib/presets` → `presets-local`, so presets are device-local and `/api/presets` never reaches the native bundle; `@/lib/wakeLock-platform` → `wakeLock-platform-native`, backing the screen wake lock with `@capacitor-community/keep-awake` and keeping the plugin out of the web bundle) — kept separate from the web build so "Takt's own process makes zero network calls" is structural, not observed. Native Capacitor plugins (e.g. keep-awake) are added with `pnpm add` and wired into `android/` by `npx cap sync android`, which updates the generated `capacitor.build.gradle`/`capacitor.settings.gradle` include entries; re-run `pnpm android:check` after any plugin install, since manifest-merge is where a dependency could reintroduce `INTERNET`. WebView origin is locked to `https://localhost` and the application ID to `org.hultberg.takt` — both immutable after first release.
+The Capacitor scaffold lives in `android/` (checked in; build artefacts are gitignored). The app runs from the **native Vite build variant** — self-hosted fonts, no analytics, a scoped CSP, no service worker, and a set of **build-time module aliases** in `vite.config.ts` (`virtual:pwa-register` → a no-op stub, and the platform seams: `@/lib/presets` → device-local presets so `/api/presets` never reaches the native bundle; `@/lib/wakeLock-platform` → keep-awake; `@/lib/voice/useVoiceMachine` → the on-device recogniser, Part 4; `@/lib/app-lifecycle` → `@capacitor/app`, Part 5; `@/lib/status-bar` → the system bars, Part 7 — each keeping its plugin out of the web bundle; `vite.native-aliases.test.ts` guards the keys and targets) — kept separate from the web build so "Takt's own process makes zero network calls" is structural, not observed. Native Capacitor plugins (e.g. keep-awake) are added with `pnpm add` and wired into `android/` by `npx cap sync android`, which updates the generated `capacitor.build.gradle`/`capacitor.settings.gradle` include entries; re-run `pnpm android:check` after any plugin install, since manifest-merge is where a dependency could reintroduce `INTERNET`. WebView origin is locked to `https://localhost` and the application ID to `org.hultberg.takt` — both immutable after first release.
 
 ### The pnpm scripts
 
@@ -284,7 +284,7 @@ jarsigner -verify -verbose android/app/build/outputs/bundle/release/app-release.
 
 ### Bump the version for each upload
 
-In `android/app/build.gradle` (`defaultConfig`): increment `versionCode` by 1 every upload; set `versionName` to the human-facing version (e.g. `"1.0"`, `"1.1"`). First release ships as `versionCode 1` / `versionName "1.0"` (already set).
+In `android/app/build.gradle` (`defaultConfig`): increment `versionCode` by 1 for **every** upload to any track — it is a monotonic counter Play never lets you reuse or lower — and set `versionName` to the human-facing semver (`"1.0.1"` for a fix, `"1.1.0"` for a feature). The closed-test uploads so far: `versionCode` 2 (`1.0.0`) → 3 (`1.0.1`) → 4 (`1.1.0`, appearance).
 
 ### Upload to the closed-testing track
 
@@ -295,6 +295,36 @@ In `android/app/build.gradle` (`defaultConfig`): increment `versionCode` by 1 ev
 
 ---
 
+## Part 7 — Appearance on native (dark mode)
+
+The web app resolves System / Light / Dark to a `data-theme` attribute ([theming.md](./theming.md), [ADR 2026-09-12](./decisions/2026-09-12-theme-resolution.md)); the native shell runs the same bundle, so the page itself just works. Five native pieces make it feel like an Android app rather than a web page that went dark. **Test device: the OnePlus runs Android 16** — several of these depend on the device's OS version, not `targetSdk`.
+
+1. **Status bar** — `@capacitor/status-bar`, behind the `@/lib/status-bar` seam (`status-bar-native.ts` aliased in `vite.config.ts`, plugin out of the web bundle). `SettingsProvider` calls `setStatusBarAppearance(resolvedTheme)` on every change and on return to the foreground. It calls both `setStyle` and `setBackgroundColor`: on Android 15+/16 edge-to-edge is enforced by the OS, the bar is transparent over the page and only `setStyle` (icon contrast) matters; on Android 13/14 the bar keeps its own DayNight-driven background and `setBackgroundColor` is what keeps "explicit Light on a dark phone" legible. Mind the plugin's naming: `Style.Dark` means _light icons for a dark background_ — the native test pins that inversion.
+2. **Window and WebView background** — `res/values/colors.xml` + `values-night/colors.xml` define `window_background` (light / dark `--paper`); `AppTheme.NoActionBar` uses it as `android:windowBackground`, and `MainActivity.onCreate` applies the same resource to the WebView. Without both, the WebView is white between splash dismissal and the page's first paint — the native half of "no flash". Follows the _OS_ appearance only (it runs before any JS); a user who forces Dark on a light-mode phone sees a paper-coloured frame for a few hundred milliseconds, then dark. Accepted.
+3. **Splash** — `values-night/colors.xml` overrides `splash_background` with the dark paper, and `scripts/gen-icons.mjs` emits `drawable-night/splash_logo.png` with paper-coloured ink so the wordmark stays legible on it. Android picks both night resources automatically. The launcher icon does not change with theme.
+4. **The WebView reporting dark** — `index.html` carries `<meta name="color-scheme" content="light dark">`, and `AppTheme.NoActionBar`'s DayNight parent sets `isLightTheme` from the system `uiMode`. On **API 33+** that is all the WebView needs to make `prefers-color-scheme` follow the OS. On **API 29–32** the docs describe a legacy force-dark path; **no force-dark code is written** — with `targetSdk` 36 that path is superseded, and `FORCE_DARK_AUTO` would switch on the algorithmic darkening the `color-scheme` meta exists to prevent. Verify on a 29–32 device first; only if it empirically fails, reach for `WebSettingsCompat.setAlgorithmicDarkeningAllowed` — never `setForceDark`. Below API 29 the WebView cannot report it, so System resolves to light (explicit Dark still works). `uiMode` is already in the activity's `configChanges`, so an OS theme flip doesn't recreate the activity; the resolver's foreground re-read covers the backgrounded case.
+
+5. **Navigation bar** — `@capacitor/status-bar` covers the status bar only; the navigation bar keeps whatever the OS theme was at activity creation. The in-app `NavigationBarPlugin` (`android/.../NavigationBarPlugin.java`, registered in `MainActivity` before `super.onCreate`) exposes one method, `setAppearance`, which the same seam calls after the status bar. **Flipping the icon flag alone does not work with 3-button navigation on Android 15+**: the framework draws its own contrast scrim under the buttons and _forces_ a light appearance to match it — `dumpsys window` shows `LIGHT_NAVIGATION_BARS FORCE_LIGHT_NAVIGATION_BARS` on the window whatever the app asked for. So the plugin first switches the scrim off (`setNavigationBarContrastEnforced(false)` — the page already paints edge-to-edge behind the bar, with safe-area insets keeping content clear) and makes the bar transparent; only then does `setAppearanceLightNavigationBars(!dark)` decide the icon colour. On releases where the window does not extend under the bar, the transparent bar shows the activity's night-aware `windowBackground` instead — also the right look. Gesture navigation never had the scrim; 3-button users would have seen a light band under a dark app.
+
+**`uiMode` must stay in the activity's `configChanges`.** Removing it makes Android recreate the activity on an OS theme flip, which reloads the WebView and destroys a running interval session (only the stopwatch persists to `localStorage`). If the WebView ever fails to report a theme flip live, fix it natively — never by dropping `uiMode`.
+
+Plugin installs go through the usual gate — `pnpm add`, `npx cap sync android`, then `pnpm android:check`, which must still report no `INTERNET` and the recogniser `<queries>` intact. In-app plugins like `NavigationBarPlugin` add no dependency and no manifest entry.
+
+### Verified on device
+
+**OnePlus CPH2581, Android 16 (API 36), 12 Sep 2026** — debug build of `versionCode` 4 installed over `adb` (the Play-installed build had to be uninstalled first: Play App Signing re-signs uploads, so a locally signed APK cannot update it in place).
+
+- System follows the OS toggle live, without restart — and after backgrounding Takt, flipping the OS theme and returning ("Currently light" / "Currently dark" caption follows). ✅
+- Explicit Dark on a light OS: dark app, light status-bar icons. Explicit Light on a dark OS: light app, dark icons. ✅
+- No white frame between splash dismissal and first paint with the OS dark — captures at ~150 ms intervals went splash → dark first paint; with the window and WebView backgrounds both dark, a white frame is structurally excluded. ✅
+- Splash: Android 12+ draws its **own** system splash (`Theme.SplashScreen`) — dark background, the launcher-icon tile centred, wordmark legible. `drawable-night/splash_logo.png` only applies on Android < 12, where the layer-list splash is used. ✅
+- No algorithmic-darkening artefacts. ✅
+- Navigation bar (3-button mode) follows the resolved appearance, including the mismatched cases and a live OS flip. ✅ (after `NavigationBarPlugin` with the contrast scrim disabled; before it, the bar kept its launch-time OS theme, and with the scrim on, the icon flag alone was overridden by `FORCE_LIGHT_NAVIGATION_BARS`)
+- Back button: deeper screen → back, root → exits to the launcher. ✅ Keep-awake, voice and presets: smoke run. ✅
+- **Untested — no device to hand:** the Android 13/14 status-bar background fallback (`setBackgroundColor`), and API 29–32 `prefers-color-scheme` reporting. Both are recorded here rather than assumed.
+
+Re-run this list whenever the palette, the splash, or a system-bar seam changes.
+
 ## Cross-references
 
 - [SPECIFICATIONS/07-android-app.md](../SPECIFICATIONS/07-android-app.md) — the umbrella spec (north star, architecture, risks).
@@ -302,4 +332,5 @@ In `android/app/build.gradle` (`defaultConfig`): increment `versionCode` by 1 ev
 - [SPECIFICATIONS/07a-spikes.md](../SPECIFICATIONS/07a-spikes.md) — the first code work (keep-awake / lifecycle / speech-recognition), needs the dev environment above.
 - [SPECIFICATIONS/07f-voice-pipeline.md](../SPECIFICATIONS/07f-voice-pipeline.md) — the native voice deliverable documented in Part 4 above.
 - [SPECIFICATIONS/07h-publishing.md](../SPECIFICATIONS/07h-publishing.md) — the publishing deliverable, whose admin track is Part 1 above.
+- [SPECIFICATIONS/dark-mode.md](../SPECIFICATIONS/dark-mode.md) — the appearance feature; its native half is Part 7 above.
 - [environment-setup.md](./environment-setup.md) — the _web_ app's Cloudflare/Wrangler environment (unrelated to Android, but the sibling setup doc).

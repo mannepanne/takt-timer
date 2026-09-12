@@ -36,7 +36,7 @@ Thin indicators — the 3px progress-bar fill, set dots, the pager pill, the sel
 
 ## How the appearance is resolved
 
-Three modes — `system` (default), `light`, `dark` — stored as `takt.theme.v1` in `localStorage` on each device, never synced (appearance is a per-device preference). `src/lib/settings/theme.ts` holds the pure helpers; `SettingsProvider` resolves the mode against `prefers-color-scheme` — live, and again whenever the app returns to the foreground — and calls `applyThemeToDocument()`, which stamps `data-theme` on `<html>` and points every `<meta name="theme-color">` at the matching `--paper`.
+Three modes — `system` (default), `light`, `dark` — stored as `takt.theme.v1` in `localStorage` on each device, never synced (appearance is a per-device preference). `src/lib/settings/theme.ts` holds the pure helpers; `SettingsProvider` resolves the mode against `prefers-color-scheme` — live, and again whenever the app returns to the foreground — and calls `applyThemeToDocument()`, which stamps `data-theme` on `<html>` and points every `<meta name="theme-color">` at the matching `--paper`. The same resolved value drives the system bars on Android through the `@/lib/status-bar` seam (a no-op on the web) — see [android-app.md](./android-app.md) Part 7.
 
 Before any of that runs, `public/theme-init.js` — a blocking classic script in `<head>` — does the same resolution from the stored key and the media query and stamps the attribute, so a dark-mode user never sees a light first frame. It is external rather than inline because neither CSP has nonce/hash machinery; `theme-init.test.ts` keeps its storage key and media query in step with `theme.ts`. Decision record: [ADR 2026-09-12](./decisions/2026-09-12-theme-resolution.md).
 
@@ -54,6 +54,7 @@ The accent-derivation percentages are a contract shared by the resolver and `scr
 2. Add the dark value to `:root[data-theme='dark']` — or, if the token is a `var()` of another token, let it re-resolve.
 3. Use `var(--your-token)` in the rule.
 4. If it's text on a surface, add the pair to `scripts/check-contrast.mjs` and run `pnpm contrast:check`.
+5. If you change `--paper`, change the Android copies too: `window_background` and `splash_background` in `android/app/src/main/res/values{,-night}/colors.xml`, and `BG` in `scripts/gen-icons.mjs` (then regenerate). `theme.test.ts` pins the XML resources to `PAPER` so a drift fails the suite instead of surfacing as a flash on a phone.
 
 The allow-list in `src/styles.test.ts` (`LITERAL_ALLOWED`) is for the two token blocks, the desktop canvas outside the phone frame, and the JS-off `.noscript-fallback` splash. Adding to it is a reviewed decision, not a convenience.
 

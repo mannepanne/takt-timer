@@ -9,9 +9,11 @@ import { SettingsProvider, useSettings } from './context';
 
 vi.mock('@/lib/apiFetch', () => ({ apiFetch: vi.fn() }));
 vi.mock('@/lib/auth/client', () => ({ getMe: vi.fn() }));
+vi.mock('@/lib/status-bar', () => ({ setStatusBarAppearance: vi.fn(async () => {}) }));
 
 import { apiFetch } from '@/lib/apiFetch';
 import { getMe } from '@/lib/auth/client';
+import { setStatusBarAppearance } from '@/lib/status-bar';
 
 beforeEach(() => {
   localStorage.clear();
@@ -246,6 +248,30 @@ describe('appearance mode', () => {
       setVisibility('visible');
       act(() => document.dispatchEvent(new Event('visibilitychange')));
       expect(result.current.resolvedTheme).toBe('dark');
+    } finally {
+      delete (document as { visibilityState?: unknown }).visibilityState;
+    }
+  });
+
+  it('drives the status-bar seam with the resolved appearance, on mount and on change', () => {
+    const { result } = renderHook(() => useSettings(), { wrapper });
+    expect(setStatusBarAppearance).toHaveBeenLastCalledWith('light');
+    act(() => result.current.setThemeMode('dark'));
+    expect(setStatusBarAppearance).toHaveBeenLastCalledWith('dark');
+  });
+
+  it('re-applies the status bar when the app returns to the foreground', () => {
+    renderHook(() => useSettings(), { wrapper });
+    vi.mocked(setStatusBarAppearance).mockClear();
+    const setVisibility = (state: DocumentVisibilityState) =>
+      Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => state });
+    try {
+      setVisibility('hidden');
+      act(() => document.dispatchEvent(new Event('visibilitychange')));
+      expect(setStatusBarAppearance).not.toHaveBeenCalled();
+      setVisibility('visible');
+      act(() => document.dispatchEvent(new Event('visibilitychange')));
+      expect(setStatusBarAppearance).toHaveBeenCalledWith('light');
     } finally {
       delete (document as { visibilityState?: unknown }).visibilityState;
     }

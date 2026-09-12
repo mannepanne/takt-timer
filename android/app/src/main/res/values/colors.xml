@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The page colour behind the WebView before first paint: the light "paper" token from
+         src/styles.css. Used as the activity's windowBackground and applied to the WebView itself
+         in MainActivity, so the gap between splash dismissal and first paint is paper-coloured,
+         not white. values-night/ overrides it with the dark paper. -->
+    <color name="window_background">#F5F4F0</color>
+</resources>

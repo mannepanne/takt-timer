@@ -48,3 +48,9 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      # The native Vite variant resolves a different set of module aliases (the platform seams in
+      # vite.config.ts). Building it here catches a broken seam target without an Android SDK;
+      # vite.native-aliases.test.ts catches a mistyped seam key.
+      - name: Build (native variant)
+        run: pnpm build:native

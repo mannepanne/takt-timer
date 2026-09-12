@@ -22,7 +22,7 @@ Voice is the primary input; every voice action has a tap equivalent. Designed mo
 
 ## Status
 
-Takt is live at [takt.hultberg.org](https://takt.hultberg.org). Voice input, passkey accounts, presets, session history, English/Swedish, and the admin backend are all shipped.
+Takt is live at [takt.hultberg.org](https://takt.hultberg.org). Voice input, passkey accounts, presets, session history, English/Swedish, a System / Light / Dark appearance setting, and the admin backend are all shipped. The Android app (Capacitor, Google Play) is the timer, presets and voice with no accounts and no network: device-local presets, on-device voice, and the same appearance setting — following the phone's dark mode by default.
 
 ## Getting started (for contributors / future Magnus)
 
