@@ -1,6 +1,6 @@
 # Android app — getting started, dev environment, and publishing
 
-> **Living document.** Seven parts: the **Play Console admin track** (Part 1), the **macOS Android dev environment** (Part 2), **building locally** (Part 3), **native voice** (Part 4), **app lifecycle and the back button** (Part 5), **signing and release** (Part 6), and **appearance on native** (Part 7). Specs behind it: [SPECIFICATIONS/07-android-app.md](../SPECIFICATIONS/07-android-app.md) with its children `07a`–`07h`, and [dark-mode.md](../SPECIFICATIONS/dark-mode.md).
+> **Living document.** Seven parts: the **Play Console admin track** (Part 1), the **macOS Android dev environment** (Part 2), **building locally** (Part 3), **native voice** (Part 4), **app lifecycle and the back button** (Part 5), **signing and release** (Part 6), and **appearance on native** (Part 7). Specs behind it: [SPECIFICATIONS/07-android-app.md](../SPECIFICATIONS/07-android-app.md) with its children `07a`–`07h`, and [dark-mode.md](../SPECIFICATIONS/ARCHIVE/dark-mode.md).
 >
 > **A note on exact steps:** Google changes the Play Console UI and its wording often. This guide gives the accurate _shape_ and the _order_ of what's required; where it says "follow the on-screen prompts", trust the live console over any exact menu path written here, because the live console is current and this file may not be.
 
@@ -332,5 +332,5 @@ Re-run this list whenever the palette, the splash, or a system-bar seam changes.
 - [SPECIFICATIONS/07a-spikes.md](../SPECIFICATIONS/07a-spikes.md) — the first code work (keep-awake / lifecycle / speech-recognition), needs the dev environment above.
 - [SPECIFICATIONS/07f-voice-pipeline.md](../SPECIFICATIONS/07f-voice-pipeline.md) — the native voice deliverable documented in Part 4 above.
 - [SPECIFICATIONS/07h-publishing.md](../SPECIFICATIONS/07h-publishing.md) — the publishing deliverable, whose admin track is Part 1 above.
-- [SPECIFICATIONS/dark-mode.md](../SPECIFICATIONS/dark-mode.md) — the appearance feature; its native half is Part 7 above.
+- [SPECIFICATIONS/ARCHIVE/dark-mode.md](../SPECIFICATIONS/ARCHIVE/dark-mode.md) — the appearance feature; its native half is Part 7 above.
 - [environment-setup.md](./environment-setup.md) — the _web_ app's Cloudflare/Wrangler environment (unrelated to Android, but the sibling setup doc).

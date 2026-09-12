@@ -17,7 +17,7 @@ Two blocks at the top of `src/styles.css`:
 - `:root` — the light palette (the prototype's "paper" design), plus every token's default.
 - `:root[data-theme='dark']` — the dark palette. It only overrides tokens `:root` already defines (the test checks this too), and it contains **no accent rules** — see below.
 
-Selection is by the `data-theme` attribute on `<html>`, resolved in JS. There is deliberately no `@media (prefers-color-scheme)` block: the dark values live in exactly one place. (Design rationale and the rejected alternatives: [SPECIFICATIONS/dark-mode.md](../SPECIFICATIONS/dark-mode.md) while in progress, then its archive.)
+Selection is by the `data-theme` attribute on `<html>`, resolved in JS. There is deliberately no `@media (prefers-color-scheme)` block: the dark values live in exactly one place. (Design rationale and the rejected alternatives: [SPECIFICATIONS/ARCHIVE/dark-mode.md](../SPECIFICATIONS/ARCHIVE/dark-mode.md).)
 
 ### Token families
 

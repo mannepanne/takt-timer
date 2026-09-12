@@ -11,7 +11,7 @@ The appearance mode (System / Light / Dark) is resolved to a concrete `light` or
 
 ## Context
 
-Dark mode ([SPECIFICATIONS/dark-mode.md](../../SPECIFICATIONS/dark-mode.md), issue #154) needed three things at once: a System mode that follows the OS live, explicit Light/Dark overrides (the gym case: phone in light mode, Takt dark), and no light flash on load for dark-mode users. Takt is an app that cannot run without JS, is served under a CSP with no nonce or hash machinery on either platform, and already applies its accent colour by writing custom properties on `<html>` at runtime.
+Dark mode ([SPECIFICATIONS/ARCHIVE/dark-mode.md](../../SPECIFICATIONS/ARCHIVE/dark-mode.md), issue #154) needed three things at once: a System mode that follows the OS live, explicit Light/Dark overrides (the gym case: phone in light mode, Takt dark), and no light flash on load for dark-mode users. Takt is an app that cannot run without JS, is served under a CSP with no nonce or hash machinery on either platform, and already applies its accent colour by writing custom properties on `<html>` at runtime.
 
 ## Alternatives considered
 
@@ -44,6 +44,6 @@ Dark mode ([SPECIFICATIONS/dark-mode.md](../../SPECIFICATIONS/dark-mode.md), iss
 
 ## References
 
-- Relevant spec: [SPECIFICATIONS/dark-mode.md](../../SPECIFICATIONS/dark-mode.md)
+- Relevant spec: [SPECIFICATIONS/ARCHIVE/dark-mode.md](../../SPECIFICATIONS/ARCHIVE/dark-mode.md)
 - How it works: [REFERENCE/theming.md](../theming.md)
 - Related ADRs: [2026-04-19 — Port prototype CSS](./2026-04-19-port-prototype-css.md), [2026-07-26 — Capacitor wraps the SPA](./2026-07-26-capacitor-android-wrapper.md) (the seam pattern the native status bar follows)
