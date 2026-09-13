@@ -88,15 +88,20 @@ function RunInner({ session, onComplete }: RunInnerProps) {
 
   const showPip = api.secondsLeft > 0 && api.secondsLeft <= 3 && !countingIn && soundOn;
 
-  const phaseLabel = countingIn
+  const isRest = phaseForUi === 'rest';
+  // The phase word: "Get ready" during count-in, otherwise "Work" / "Rest". The set fraction is a
+  // separate element below it (hidden during count-in and for single-set sessions, where "1 / 1"
+  // would be the loudest thing on screen while saying nothing).
+  const phaseWord = countingIn
     ? t('run.getReady')
-    : phaseForUi === 'rest'
-      ? t('run.phase.rest', { idx: currentIdx + 1, total: session.sets })
-      : t('run.phase.work', { idx: currentIdx + 1, total: session.sets });
+    : isRest
+      ? t('run.phase.rest')
+      : t('run.phase.work');
+  const showFraction = !countingIn && session.sets > 1;
 
   return (
-    <div className={`screen run-screen ${phaseForUi === 'rest' ? 'rest' : 'work'}`}>
-      <div className={`run-bar ${phaseForUi === 'rest' ? 'rest' : ''}`}>
+    <div className={`screen run-screen ${isRest ? 'rest' : 'work'}`}>
+      <div className={`run-bar ${isRest ? 'accent' : ''}`}>
         <div className="fill" style={{ transform: `scaleX(${api.progress})` }} />
       </div>
 
@@ -124,23 +129,33 @@ function RunInner({ session, onComplete }: RunInnerProps) {
       </div>
 
       <div className="run-body">
-        <div
-          className={`eyebrow run-phase-label ${phaseForUi === 'rest' ? 'rest' : ''}`}
-          aria-live="polite"
-        >
-          <span>{phaseLabel}</span>
+        <div className="run-phase-block">
+          {/* Live region wraps the word and fraction only — never the clock (would announce every
+              second) or the pip chip (would re-announce the phase on each of its per-second flashes,
+              which sits in the third grid column instead). */}
+          <div className="run-phase-live" aria-live="polite">
+            <div className={`run-phase-word ${isRest && !countingIn ? 'rest' : ''}`}>
+              {phaseWord}
+            </div>
+            {showFraction && (
+              <div className="mono run-set-count">
+                {t('run.setCount', { idx: currentIdx + 1, total: session.sets })}
+              </div>
+            )}
+          </div>
+
           {showPip && (
             <span className="run-pip-chip">
               <Icon.Volume size={10} color="var(--accent-deep)" /> {api.secondsLeft}
             </span>
           )}
-        </div>
 
-        {countingIn ? (
-          <div className="mono run-timer-countin">{Math.max(1, api.secondsLeft)}</div>
-        ) : (
-          <div className="mono timer-display run-timer-big">{fmtTime(api.secondsLeft)}</div>
-        )}
+          {countingIn ? (
+            <div className="mono run-timer-countin">{Math.max(1, api.secondsLeft)}</div>
+          ) : (
+            <div className="mono timer-display run-timer-big">{fmtTime(api.secondsLeft)}</div>
+          )}
+        </div>
       </div>
 
       <div className="run-controls">

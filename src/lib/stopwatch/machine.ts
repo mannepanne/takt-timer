@@ -50,4 +50,4 @@ export function step(state: MachineState, event: MachineEvent): StepResult {
 }
 
 // Re-export type helpers for consumers.
-export { elapsedMs, ringProgress } from './types';
+export { elapsedMs, minuteProgress } from './types';

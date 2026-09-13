@@ -32,7 +32,7 @@ Selection is by the `data-theme` attribute on `<html>`, resolved in JS. There is
 | Tints and scrims    | `--hover-tint`, `--scrim`, `--backdrop`, `--backdrop-strong`                                                                              |                                                                                                                               |
 | Shadows             | `--shadow-lift`, `--shadow-pop`, `--shadow-sheet`, `--shadow-drawer`, `--shadow-knob`, `--shadow-mic`, `--shadow-toast`, `--frame-shadow` | On dark, shadows give way to 1px `rgba(255,255,255,…)` rings — a drop shadow on near-black is invisible.                      |
 
-Thin indicators — the 3px progress-bar fill, set dots, the pager pill, the selected-swatch ring — stay on `--ink` on purpose. On dark they read as light marks, which is what an indicator should be; a mid-grey fill would vanish against the dark track.
+Thin indicators — the 6px progress-bar fill, set dots, the pager pill, the selected-swatch ring — stay on `--ink` on purpose. On dark they read as light marks, which is what an indicator should be; a mid-grey fill would vanish against the dark track.
 
 ## How the appearance is resolved
 

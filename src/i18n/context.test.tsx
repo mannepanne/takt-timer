@@ -85,12 +85,12 @@ describe('useI18n', () => {
   it('t() interpolates multiple params', () => {
     const { result } = renderHook(() => useI18n(), { wrapper });
     act(() => result.current.setLang('en'));
-    expect(result.current.t('run.phase.work', { idx: 2, total: 3 })).toBe('Work · Set 2 / 3');
+    expect(result.current.t('run.setCount', { idx: 2, total: 3 })).toBe('2 / 3');
   });
 
   it('t() leaves unknown placeholders intact', () => {
     const { result } = renderHook(() => useI18n(), { wrapper });
     act(() => result.current.setLang('en'));
-    expect(result.current.t('run.phase.work', {})).toBe('Work · Set {idx} / {total}');
+    expect(result.current.t('run.setCount', {})).toBe('{idx} / {total}');
   });
 });

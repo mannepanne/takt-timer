@@ -87,7 +87,7 @@ export function Complete() {
 
       <main className="complete-screen-body">
         <div className="complete-eyebrow-row">
-          <Icon.Check size={20} color="var(--accent)" />
+          <Icon.Check size={32} color="var(--accent)" />
           <span className="eyebrow complete-eyebrow-label">{t('complete.title')}</span>
         </div>
         <h1 className="complete-title">{t('complete.heading')}</h1>

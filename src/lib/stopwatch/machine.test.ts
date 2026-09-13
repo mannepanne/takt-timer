@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { elapsedMs, initial, ringProgress, step } from './machine';
+import { elapsedMs, initial, minuteProgress, step } from './machine';
 import type { MachineState } from './types';
 
 const idle = (): MachineState => initial();
@@ -146,22 +146,24 @@ describe('elapsedMs — clamp at zero on a backwards clock step', () => {
   });
 });
 
-describe('ringProgress — one revolution per hour, wraps past 60:00', () => {
+describe('minuteProgress — one sweep per minute, wraps every 60s', () => {
   it('is 0 at 0:00', () => {
-    expect(ringProgress(0)).toBe(0);
+    expect(minuteProgress(0)).toBe(0);
   });
 
-  it('is 0.5 at 30:00', () => {
-    expect(ringProgress(30 * 60 * 1000)).toBe(0.5);
+  it('is 0.5 at 30s into a minute', () => {
+    expect(minuteProgress(30 * 1000)).toBe(0.5);
   });
 
-  it('wraps to a new revolution past 60:00 rather than exceeding 1', () => {
-    const oneHourOneMinute = (60 + 1) * 60 * 1000;
-    expect(ringProgress(oneHourOneMinute)).toBeCloseTo(1 / 60, 10);
+  it('wraps back to 0 at exactly 60s', () => {
+    expect(minuteProgress(60 * 1000)).toBe(0);
   });
 
-  it('wraps again past two full hours', () => {
-    const twoHoursFifteen = (120 + 15) * 60 * 1000;
-    expect(ringProgress(twoHoursFifteen)).toBeCloseTo(15 / 60, 10);
+  it('is 1/60 at 61s (1s into the second minute)', () => {
+    expect(minuteProgress(61 * 1000)).toBeCloseTo(1 / 60, 10);
+  });
+
+  it('is 15/60 at 2m15s', () => {
+    expect(minuteProgress((2 * 60 + 15) * 1000)).toBeCloseTo(15 / 60, 10);
   });
 });
