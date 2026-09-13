@@ -138,6 +138,9 @@ describe('Run route', () => {
     await userEvent.click(await screen.findByLabelText('Skip phase')); // countIn → work
     const live = container.querySelector('.run-phase-live')!;
     expect(live).toHaveAttribute('aria-live', 'polite');
+    // aria-atomic so the whole "Work 1 / 2" is announced on a phase change even when only the word
+    // text mutated (e.g. work → rest at the same set index).
+    expect(live).toHaveAttribute('aria-atomic', 'true');
     expect(live.textContent).toContain('Work');
     expect(live.textContent).toContain('1 / 2');
     // The clock (the only element with a colon) must sit outside the live region.

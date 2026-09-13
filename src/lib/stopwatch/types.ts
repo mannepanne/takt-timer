@@ -36,8 +36,7 @@ export function elapsedMs(state: MachineState, now: number): number {
 }
 
 // One full sweep per minute; wraps and restarts every 60s while the digit display keeps
-// counting normally. Drives the Timer screen's top progress bar (a per-minute rhythm),
-// replacing the old once-per-hour ring.
+// counting normally. Drives the Timer screen's top progress bar (a per-minute rhythm).
 export function minuteProgress(ms: number): number {
   return (ms % MS_PER_MINUTE) / MS_PER_MINUTE;
 }

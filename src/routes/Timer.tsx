@@ -56,7 +56,7 @@ export function Timer() {
     <div className="screen timer-screen">
       {/* Per-minute progress bar, same construction as the run screens' bar. Static fill (no CSS
           transition) so the once-a-minute wrap resets instantly instead of animating backwards.
-          Decorative, like the ring it replaces — the digits carry the information. */}
+          Decorative (aria-hidden) — the digits carry the information. */}
       <div className="run-bar accent static" aria-hidden="true">
         <div className="fill" style={{ transform: `scaleX(${minuteProgress(elapsed)})` }} />
       </div>

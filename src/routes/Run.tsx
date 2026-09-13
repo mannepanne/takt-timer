@@ -132,11 +132,11 @@ function RunInner({ session, onComplete }: RunInnerProps) {
         <div className="run-phase-block">
           {/* Live region wraps the word and fraction only — never the clock (would announce every
               second) or the pip chip (would re-announce the phase on each of its per-second flashes,
-              which sits in the third grid column instead). */}
-          <div className="run-phase-live" aria-live="polite">
-            <div className={`run-phase-word ${isRest && !countingIn ? 'rest' : ''}`}>
-              {phaseWord}
-            </div>
+              which sits in the third grid column instead). aria-atomic so a phase change announces
+              the whole "Rest, 2 / 3" — without it a work→rest change at the same set index announces
+              only the word, since the fraction text didn't mutate. */}
+          <div className="run-phase-live" aria-live="polite" aria-atomic="true">
+            <div className={`run-phase-word ${isRest ? 'rest' : ''}`}>{phaseWord}</div>
             {showFraction && (
               <div className="mono run-set-count">
                 {t('run.setCount', { idx: currentIdx + 1, total: session.sets })}
