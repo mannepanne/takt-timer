@@ -25,7 +25,7 @@ Play Console → **Grow users → Store presence → Store listings** (graphics 
 | --------------------------------- | --------- | -------------------------------- | -------------------------------------- |
 | `app-icon-512.png`                | 512×512   | App icon                         | Rarely (brand change only)             |
 | `feature-graphic-1024x500.png`    | 1024×500  | Feature graphic (required)       | Rarely                                 |
-| `01-home.png` … `06-settings.png` | 1080×1920 | Phone screenshots (min 2, max 8) | **Every release where the UI changed** |
+| `01-home.png` … `07-settings.png` | 1080×1920 | Phone screenshots (min 2, max 8) | **Every release where the UI changed** |
 
 Play's screenshot rules the generator already satisfies: PNG, each side 320–3840 px, and a safe 9:16 frame (1080×1920) so a tall device capture is never rejected for aspect ratio.
 
@@ -45,11 +45,23 @@ Play's screenshot rules the generator already satisfies: PNG, each side 320–38
    # …and when done: adb shell am broadcast -a com.android.systemui.demo -e command exit
    ```
 3. **Capture each screen** you want, into `captures/` (navigate the app, then):
+
    ```bash
    adb exec-out screencap -p > store-assets/captures/home.png
    ```
-   Keep the filenames the generator expects (`home`, `run`, `stopwatch`, `complete`, `presets`, `settings`), or edit the `SHOTS` list in `generate.mjs`.
+
+   Keep the filenames the generator expects (`home`, `run`, `run-dark`, `stopwatch`, `complete`, `presets`, `settings`), or edit the `SHOTS` list in `generate.mjs`.
+
    > Tip: the running-timer screen can occasionally capture as a black frame mid-transition — just re-capture.
+
+   **Dark shot (`run-dark.png`).** The listing shows the Run screen in both appearances (issue #159). The app follows the system theme, so flip the device to dark, navigate to a rest phase (the accent pill is the clearest dark-mode cue), capture, then flip back:
+
+   ```bash
+   adb shell "cmd uimode night yes"   # device → dark
+   # …capture store-assets/captures/run-dark.png…
+   adb shell "cmd uimode night no"    # device → light
+   ```
+
 4. **Regenerate and review:**
    ```bash
    pnpm store:assets

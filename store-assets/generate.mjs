@@ -23,13 +23,16 @@ const ACCENT = '#4EA47A';
 const FONT = 'Figtree, Inter, Helvetica, Arial, sans-serif';
 
 // The screenshot set: source capture → caption → output filename. Order is the upload order.
+// The Run screen appears twice — light (work) then dark (rest) — to show the at-a-distance cues
+// and dark mode in one pass (issue #159); rest carries the accent pill, the strongest dark showcase.
 const SHOTS = [
   { src: 'home.png', caption: 'Set it up by voice — or tap.', out: '01-home.png' },
-  { src: 'run.png', caption: 'Run it with a tap.', out: '02-run.png' },
-  { src: 'stopwatch.png', caption: 'A count-up stopwatch, too.', out: '03-stopwatch.png' },
-  { src: 'complete.png', caption: 'Save what works as a preset.', out: '04-complete.png' },
-  { src: 'presets.png', caption: 'Your presets, on your device.', out: '05-presets.png' },
-  { src: 'settings.png', caption: 'Yours to tune. No account, ever.', out: '06-settings.png' },
+  { src: 'run.png', caption: 'Big, clear cues while you train.', out: '02-run.png' },
+  { src: 'run-dark.png', caption: 'Readable across the room, light or dark.', out: '03-run-dark.png' },
+  { src: 'stopwatch.png', caption: 'A count-up stopwatch, too.', out: '04-stopwatch.png' },
+  { src: 'complete.png', caption: 'Save what works as a preset.', out: '05-complete.png' },
+  { src: 'presets.png', caption: 'Your presets, on your device.', out: '06-presets.png' },
+  { src: 'settings.png', caption: 'Yours to tune. No account, ever.', out: '07-settings.png' },
 ];
 
 // Canvas + phone-frame geometry. PH derives from the OnePlus capture aspect (1440x3168); if you
