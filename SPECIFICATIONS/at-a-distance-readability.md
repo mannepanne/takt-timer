@@ -40,7 +40,7 @@ This is a firm default, not a setting. No "large display" toggle — the default
 
 ### Run screen: count-in
 
-- "Get ready" (`run.getReady`) renders at 22px, uppercase with the eyebrow tracking and weight, in `--ink-2` rather than `--mute`. The 200px count-in digit is unchanged.
+- "Get ready" (`run.getReady`) renders at 32px, uppercase with the eyebrow tracking and weight, in `--ink-2` rather than `--mute`, with no pill. The 200px count-in digit is unchanged.
 - No set fraction is shown during count-in. Count-in runs once, before set 1, on the work background; it never recurs mid-session, so the fraction would always read "1 / n" and adds nothing.
 - Pausing during count-in keeps "Get ready" on screen, exactly as today, at the new size.
 
@@ -48,13 +48,15 @@ This is a firm default, not a setting. No "large display" toggle — the default
 
 The single translated label "Work · Set 2 / 3" becomes two stacked elements above the clock:
 
-| Tier | Element                                         | Size                                         | Font                     | Colour (work) | Colour (rest)   |
-| ---- | ----------------------------------------------- | -------------------------------------------- | ------------------------ | ------------- | --------------- |
-| 1    | Phase word: "Work" / "Rest" ("Arbete" / "Vila") | 20px, uppercase, 0.14em tracking, weight 600 | Figtree                  | `--ink-2`     | `--accent-deep` |
-| 2    | Set fraction: "2 / 3"                           | 56px, weight 300                             | JetBrains Mono (`.mono`) | `--ink`       | `--ink`         |
-| 3    | Clock                                           | 120px (unchanged)                            | JetBrains Mono           | `--ink`       | `--ink`         |
+| Tier | Element                                         | Size                                         | Font                     | Colour (work)    | Colour (rest)                              |
+| ---- | ----------------------------------------------- | -------------------------------------------- | ------------------------ | ---------------- | ------------------------------------------ |
+| 1    | Phase word: "Work" / "Rest" ("Arbete" / "Vila") | 32px, uppercase, 0.14em tracking, weight 600 | Figtree                  | `--ink-2`, plain | `--accent-deep` in an `--accent-soft` pill |
+| 2    | Set fraction: "2 / 3"                           | 56px, weight 300                             | JetBrains Mono (`.mono`) | `--ink`          | `--ink`                                    |
+| 3    | Clock                                           | 120px (unchanged)                            | JetBrains Mono           | `--ink`          | `--ink`                                    |
 
-Spacing: 12px between the phase word and the fraction, 22px between the fraction and the clock. The block stays vertically centred in `.run-body` as today. The clock therefore sits slightly lower during work and rest than during count-in, because the fraction is present; today the same jump exists between the 200px and 120px digits. Accepted.
+**The rest word sits in a pill:** `--accent-soft` fill, 999px radius, 12px vertical and 28px horizontal padding. The work word has the same 12px vertical padding and no fill, so the two phases share a baseline and the block does not shift height between them. The pill is the strongest phase cue on the screen: a filled colour block is recognisable at distances where no word is readable, and the plain-versus-pill asymmetry between work and rest is itself part of the cue. A plain 32px word and a solid-accent pill were both tried on the canvas and rejected: the first still asks the user to read, the second shouts.
+
+Spacing: 14px between the phase word and the fraction, 22px between the fraction and the clock. The block stays vertically centred in `.run-body` as today. The clock therefore sits slightly lower during work and rest than during count-in, because the fraction is present; today the same jump exists between the 200px and 120px digits. Accepted.
 
 **Single-set sessions hide the fraction.** When `session.sets === 1` the fraction element is not rendered. A 56px "1 / 1" would be the largest thing on screen while saying nothing.
 
@@ -72,7 +74,7 @@ The beep-countdown pip chip (`.run-pip-chip`, shown in the last seconds of a pha
 
 ### Done screen
 
-- The "Complete" eyebrow becomes 20px, uppercase, eyebrow tracking and weight, in `--accent-deep`, with the check icon scaled to 26px beside it — the same visual weight as the phase word on the preceding screens.
+- The "Complete" eyebrow becomes 32px, uppercase, eyebrow tracking and weight, in `--accent-deep`, with the check icon scaled to 32px beside it — the same size as the phase word on the preceding screens. No pill; it is not a phase.
 - The two totals ("Total time", "Work time") grow from 34px to **44px**, weight 300. Not 56px: at 56px a five-character total such as "12:00" is about 160px wide against a 145px column on a 375px phone, so any session of ten minutes or more would overflow the two-column grid. At 44px the same string is about 125px and fits on a 360px phone. Their 11px labels are unchanged.
 - Heading, subtitle, divider and all three buttons are unchanged.
 
@@ -91,7 +93,7 @@ The beep-countdown pip chip (`.run-pip-chip`, shown in the last seconds of a pha
 - The phase word and set fraction share one `aria-live="polite"` container, so a screen reader announces "Work, 2 / 3" as one update at each phase change. **The clock and the pip chip are outside that container.** Putting the clock inside would announce every second; the chip inside would re-announce the phase during the last three seconds of every phase. The fraction's separator is the literal text "/".
 - The Timer page's bar is `aria-hidden`, exactly as the ring was; the digits remain the only informational element.
 - Reduced motion: the bar fill on the run screens is added to the existing `@media (prefers-reduced-motion: reduce)` block with `transition: none`. Today that block covers the ring's fill; deleting the ring must not silently leave the run screens' bar as the one animated element without an escape hatch. The Timer page's bar has no transition to begin with.
-- Contrast: every pair this spec uses is already in `scripts/check-contrast.mjs`. `--ink-2` on `--paper` (the work word and count-in label) is listed; `--accent-deep` on `--paper-2` (the rest word) is a per-accent pair. No additions; the script runs unchanged and must pass for every accent in both appearances. The 4.5:1 text threshold applies even though the 20px word would qualify as large text.
+- Contrast: every pair this spec uses is already in `scripts/check-contrast.mjs`. `--ink-2` on `--paper` (the work word and count-in label) is listed; `--accent-deep` on `--accent-soft` (the rest word in its pill) and on `--paper-2` ("Complete" sits on paper, and the pip chip already uses the same pair) are per-accent pairs. No additions; the script runs unchanged and must pass for every accent in both appearances. The 4.5:1 text threshold applies even though the 32px word would qualify as large text.
 
 ## Architecture
 
@@ -128,11 +130,11 @@ The live region's DOM is word plus fraction and nothing else. The pip chip sits 
 
 All sizes are plain px, matching every other size on these screens (no `clamp()`, no viewport units). The app viewport is capped at 440px wide and portrait-only is the use case. The two overflow cases found in review were solved by choosing sizes that fit, not by fluid scaling.
 
-- `.run-phase-word` — 20px, uppercase, 0.14em, 600, `--ink-2`; `.run-phase-word.rest` sets `--accent-deep`. `.run-countin-label` — 22px, otherwise identical.
+- `.run-phase-word` — 32px, uppercase, 0.14em, 600, `--ink-2`, `padding: 12px 0`; `.run-phase-word.rest` sets `--accent-deep`, `background: var(--accent-soft)`, `border-radius: 999px`, `padding: 12px 28px`. `.run-countin-label` — identical to the plain word.
 - `.run-set-count` — 56px, 300, `--ink`, `.mono`.
 - `.run-bar` — `height: 6px`. The existing `.run-bar.rest` modifier is renamed `.run-bar.accent` (two references: the stylesheet and `Run.tsx`) so the Timer page can use it without borrowing the word "rest". `.run-bar.static .fill` — `transition: none`, used by the Timer page.
 - `.run-bar .fill` — added to the reduced-motion block.
-- `.complete-eyebrow-label` (exists, colour only) gains 20px, uppercase, tracking and weight. `.complete-totals-value` — 44px.
+- `.complete-eyebrow-label` (exists, colour only) gains 32px, uppercase, tracking and weight. `.complete-totals-value` — 44px.
 - `.timer-digits` — no longer absolutely positioned inside a ring wrap; 120px, 300. `.timer-digits.compact` — 96px. `.timer-ring-wrap`, `.progress-ring-track` and `.progress-ring-fill` (including its reduced-motion entry) are deleted.
 
 Every colour stays a token.
@@ -161,9 +163,9 @@ Width sanity, using JetBrains Mono's 0.6em advance and the existing negative tra
 | "100:00" (Timer past 99:59)       | 96px  | 322px         | ~400px timer body             |
 | "12:00" (Done total)              | 44px  | 125px         | 138px column on a 360px phone |
 
-"Arbete" and "Vila" at 20px uppercase with 0.14em tracking are under 120px wide, so `nowrap` on the row is safe in both languages.
+"ARBETE" at 32px uppercase with 0.14em tracking is about 175px wide, about 231px inside the pill; "COMPLETE" on the Done screen is about 230px against a 326px body. `nowrap` on the row is safe in both languages.
 
-Vertical sanity: the run body has roughly 650px available on an 844px viewport and the new block is about 230px tall; on a 640px-tall phone the body still has roughly 450px.
+Vertical sanity: the phase block is now word row (about 62px with padding) + 14 + 56 + 22 + 120, roughly 275px, in a run body of roughly 650px on an 844px viewport and roughly 450px on a 640px phone.
 
 ## Files affected
 
@@ -181,12 +183,12 @@ Vertical sanity: the run body has roughly 650px available on an 844px viewport a
 
 ## Acceptance criteria
 
-- [ ] Work and rest screens show the phase word (20px), set fraction (56px mono) and clock (120px) stacked and centred, in both English and Swedish.
+- [ ] Work and rest screens show the phase word (32px), set fraction (56px mono) and clock (120px) stacked and centred, in both English and Swedish. The rest word is in an `--accent-soft` pill; the work word is plain; the block height is identical in both phases.
 - [ ] A single-set session shows the phase word and clock with no fraction.
-- [ ] Count-in shows "Get ready" at 22px and no fraction, including while paused.
+- [ ] Count-in shows "Get ready" at 32px, no pill, and no fraction, including while paused.
 - [ ] Rest renders on `--paper-2` with the phase word in `--accent-deep` and the bar in `--accent`; work renders on `--paper` with `--ink-2` and `--ink`. Both hold in dark mode with no new token values.
 - [ ] Progress bar is 6px on run screens and on the Timer page.
-- [ ] Done screen: "Complete" eyebrow at 20px with a 26px check; totals at 44px and not overflowing at "12:00" on a 360px-wide viewport; buttons unchanged.
+- [ ] Done screen: "Complete" eyebrow at 32px with a 32px check; totals at 44px and not overflowing at "12:00" on a 360px-wide viewport; buttons unchanged.
 - [ ] Timer page: no ring; digits at 120px, dropping to 96px at "100:00"; accent top bar fills once per minute with no transition, resets instantly at the boundary, holds while paused, empties on reset.
 - [ ] Screen-reader announcement at a phase change is a single polite update containing the phase word and the fraction, and nothing is announced on clock ticks or pip-chip updates.
 - [ ] `prefers-reduced-motion` disables the run screens' bar transition.
@@ -209,12 +211,12 @@ One PR, `feature/at-a-distance-readability`. With the Timer bar reduced to a sta
 
 ## Risks
 
-- **Fraction reads as a ratio, not a set count.** Mitigated by the phase word directly above it. If testers misread it, the fallback is not "Set 2 / 3" at 56px, which at "Set 10 / 12" would be about 370px and overflow; it is a smaller "Set" prefix in the 20px word style on the same line, "SET 2 / 3", with the numerals staying large.
+- **Fraction reads as a ratio, not a set count.** Mitigated by the phase word directly above it. If testers misread it, the fallback is not "Set 2 / 3" at 56px, which at "Set 10 / 12" would be about 370px and overflow; it is a smaller "Set" prefix in the word style on the same line, "SET 2 / 3", with the numerals staying large.
 - **Work versus rest is still not obvious at three metres.** The review's arithmetic says the word will not be readable at that range, so the cue rests on the bar's colour flip and the word's colour. If the device check finds that insufficient, the option on the table is a stronger rest background; it was prototyped and is a one-token change, but it was rejected on looks and would need re-approval.
 - **Coverage floors.** Noted in acceptance criteria; not a design risk.
 
 ## Decisions recorded
 
-- Colour, not type, is the primary phase cue at distance: the bar's ink-to-accent flip and the word's accent colour. A 20px word is about 2mm tall on a phone and is not expected to be readable at three metres. The review proposed an accent-tinted rest background as a stronger cue; it was prototyped at 14% and 24% and rejected by the product owner because it breaks the quiet, dampened look of the rest screen. The paper-2 background stays.
+- Colour, not type, is the primary phase cue at distance: the bar's ink-to-accent flip and the rest word's accent-soft pill. A 32px word is about 3.5mm tall on a phone and is at the edge of readability at three metres; the pill's filled colour block is recognisable well beyond that. The pill was chosen over a plain 32px word and over a solid-accent pill after all three were mocked up in light and dark. The review proposed an accent-tinted rest background as a stronger cue; it was prototyped at 14% and 24% and rejected by the product owner because it breaks the quiet, dampened look of the rest screen. The paper-2 background stays.
 - The Timer page keeps a progress indicator, as a static-fill minute bar in accent. "No indicator at all" was considered and rejected by the product owner; the chosen form costs no more than the deletion alone.
 - No user-facing size setting. The defaults are the opinion.
