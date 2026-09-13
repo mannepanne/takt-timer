@@ -145,14 +145,37 @@ describe('Timer route', () => {
     expect(screen.getByTestId('path')).toHaveTextContent('/');
   });
 
-  it('the progress ring is decorative (aria-hidden)', () => {
+  it('the per-minute bar is decorative (aria-hidden) and static, with no ring', () => {
     renderTimer();
-    expect(document.querySelector('svg.progress-ring')).toHaveAttribute('aria-hidden', 'true');
+    expect(document.querySelector('svg.progress-ring')).toBeNull();
+    const bar = document.querySelector('.run-bar');
+    expect(bar).toHaveClass('accent', 'static');
+    expect(bar).toHaveAttribute('aria-hidden', 'true');
   });
 
   it('elapsed digits are not aria-live', () => {
     renderTimer();
     expect(screen.getByText('0:00')).not.toHaveAttribute('aria-live');
+  });
+
+  it('the bar fill reflects minute progress (half-full at 30s)', () => {
+    // Rehydrate paused rather than advancing timers: getElapsedMs returns accumulatedMs, so the
+    // display and bar seed straight from it with no interval churn.
+    persistState({ phase: 'paused', accumulatedMs: 30_000, startedAtMs: null });
+    renderTimer();
+    const fill = document.querySelector('.run-bar .fill') as HTMLElement;
+    expect(fill.style.transform).toBe('scaleX(0.5)');
+  });
+
+  it('digits stay full-size at 99:59 and step down to compact at 100:00', () => {
+    persistState({ phase: 'paused', accumulatedMs: 99 * 60_000 + 59_000, startedAtMs: null });
+    const { unmount } = renderTimer();
+    expect(screen.getByText('99:59')).not.toHaveClass('compact');
+    unmount();
+
+    persistState({ phase: 'paused', accumulatedMs: 100 * 60_000, startedAtMs: null });
+    renderTimer();
+    expect(screen.getByText('100:00')).toHaveClass('compact');
   });
 
   describe('screen keep-awake while the Timer screen is shown (07e native, #131 web)', () => {

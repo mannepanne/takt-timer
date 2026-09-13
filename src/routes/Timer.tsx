@@ -6,16 +6,16 @@ import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 import { Icon } from '@/components/icons';
-import { ProgressRing } from '@/components/ProgressRing';
 import { TopBar } from '@/components/TopBar';
 import { useI18n } from '@/i18n/context';
 import { fmtTime } from '@/lib/format';
-import { ringProgress } from '@/lib/stopwatch/machine';
+import { minuteProgress } from '@/lib/stopwatch/machine';
 import { useElapsedMs, useStopwatch } from '@/lib/stopwatch/context';
 import { acquire, release } from '@/lib/wakeLock';
 
-// The ring needs smoother motion than a once-a-second digit update would give.
-const RING_POLL_MS = 200;
+// The bar advances continuously; a sub-second poll keeps both it and the digits from stepping. The
+// same value drives the digits (fmtTime), so this can't slow to 1s without visibly stuttering them.
+const BAR_POLL_MS = 200;
 
 // A distinct wake-lock owner from the stopwatch reducer's 'stopwatch': this one tracks the Timer
 // screen being on-screen, that one tracks an active session. Two independent wanters, one owner
@@ -25,7 +25,11 @@ const SCREEN_WAKE_LOCK_OWNER = 'stopwatch-screen';
 export function Timer() {
   const { t } = useI18n();
   const { phase, start, pause, resume, reset } = useStopwatch();
-  const elapsed = useElapsedMs(RING_POLL_MS);
+  const elapsed = useElapsedMs(BAR_POLL_MS);
+  const digits = fmtTime(elapsed / 1000);
+  // The stopwatch has no hour rollover, so past 99:59 the display is six characters ("100:00") and
+  // would clip at 120px in the ~400px body; step down one size at that point.
+  const compact = digits.length > 5;
 
   const running = phase === 'running';
   const paused = phase === 'paused';
@@ -50,6 +54,13 @@ export function Timer() {
 
   return (
     <div className="screen timer-screen">
+      {/* Per-minute progress bar, same construction as the run screens' bar. Static fill (no CSS
+          transition) so the once-a-minute wrap resets instantly instead of animating backwards.
+          Decorative (aria-hidden) — the digits carry the information. */}
+      <div className="run-bar accent static" aria-hidden="true">
+        <div className="fill" style={{ transform: `scaleX(${minuteProgress(elapsed)})` }} />
+      </div>
+
       <TopBar
         left={
           <Link to="/" className="icon-btn" aria-label={t('nav.backToHome')}>
@@ -59,9 +70,8 @@ export function Timer() {
       />
 
       <main className="timer-body">
-        <div className="timer-ring-wrap">
-          <ProgressRing progress={ringProgress(elapsed)} />
-          <div className="mono timer-display timer-digits">{fmtTime(elapsed / 1000)}</div>
+        <div className={`mono timer-display timer-digits ${compact ? 'compact' : ''}`}>
+          {digits}
         </div>
       </main>
 

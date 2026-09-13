@@ -102,4 +102,48 @@ describe('Run route', () => {
     // Initial render with sound off — toggle labelled "Unmute sounds".
     expect(await screen.findByLabelText(/unmute sounds/i)).toBeInTheDocument();
   });
+
+  it('count-in shows "Get ready" and no set fraction', async () => {
+    renderRoute([{ pathname: '/run', state: { session } }]);
+    expect(await screen.findByText('Get ready')).toBeInTheDocument();
+    // No "n / n" fraction during count-in.
+    expect(screen.queryByText(/\d+ \/ \d+/)).not.toBeInTheDocument();
+  });
+
+  it('work phase shows the "Work" word and the set fraction', async () => {
+    renderRoute([{ pathname: '/run', state: { session } }]);
+    await userEvent.click(await screen.findByLabelText('Skip phase')); // countIn → work (set 1)
+    expect(screen.getByText('Work')).toBeInTheDocument();
+    expect(screen.getByText('1 / 2')).toBeInTheDocument();
+  });
+
+  it('rest phase shows the "Rest" word, the fraction, and the accent bar', async () => {
+    renderRoute([{ pathname: '/run', state: { session } }]);
+    await userEvent.click(await screen.findByLabelText('Skip phase')); // countIn → work
+    await userEvent.click(screen.getByLabelText('Skip phase')); // work → rest
+    expect(screen.getByText('Rest')).toBeInTheDocument();
+    expect(screen.getByText('1 / 2')).toBeInTheDocument();
+    expect(document.querySelector('.run-bar.accent')).toBeInTheDocument();
+  });
+
+  it('a single-set session renders no fraction', async () => {
+    renderRoute([{ pathname: '/run', state: { session: { sets: 1, workSec: 10, restSec: 5 } } }]);
+    await userEvent.click(await screen.findByLabelText('Skip phase')); // countIn → work
+    expect(screen.getByText('Work')).toBeInTheDocument();
+    expect(screen.queryByText(/\d+ \/ \d+/)).not.toBeInTheDocument();
+  });
+
+  it('the live region holds the word and fraction but not the clock', async () => {
+    const { container } = renderRoute([{ pathname: '/run', state: { session } }]);
+    await userEvent.click(await screen.findByLabelText('Skip phase')); // countIn → work
+    const live = container.querySelector('.run-phase-live')!;
+    expect(live).toHaveAttribute('aria-live', 'polite');
+    // aria-atomic so the whole "Work 1 / 2" is announced on a phase change even when only the word
+    // text mutated (e.g. work → rest at the same set index).
+    expect(live).toHaveAttribute('aria-atomic', 'true');
+    expect(live.textContent).toContain('Work');
+    expect(live.textContent).toContain('1 / 2');
+    // The clock (the only element with a colon) must sit outside the live region.
+    expect(live.textContent).not.toMatch(/:/);
+  });
 });

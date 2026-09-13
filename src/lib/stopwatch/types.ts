@@ -20,7 +20,7 @@ export type Effect = { type: 'acquireWakeLock' } | { type: 'releaseWakeLock' };
 
 export type StepResult = { next: MachineState; effects: Effect[] };
 
-const MS_PER_HOUR = 3_600_000;
+const MS_PER_MINUTE = 60_000;
 
 // Elapsed is always derived from timestamps rather than counted, so a backwards clock
 // step (NTP correction is the realistic case) can produce a negative delta for the
@@ -35,8 +35,8 @@ export function elapsedMs(state: MachineState, now: number): number {
   return state.accumulatedMs;
 }
 
-// One full revolution per hour; wraps and starts a new revolution past 60:00 while the
-// digit display keeps counting normally.
-export function ringProgress(ms: number): number {
-  return (ms % MS_PER_HOUR) / MS_PER_HOUR;
+// One full sweep per minute; wraps and restarts every 60s while the digit display keeps
+// counting normally. Drives the Timer screen's top progress bar (a per-minute rhythm).
+export function minuteProgress(ms: number): number {
+  return (ms % MS_PER_MINUTE) / MS_PER_MINUTE;
 }

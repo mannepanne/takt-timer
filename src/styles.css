@@ -421,7 +421,7 @@ input {
 .run-bar {
   position: relative;
   width: 100%;
-  height: 3px;
+  height: 6px;
   background: var(--rule);
   overflow: hidden;
 }
@@ -432,8 +432,13 @@ input {
   transform-origin: left center;
   transition: transform 1000ms linear;
 }
-.run-bar.rest .fill {
+.run-bar.accent .fill {
   background: var(--accent);
+}
+/* Timer screen: the per-minute bar wraps once a minute; a static fill snaps back at the boundary
+   instead of animating a full backwards sweep over the transition duration. */
+.run-bar.static .fill {
+  transition: none;
 }
 
 /* Set dots */
@@ -1121,17 +1126,49 @@ button.settings-link {
 .run-header {
   padding-top: 22px;
 }
-.run-phase-label {
-  display: inline-flex;
+/* Three-column grid so the pip chip (last column) can sit beside the word without shifting the
+   centred word+fraction block when it flashes in. Both side columns are 1fr; the middle column
+   holds the live region and the clock and stays centred whether or not the chip renders. */
+.run-phase-block {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  justify-items: center;
+  align-items: start;
+}
+.run-phase-live {
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 18px;
+}
+.run-phase-word {
+  font-size: 32px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 600;
+  color: var(--ink-2);
+  padding: 12px 0;
   white-space: nowrap;
 }
-.run-phase-label.rest {
+/* Rest word sits in an accent-soft pill (the pip chip's fill) — a filled colour block reads at
+   distances where the word itself can't, and the plain-vs-pill contrast is itself the phase cue. */
+.run-phase-word.rest {
   color: var(--accent-deep);
+  background: var(--accent-soft);
+  border-radius: 999px;
+  padding: 12px 28px;
+}
+.run-set-count {
+  font-size: 56px;
+  font-weight: 300;
+  color: var(--ink);
+  margin-top: 14px;
 }
 .run-pip-chip {
+  grid-column: 3;
+  justify-self: start;
+  align-self: start;
+  margin-top: 12px;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -1153,12 +1190,17 @@ button.settings-link {
   padding: 0 20px;
   position: relative;
 }
+/* Clock and count-in digit span all three grid columns so they stay centred in the block
+   regardless of the pip chip in column 3. */
 .run-timer-big {
+  grid-column: 1 / -1;
   font-size: 120px;
   color: var(--ink);
   font-weight: 300;
+  margin-top: 22px;
 }
 .run-timer-countin {
+  grid-column: 1 / -1;
   font-size: 200px;
   color: var(--ink);
   font-weight: 200;
@@ -1282,6 +1324,10 @@ button.settings-link {
   color: var(--accent-deep);
 }
 .complete-eyebrow-label {
+  font-size: 32px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 600;
   color: var(--accent-deep);
 }
 .complete-totals-label {
@@ -1312,7 +1358,7 @@ button.settings-link {
   gap: 20px;
 }
 .complete-totals-value {
-  font-size: 34px;
+  font-size: 44px;
   font-weight: 300;
   letter-spacing: -0.03em;
   margin-top: 6px;
@@ -1943,23 +1989,13 @@ button.settings-link {
   align-items: center;
   justify-content: center;
 }
-.timer-ring-wrap {
-  position: relative;
-  display: grid;
-  place-items: center;
-}
-.progress-ring-track {
-  stroke: var(--paper-2);
-}
-.progress-ring-fill {
-  stroke: var(--accent);
-  stroke-linecap: round;
-  transition: stroke-dashoffset 200ms linear;
-}
 .timer-digits {
-  position: absolute;
-  font-size: 44px;
+  font-size: 120px;
   font-weight: 300;
+  color: var(--ink);
+}
+.timer-digits.compact {
+  font-size: 96px;
 }
 .timer-controls {
   display: flex;
@@ -1985,7 +2021,7 @@ button.settings-link {
     animation: none !important;
     transition: none !important;
   }
-  .progress-ring-fill {
+  .run-bar .fill {
     transition: none !important;
   }
 }
