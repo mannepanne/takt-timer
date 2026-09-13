@@ -2,15 +2,15 @@
 
 Tester feedback, issue [#153](https://github.com/mannepanne/takt-timer/issues/153): "I would like my work/rest cues to be bigger. Chances are I've got my phone propped up somewhere else as I'm exercising so need to be able to read at distance."
 
-Design canvas with today-versus-proposed mockups: https://claude.ai/code/artifact/c815d58f-2803-4a78-93a4-dfab534c1552. The middle row is the agreed direction. The bottom row holds the rest-background tint options (14% and 24%) added after spec review, and the rejected accent-bar-on-work variant. Every measurement below is also written into this document, so the canvas is a convenience, not the record.
+Design canvas with today-versus-proposed mockups: https://claude.ai/code/artifact/c815d58f-2803-4a78-93a4-dfab534c1552. The middle row is the agreed direction, the third row is the same screens in dark mode, and the bottom row is the rejected accent-bar-on-work variant. Every measurement below is also written into this document, so the canvas is a convenience, not the record.
 
-Reviewed with `/review-spec` on 13 Sep 2026; this revision folds in its findings.
+Reviewed with `/review-spec` on 13 Sep 2026; this revision folds in its findings. An accent-tinted rest background was prototyped on the canvas in response to the review and rejected on aesthetics; see Decisions recorded.
 
 ## Problem
 
 The clock digits on the running screens are already enormous (120px, 200px on count-in). Everything that gives those digits meaning is not: "Work · Set 2 / 3", "Rest · Set 2 / 3" and "Get ready" are all the 11px muted-grey `.eyebrow` style, and the Done screen's totals are 34px. Across a room the user sees a big number and cannot tell which set they are on, or whether it is work or rest.
 
-The work and rest backgrounds do not help either. `--paper` against `--paper-2` is a 1.08:1 contrast ratio in light mode and 1.07:1 in dark, which is invisible at any distance. Today the only real work/rest signal at range is the 3px bar's colour.
+The work and rest backgrounds barely help: `--paper` against `--paper-2` is a 1.08:1 contrast ratio in light mode and 1.07:1 in dark, a deliberate dampening rather than a signal. Today the only real work/rest cue at range is the 3px bar's colour.
 
 The Timer page is worse still: its digits are 44px, sized to fit inside a 240px decorative ring whose one-lap-per-hour progress barely moves.
 
@@ -20,7 +20,7 @@ The phone is propped up in portrait. Landscape is explicitly not a use case.
 
 Two things, working together.
 
-**Colour carries the phase.** The rest phase gets a visibly accent-tinted background so work versus rest is recognisable at a glance, from any distance at which the screen is visible at all. The 6px bar keeps its ink-to-accent flip as a second colour cue.
+**Colour carries the phase.** The 6px bar keeps its ink-to-accent flip, and the phase word turns accent during rest. Together with the existing paper-2 dampening those are the work/rest cues; they are recognisable well before the word itself is readable.
 
 **Type carries the detail.** Every screen that is on-screen while exercising gets a three-tier hierarchy: a phase word, a set fraction, and the clock, each visibly smaller than the next. The word confirms the phase up close; the fraction and the clock are what you read from across the room. On the Timer page the ring goes, the digits match the run screens, and the run screens' top bar is reused as a per-minute progress indicator.
 
@@ -60,11 +60,10 @@ Spacing: 12px between the phase word and the fraction, 22px between the fraction
 
 The beep-countdown pip chip (`.run-pip-chip`, shown in the last seconds of a phase) stays inline beside the phase word, at its current size. It is a momentary secondary cue, not something to read at distance.
 
-### Rest background tint
+### Backgrounds
 
-- The rest screen's background becomes `--paper-rest`, a new token: the current accent mixed 14% into `--paper`. That is the same strength as `--accent-soft`, so it is a shade the app already uses, now applied to a whole surface. The canvas also shows 24% for comparison; 14% is the default unless the canvas review says otherwise, and the number is a single line to change.
-- Because it is derived from `--accent` and `--paper`, it follows the chosen accent and inverts correctly in dark mode with no per-accent or per-theme values.
-- The work background stays `--paper`. `--paper-2` is no longer used by the run screens; it keeps its other uses.
+- Unchanged: `--paper` during work and count-in, `--paper-2` during rest. The subtle dampening is the intended look. An accent tint was tried on the canvas and rejected.
+- Dark mode needs nothing new. The same tokens resolve to the dark palette, the bar's ink fill reads as a light mark on dark (the rule already recorded in `REFERENCE/theming.md` for thin indicators), and the rest word uses the resolver's dark-derived `--accent-deep`. The canvas's third row shows all five screens on the dark tokens.
 
 ### Progress bar (run screens)
 
@@ -92,7 +91,7 @@ The beep-countdown pip chip (`.run-pip-chip`, shown in the last seconds of a pha
 - The phase word and set fraction share one `aria-live="polite"` container, so a screen reader announces "Work, 2 / 3" as one update at each phase change. **The clock and the pip chip are outside that container.** Putting the clock inside would announce every second; the chip inside would re-announce the phase during the last three seconds of every phase. The fraction's separator is the literal text "/".
 - The Timer page's bar is `aria-hidden`, exactly as the ring was; the digits remain the only informational element.
 - Reduced motion: the bar fill on the run screens is added to the existing `@media (prefers-reduced-motion: reduce)` block with `transition: none`. Today that block covers the ring's fill; deleting the ring must not silently leave the run screens' bar as the one animated element without an escape hatch. The Timer page's bar has no transition to begin with.
-- Contrast: `--ink` and `--ink-2` on `--paper-rest` are new text pairs and are added to `scripts/check-contrast.mjs` as per-accent pairs. `--accent-deep` on the 14% tint is already covered by the existing "accent-deep on accent-soft" pair. `--ink-2` on `--paper` (count-in) is already listed. All pairs must clear 4.5:1 for every accent in both appearances; the stricter text threshold is intentional even though the 20px word would qualify as large text.
+- Contrast: every pair this spec uses is already in `scripts/check-contrast.mjs`. `--ink-2` on `--paper` (the work word and count-in label) is listed; `--accent-deep` on `--paper-2` (the rest word) is a per-accent pair. No additions; the script runs unchanged and must pass for every accent in both appearances. The 4.5:1 text threshold applies even though the 20px word would qualify as large text.
 
 ## Architecture
 
@@ -129,8 +128,6 @@ The live region's DOM is word plus fraction and nothing else. The pip chip sits 
 
 All sizes are plain px, matching every other size on these screens (no `clamp()`, no viewport units). The app viewport is capped at 440px wide and portrait-only is the use case. The two overflow cases found in review were solved by choosing sizes that fit, not by fluid scaling.
 
-- `--paper-rest` — new token on `:root`, `color-mix(in srgb, var(--accent) 14%, var(--paper))`. Because both inputs are themselves tokens it needs no second value in the dark block. `color-mix` with tokens is already the pattern for `--danger-deep`, so `src/styles.test.ts` accepts it.
-- `.run-screen.rest` — background `--paper-rest` instead of `--paper-2`.
 - `.run-phase-word` — 20px, uppercase, 0.14em, 600, `--ink-2`; `.run-phase-word.rest` sets `--accent-deep`. `.run-countin-label` — 22px, otherwise identical.
 - `.run-set-count` — 56px, 300, `--ink`, `.mono`.
 - `.run-bar` — `height: 6px`. The existing `.run-bar.rest` modifier is renamed `.run-bar.accent` (two references: the stylesheet and `Run.tsx`) so the Timer page can use it without borrowing the word "rest". `.run-bar.static .fill` — `transition: none`, used by the Timer page.
@@ -153,7 +150,7 @@ The stopwatch reducer, its persistence key, the interval machine, the Worker and
 
 ## UI
 
-Reference: canvas linked at the top. Middle row, left to right: Get ready, Work, Rest, Done, Timer. Bottom row: Work again for comparison, Rest at 14% tint, Rest at 24% tint, and the rejected accent-bar variant.
+Reference: canvas linked at the top. Middle row, left to right: Get ready, Work, Rest, Done, Timer, on the light tokens. Third row: the same five on the dark tokens. Bottom row: the rejected accent-bar variant.
 
 Width sanity, using JetBrains Mono's 0.6em advance and the existing negative tracking:
 
@@ -178,9 +175,7 @@ Vertical sanity: the run body has roughly 650px available on an 844px viewport a
 - `src/routes/Timer.tsx`, `src/routes/Timer.test.tsx` — ring out, static bar in, `compact` digits, `aria-hidden` bar test replacing the ring test.
 - `src/lib/stopwatch/types.ts`, `machine.ts`, `machine.test.ts` — `ringProgress` and `MS_PER_HOUR` become `minuteProgress`.
 - `src/components/ProgressRing.tsx`, `ProgressRing.test.tsx` — deleted.
-- `src/styles.css` — token, classes and sizes listed under Architecture; reduced-motion block.
-- `scripts/check-contrast.mjs` — add per-accent "ink on paper-rest" and "ink-2 on paper-rest" pairs.
-- `REFERENCE/theming.md` — one line for `--paper-rest`.
+- `src/styles.css` — classes and sizes listed under Architecture; reduced-motion block.
 - `SPECIFICATIONS/ARCHIVE/timer-mode.md` — a superseded note on the ring paragraph, in the style of the existing #131 note.
 - `SPECIFICATIONS/CLAUDE.md`, root `CLAUDE.md` — this spec listed as active, then archived on ship.
 
@@ -189,16 +184,16 @@ Vertical sanity: the run body has roughly 650px available on an 844px viewport a
 - [ ] Work and rest screens show the phase word (20px), set fraction (56px mono) and clock (120px) stacked and centred, in both English and Swedish.
 - [ ] A single-set session shows the phase word and clock with no fraction.
 - [ ] Count-in shows "Get ready" at 22px and no fraction, including while paused.
-- [ ] Rest renders on the `--paper-rest` background with the phase word in `--accent-deep` and the bar in `--accent`; work renders on `--paper` with `--ink-2` and `--ink`. The tint follows the selected accent and inverts in dark mode.
+- [ ] Rest renders on `--paper-2` with the phase word in `--accent-deep` and the bar in `--accent`; work renders on `--paper` with `--ink-2` and `--ink`. Both hold in dark mode with no new token values.
 - [ ] Progress bar is 6px on run screens and on the Timer page.
 - [ ] Done screen: "Complete" eyebrow at 20px with a 26px check; totals at 44px and not overflowing at "12:00" on a 360px-wide viewport; buttons unchanged.
 - [ ] Timer page: no ring; digits at 120px, dropping to 96px at "100:00"; accent top bar fills once per minute with no transition, resets instantly at the boundary, holds while paused, empties on reset.
 - [ ] Screen-reader announcement at a phase change is a single polite update containing the phase word and the fraction, and nothing is announced on clock ticks or pip-chip updates.
 - [ ] `prefers-reduced-motion` disables the run screens' bar transition.
-- [ ] `pnpm contrast:check` passes with the two new pairs, every accent, light and dark.
+- [ ] `pnpm contrast:check` passes unchanged, every accent, light and dark.
 - [ ] `src/styles.test.ts` passes (no colour literals introduced).
 - [ ] `pnpm test`, `pnpm typecheck` pass; coverage floors hold. Deleting a fully-covered file lowers the numerator, so check coverage locally before pushing.
-- [ ] Verified on a real Android device via a local debug APK, and on the live web app, from roughly three metres in portrait: phase recognisable by colour, set fraction and clock legible. If the fraction is not legible at three metres, the fallback is 64px with the fraction on its own line, which still fits "99 / 99" at about 269px.
+- [ ] Verified on a real Android device via a local debug APK, and on the live web app, in light and dark, from roughly three metres in portrait: phase recognisable by bar and word colour, set fraction and clock legible. If the fraction is not legible at three metres, the fallback is 64px with the fraction on its own line, which still fits "99 / 99" at about 269px.
 
 ## Testing strategy
 
@@ -215,11 +210,11 @@ One PR, `feature/at-a-distance-readability`. With the Timer bar reduced to a sta
 ## Risks
 
 - **Fraction reads as a ratio, not a set count.** Mitigated by the phase word directly above it. If testers misread it, the fallback is not "Set 2 / 3" at 56px, which at "Set 10 / 12" would be about 370px and overflow; it is a smaller "Set" prefix in the 20px word style on the same line, "SET 2 / 3", with the numerals staying large.
-- **The 14% tint is too subtle or too strong.** It is one number. The canvas shows 14% and 24% side by side; the three-metre device check settles it.
+- **Work versus rest is still not obvious at three metres.** The review's arithmetic says the word will not be readable at that range, so the cue rests on the bar's colour flip and the word's colour. If the device check finds that insufficient, the option on the table is a stronger rest background; it was prototyped and is a one-token change, but it was rejected on looks and would need re-approval.
 - **Coverage floors.** Noted in acceptance criteria; not a design risk.
 
 ## Decisions recorded
 
-- Colour, not type, is the primary phase cue at distance. Type sizes were chosen for near-field confirmation and mid-range legibility; a 20px word is about 2mm tall on a phone and is not expected to be readable at three metres. This was the spec review's main finding and is accepted.
+- Colour, not type, is the primary phase cue at distance: the bar's ink-to-accent flip and the word's accent colour. A 20px word is about 2mm tall on a phone and is not expected to be readable at three metres. The review proposed an accent-tinted rest background as a stronger cue; it was prototyped at 14% and 24% and rejected by the product owner because it breaks the quiet, dampened look of the rest screen. The paper-2 background stays.
 - The Timer page keeps a progress indicator, as a static-fill minute bar in accent. "No indicator at all" was considered and rejected by the product owner; the chosen form costs no more than the deletion alone.
 - No user-facing size setting. The defaults are the opinion.
